@@ -2,60 +2,59 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiMapPin, FiSearch } from 'react-icons/fi';
 
-const FindDoctor = () => {
+const FindDoctor = ({ searchTerm, setSearchTerm }) => {
     const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState('All');
-    const [searchTerm, setSearchTerm] = useState('');
 
     const departments = ['All', 'Cardiology', 'Pediatrics', 'Orthopedics', 'Gynecology', 'Neurology'];
 
     const doctors = [
         {
             id: 1,
-            name: 'Dr. Rajesh Kumar',
+            name: 'Dr. Pravesh Kumar',
             specialty: 'Cardiologist',
             experience: '15 years',
-            image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300&h=300&fit=crop',
+            image: '/public/21004063.jpg',
             department: 'Cardiology',
         },
         {
             id: 2,
-            name: 'Dr. Priya Sharma',
+            name: 'Dr. Subham Shekhar Das',
             specialty: 'Pediatrician',
             experience: '12 years',
-            image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=300&h=300&fit=crop',
+            image: '/public/21004063.jpg',
             department: 'Pediatrics',
         },
         {
             id: 3,
-            name: 'Dr. Amit Patel',
+            name: 'Dr. Chandan Shashank',
             specialty: 'Orthopedic Surgeon',
             experience: '18 years',
-            image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=300&h=300&fit=crop',
+            image: '/public/21004063.jpg',
             department: 'Orthopedics',
         },
         {
             id: 4,
-            name: 'Dr. Sneha Reddy',
+            name: 'Dr. Nikitha Reddy',
             specialty: 'Gynecologist',
             experience: '10 years',
-            image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&h=300&fit=crop',
+            image: '/public/21004063.jpg',
             department: 'Gynecology',
         },
         {
             id: 5,
-            name: 'Dr. Vikram Singh',
+            name: 'Dr. Achyut Shivarao',
             specialty: 'Neurologist',
             experience: '20 years',
-            image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=300&h=300&fit=crop',
+            image: '/public/21004063.jpg',
             department: 'Neurology',
         },
         {
             id: 6,
-            name: 'Dr. Anita Desai',
+            name: 'Dr. Aishwarya',
             specialty: 'Cardiologist',
             experience: '14 years',
-            image: 'https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?w=300&h=300&fit=crop',
+            image: '/public/21004063.jpg',
             department: 'Cardiology',
         },
     ];
