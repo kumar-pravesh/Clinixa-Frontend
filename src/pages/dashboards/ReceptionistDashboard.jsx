@@ -1,9 +1,13 @@
-import { FiUserPlus, FiCreditCard, FiActivity, FiUsers } from 'react-icons/fi';
+import { FiUserPlus, FiActivity, FiUsers } from 'react-icons/fi';
 
 const ReceptionistOverview = () => {
+    const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+    const today = new Date().toISOString().split('T')[0];
+    const todaysAppointments = appointments.filter(a => a.date === today).length;
+
     const stats = [
         { label: 'Walk-in Patients', value: '18', icon: <FiUserPlus />, color: 'bg-blue-500' },
-        { label: 'Pending Bills', value: '7', icon: <FiCreditCard />, color: 'bg-orange-500' },
+        { label: "Today's Appointments", value: String(todaysAppointments), icon: <FiActivity />, color: 'bg-green-500' },
         { label: 'Token Issued Today', value: '45', icon: <FiActivity />, color: 'bg-green-500' },
         { label: 'Emergency Queued', value: '2', icon: <FiUsers />, color: 'bg-red-500' },
     ];

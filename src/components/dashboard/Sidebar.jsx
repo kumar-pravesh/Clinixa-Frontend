@@ -8,16 +8,22 @@ import {
     FiSettings,
     FiLogOut,
     FiClock,
-    FiUploadCloud
+    FiUploadCloud,
+    FiDollarSign,
+    FiBarChart2
 } from 'react-icons/fi';
 
 const Sidebar = ({ role }) => {
     const adminLinks = [
         { name: 'Overview', icon: <FiHome />, path: '/dashboard/admin' },
+        { name: 'Staff Registration', icon: <FiActivity />, path: '/dashboard/admin/registrations' },
         { name: 'Doctors', icon: <FiUsers />, path: '/dashboard/admin/doctors' },
-        { name: 'Patients', icon: <FiActivity />, path: '/dashboard/admin/patients' },
+        { name: 'Staff', icon: <FiActivity />, path: '/dashboard/admin/staff' },
         { name: 'Departments', icon: <FiFileText />, path: '/dashboard/admin/departments' },
-        { name: 'Settings', icon: <FiSettings />, path: '/dashboard/admin/settings' },
+        { name: 'Patients', icon: <FiUsers />, path: '/dashboard/admin/patients' },
+        { name: 'Appointments', icon: <FiCalendar />, path: '/dashboard/admin/appointments' },
+        { name: 'Billing Control', icon: <FiDollarSign />, path: '/dashboard/admin/billing' },
+        { name: 'Reports', icon: <FiBarChart2 />, path: '/dashboard/admin/reports' },
     ];
 
     const doctorLinks = [
