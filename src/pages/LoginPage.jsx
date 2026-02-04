@@ -3,19 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiMail, FiLock, FiArrowRight, FiUser } from 'react-icons/fi';
 
 const LoginPage = () => {
-    const [role, setRole] = useState('Patient');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    const roles = ['Admin', 'Doctor', 'Patient', 'Receptionist', 'Lab Technician'];
-
     const handleLogin = (e) => {
         e.preventDefault();
-        // Mock login - in a real app, this would call an API
-        console.log(`Logging in as ${role} with ${email}`);
-        // For now, redirect to a placeholder dashboard
-        navigate(`/dashboard/${role.toLowerCase().replace(' ', '-')}`);
+        console.log(`Logging in as Patient with ${email}`);
+        navigate('/dashboard/patient');
     };
 
     return (
@@ -29,30 +24,11 @@ const LoginPage = () => {
                             </div>
                             <span className="text-3xl font-bold font-display text-gradient">Clinixa</span>
                         </Link>
-                        <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-                        <p className="text-gray-500 mt-2">Log in to access your healthcare portal</p>
+                        <h2 className="text-2xl font-bold text-gray-900">Patient Login</h2>
+                        <p className="text-gray-500 mt-2">Log in to access your patient portal</p>
                     </div>
 
                     <form onSubmit={handleLogin} className="space-y-6">
-                        {/* Role Selection */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Select Your Role</label>
-                            <div className="grid grid-cols-2 gap-2">
-                                {roles.map((r) => (
-                                    <button
-                                        key={r}
-                                        type="button"
-                                        onClick={() => setRole(r)}
-                                        className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 border-2 ${role === r
-                                            ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-sm'
-                                            : 'bg-white border-gray-100 text-gray-600 hover:border-primary-200 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        {r}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* Email Input */}
                         <div className="relative">
@@ -104,10 +80,10 @@ const LoginPage = () => {
                     </form>
 
                     <div className="mt-8 pt-8 border-t border-gray-100 text-center">
-                        <p className="text-gray-600">
-                            Don't have an account?{' '}
+                        <p className="text-gray-600 text-sm">
+                            Need a patient portal account?{' '}
                             <Link to="/signup" className="text-primary-600 font-bold hover:text-primary-700 transition-colors">
-                                Create Account
+                                Register Now
                             </Link>
                         </p>
                     </div>

@@ -11,7 +11,8 @@ const SignupPage = () => {
 
     const handleSignup = (e) => {
         e.preventDefault();
-        console.log(`Signing up: ${name}, ${email}`);
+        // Specifically registering as a patient
+        console.log(`Registering as PATIENT: ${name}, ${email}`);
         navigate('/login');
     };
 
@@ -26,8 +27,13 @@ const SignupPage = () => {
                             </div>
                             <span className="text-3xl font-bold font-display text-gradient">Clinixa</span>
                         </Link>
-                        <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
-                        <p className="text-gray-500 mt-2">Join Clinixa for seamless healthcare</p>
+                        <h2 className="text-2xl font-bold text-gray-900">Patient Registration</h2>
+                        <p className="text-gray-500 mt-2">Join Clinixa for seamless patient care</p>
+                        <div className="mt-4 px-4 py-2 bg-primary-50 border border-primary-100 rounded-lg inline-block">
+                            <p className="text-[10px] uppercase font-black tracking-widest text-primary-600">
+                                Staff registration is internal only
+                            </p>
+                        </div>
                     </div>
 
                     <form onSubmit={handleSignup} className="space-y-4">

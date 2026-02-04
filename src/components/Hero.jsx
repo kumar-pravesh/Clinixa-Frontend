@@ -1,7 +1,6 @@
-import { Link } from 'react-router-dom';
 import { FiArrowRight, FiPlayCircle } from 'react-icons/fi';
 
-const Hero = () => {
+const Hero = ({ onOpenBooking }) => {
     return (
         <section id="home" className="relative min-h-screen flex items-center pt-20 overflow-hidden">
             {/* Background Gradient */}
@@ -25,10 +24,13 @@ const Hero = () => {
                             journey starts here.
                         </p>
                         <div className="flex flex-wrap gap-4">
-                            <Link to="/login" className="btn-primary flex items-center space-x-2">
+                            <button
+                                onClick={onOpenBooking}
+                                className="btn-primary flex items-center space-x-2"
+                            >
                                 <span>Book Appointment</span>
                                 <FiArrowRight className="w-5 h-5" />
-                            </Link>
+                            </button>
                             <button
                                 className="btn-outline flex items-center space-x-2"
                                 onClick={() => document.getElementById('centres')?.scrollIntoView({ behavior: 'smooth' })}
