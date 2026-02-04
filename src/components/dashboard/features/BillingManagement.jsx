@@ -33,8 +33,8 @@ const BillingManagement = () => {
             if (raw) return JSON.parse(raw);
             // Default billing records include services, totalAmount and totalPaid
             return [
-                { id: 1, patientName: 'John Doe', patientId: 'P001', department: 'Cardiology', services: [{ name: 'consultant', price: 500 }], totalAmount: 500, totalPaid: 500, date: '2025-02-01' },
-                { id: 2, patientName: 'Sarah Smith', patientId: 'P002', department: 'Orthopedics', services: [{ name: 'consultant', price: 500 }, { name: 'xray', price: 150 }], totalAmount: 650, totalPaid: 0, date: '2025-02-02' },
+                { id: 1, patientName: 'Aryan Kumar', patientId: 'P001', department: 'Cardiology', services: [{ name: 'consultant', price: 500 }], totalAmount: 500, totalPaid: 500, date: '2025-02-01' },
+                { id: 2, patientName: 'Shubham Sekhar', patientId: 'P002', department: 'Orthopedics', services: [{ name: 'consultant', price: 500 }, { name: 'xray', price: 150 }], totalAmount: 650, totalPaid: 0, date: '2025-02-02' },
                 { id: 3, patientName: 'Michael Johnson', patientId: 'P003', department: 'Pediatrics', services: [{ name: 'consultant', price: 500 }, { name: 'lab', price: 200 }], totalAmount: 700, totalPaid: 0, date: '2025-01-25' },
                 { id: 4, patientName: 'Emily Brown', patientId: 'P004', department: 'Neurology', services: [{ name: 'consultant', price: 500 }], totalAmount: 500, totalPaid: 0, date: '2025-02-03' },
                 { id: 5, patientName: 'David Lee', patientId: 'P005', department: 'Cardiology', services: [{ name: 'consultant', price: 500 }, { name: 'medication', price: 100 }], totalAmount: 600, totalPaid: 600, date: '2025-02-04' },

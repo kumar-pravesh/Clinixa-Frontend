@@ -30,13 +30,13 @@ const AppointmentApproval = () => {
         try {
             const raw = localStorage.getItem('appointments');
             if (raw) return JSON.parse(raw);
-            
+
             // Always have default data even if doctors/patients are empty
             return [
                 {
                     id: 1,
-                    patientName: 'John Doe',
-                    doctorName: 'Dr. Sarah Johnson',
+                    patientName: 'Aryan Kumar',
+                    doctorName: 'Dr. Chandan Shashank',
                     department: 'Cardiology',
                     date: '2025-02-10',
                     time: '10:00 AM',
@@ -55,8 +55,8 @@ const AppointmentApproval = () => {
                 },
                 {
                     id: 3,
-                    patientName: 'Michael Johnson',
-                    doctorName: 'Dr. Emily Rodriguez',
+                    patientName: 'Shubham Sekhar',
+                    doctorName: 'Dr. Chandan Shashank',
                     department: 'Pediatrics',
                     date: '2025-02-10',
                     time: '02:00 PM',
@@ -102,7 +102,7 @@ const AppointmentApproval = () => {
     useEffect(() => {
         try {
             localStorage.setItem('appointments', JSON.stringify(appointments));
-        } catch (e) {}
+        } catch (e) { }
     }, [appointments]);
 
     // Listen for updates from DoctorManagement and PatientRecords
