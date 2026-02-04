@@ -1,12 +1,27 @@
-import { FiTrendingUp, FiUsers, FiDollarSign, FiClock } from 'react-icons/fi';
+import { FiTrendingUp, FiUsers, FiDollarSign, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { useState } from 'react';
 
-const AdminOverview = () => {
+const AdminDashboard = () => {
     const stats = [
         { label: "Today's Appointments", value: '48', icon: <FiClock />, color: 'bg-blue-500', trend: '+12%' },
         { label: 'Total Patients', value: '1,240', icon: <FiUsers />, color: 'bg-green-500', trend: '+5%' },
-        { label: 'Daily Income', value: '$2,450', icon: <FiDollarSign />, color: 'bg-purple-500', trend: '+18%' },
-        { label: 'Pending Bills', value: '12', icon: <FiTrendingUp />, color: 'bg-orange-500', trend: '-2%' },
     ];
+
+    const todayAppointments = [
+        { id: 1, patient: 'John Doe', doctor: 'Dr. Sarah Johnson', time: '10:00 AM', status: 'scheduled' },
+        { id: 2, patient: 'Sarah Smith', doctor: 'Dr. Michael Chen', time: '11:30 AM', status: 'completed' },
+        { id: 3, patient: 'Michael Johnson', doctor: 'Dr. Emily Rodriguez', time: '02:00 PM', status: 'scheduled' },
+        { id: 4, patient: 'Emily Brown', doctor: 'Dr. James Wilson', time: '03:30 PM', status: 'pending' },
+    ];
+
+    const departmentLoad = [
+        { name: 'Cardiology', load: 85, beds: '18/20' },
+        { name: 'Pediatrics', load: 72, beds: '22/30' },
+        { name: 'Neurology', load: 65, beds: '10/15' },
+        { name: 'Orthopedics', load: 78, beds: '16/20' },
+    ];
+
+    // pending bills overview removed (billing moved to Billing Control)
 
     return (
         <div className="space-y-8">
@@ -15,7 +30,9 @@ const AdminOverview = () => {
                     <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
                     <p className="text-gray-500 font-medium">Monitoring hospital performance and operations.</p>
                 </div>
-                <button className="btn-primary">Generate Report</button>
+                <div className="text-right">
+                    <p className="text-sm text-gray-500">Last Updated: Today, 2:45 PM</p>
+                </div>
             </div>
 
             {/* Stats Grid */}
@@ -36,34 +53,53 @@ const AdminOverview = () => {
                 ))}
             </div>
 
-            {/* Detailed Content Placeholder */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-                <div className="card p-6 min-h-[400px]">
-                    <h3 className="text-lg font-bold text-gray-900 mb-6 border-b pb-4">Recent Appointments</h3>
-                    <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                        <FiClock className="w-12 h-12 mb-4 opacity-20" />
-                        <p className="font-medium italic">No new appointments to display...</p>
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Today's Appointments */}
+                <div className="card p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-4">Today's Appointments</h3>
+                    <div className="space-y-3">
+                        {todayAppointments.map(apt => (
+                            <div key={apt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div className="flex-1">
+                                    <p className="text-sm font-semibold text-gray-900">{apt.patient}</p>
+                                    <p className="text-xs text-gray-500">{apt.doctor} at {apt.time}</p>
+                                </div>
+                                <span className={`px-2 py-1 rounded text-xs font-semibold ${apt.status === 'completed' ? 'bg-green-100 text-green-700' : apt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>
+                                    {apt.status}
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 </div>
-                <div className="card p-6 min-h-[400px]">
-                    <h3 className="text-lg font-bold text-gray-900 mb-6 border-b pb-4">Department Load</h3>
-                    <div className="space-y-6 mt-4">
-                        {['Cardiology', 'Pediatrics', 'Neurology', 'Orthopedics'].map(dept => (
-                            <div key={dept}>
-                                <div className="flex justify-between text-sm font-bold mb-2">
-                                    <span className="text-gray-700">{dept}</span>
-                                    <span className="text-primary-600">75%</span>
+
+                {/* Department Load */}
+                <div className="card p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-4">Department Load</h3>
+                    <div className="space-y-4">
+                        {departmentLoad.map(dept => (
+                            <div key={dept.name}>
+                                <div className="flex justify-between text-sm font-semibold mb-2">
+                                    <span className="text-gray-900">{dept.name}</span>
+                                    <span className={`text-xs ${dept.load > 80 ? 'text-red-600' : dept.load > 70 ? 'text-orange-600' : 'text-green-600'}`}>
+                                        {dept.load}% • {dept.beds}
+                                    </span>
                                 </div>
-                                <div className="w-full bg-gray-100 rounded-full h-2">
-                                    <div className="bg-gradient-primary h-2 rounded-full" style={{ width: '75%' }}></div>
+                                <div className="w-full bg-gray-100 rounded-full h-2.5">
+                                    <div
+                                        className={`h-2.5 rounded-full ${dept.load > 80 ? 'bg-red-500' : dept.load > 70 ? 'bg-orange-500' : 'bg-green-500'}`}
+                                        style={{ width: `${dept.load}%` }}
+                                    ></div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
+
+                {/* Removed Daily Income and Pending Bills overview - managed in Billing Control */}
             </div>
         </div>
     );
 };
 
-export default AdminOverview;
+export default AdminDashboard;
