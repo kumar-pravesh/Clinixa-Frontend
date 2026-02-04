@@ -8,6 +8,8 @@ import DoctorDashboard from './pages/dashboards/DoctorDashboard';
 import PatientDashboard from './pages/dashboards/PatientDashboard';
 import ReceptionistDashboard from './pages/dashboards/ReceptionistDashboard';
 import LabTechnicianDashboard from './pages/dashboards/LabTechnicianDashboard';
+import MyPatients from './pages/dashboards/MyPatients';
+import DoctorAppointments from './pages/dashboards/DoctorAppointments';
 
 // Feature Views
 import AppointmentBooking from './components/dashboard/features/AppointmentBooking';
@@ -27,6 +29,8 @@ function App() {
         <Route path="/dashboard/admin" element={<DashboardLayout role="admin"><AdminDashboard /></DashboardLayout>} />
         <Route path="/dashboard/doctor" element={<DashboardLayout role="doctor"><DoctorDashboard /></DashboardLayout>} />
         <Route path="/dashboard/doctor/prescriptions" element={<DashboardLayout role="doctor"><MedicalRecords /></DashboardLayout>} />
+        <Route path="/dashboard/doctor/patients" element={<DashboardLayout role="doctor"><MyPatients /></DashboardLayout>} />
+        <Route path="/dashboard/doctor/appointments" element={<DashboardLayout role="doctor"><DoctorAppointments /></DashboardLayout>} />
 
         <Route path="/dashboard/patient" element={<DashboardLayout role="patient"><PatientDashboard /></DashboardLayout>} />
         <Route path="/dashboard/patient/book" element={<DashboardLayout role="patient"><AppointmentBooking /></DashboardLayout>} />
