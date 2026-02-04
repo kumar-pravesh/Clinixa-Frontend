@@ -4,6 +4,10 @@ import LoginPage from '../pages/LoginPage';
 import SignupPage from '../pages/SignupPage';
 import DashboardLayout from '../layouts/DashboardLayout';
 
+// Doctor New Pages
+import MyPatients from '../modules/doctor/pages/MyPatients';
+import DoctorAppointments from '../modules/doctor/pages/DoctorAppointments';
+
 // Admin Module
 import AdminDashboard from '../modules/admin/pages/AdminDashboard';
 import StaffRegistrationApproval from '../modules/admin/components/StaffRegistrationApproval';
@@ -51,6 +55,8 @@ const AppRoutes = () => (
         {/* Doctor Dashboard Routes */}
         <Route path="/dashboard/doctor" element={<DashboardLayout role="doctor"><DoctorDashboard /></DashboardLayout>} />
         <Route path="/dashboard/doctor/prescriptions" element={<DashboardLayout role="doctor"><MedicalRecords /></DashboardLayout>} />
+        <Route path="/dashboard/doctor/patients" element={<DashboardLayout role="doctor"><MyPatients /></DashboardLayout>} />
+        <Route path="/dashboard/doctor/appointments" element={<DashboardLayout role="doctor"><DoctorAppointments /></DashboardLayout>} />
 
         {/* Patient Dashboard Routes */}
         <Route path="/dashboard/patient" element={<DashboardLayout role="patient"><PatientDashboard /></DashboardLayout>} />
