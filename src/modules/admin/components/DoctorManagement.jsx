@@ -25,7 +25,11 @@ const DoctorManagement = () => {
             localStorage.setItem('doctors', JSON.stringify(doctors));
             // Dispatch event to notify other components that doctors have been updated
             window.dispatchEvent(new Event('doctorUpdate'));
+
+        } catch (e) { }
+
         } catch (e) {}
+
     }, [doctors]);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -36,7 +40,12 @@ const DoctorManagement = () => {
         specialization: '',
         email: '',
         phone: '',
+
+        status: 'active',
+        photo: ''
+
         status: 'active'
+
     });
 
     const filteredDoctors = doctors.filter(doc =>
@@ -51,7 +60,11 @@ const DoctorManagement = () => {
             setFormData(doctor);
         } else {
             setEditingId(null);
+
+            setFormData({ name: '', specialization: '', email: '', phone: '', status: 'active', photo: '' });
+
             setFormData({ name: '', specialization: '', email: '', phone: '', status: 'active' });
+
         }
         setShowModal(true);
     };
@@ -65,6 +78,19 @@ const DoctorManagement = () => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
+
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, photo: reader.result }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
 
     const handleSave = () => {
         if (editingId) {
@@ -143,7 +169,24 @@ const DoctorManagement = () => {
                         <tbody className="divide-y divide-gray-200">
                             {filteredDoctors.map(doctor => (
                                 <tr key={doctor.id} className="hover:bg-gray-50 transition">
+
+                                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
+                                                {doctor.photo ? (
+                                                    <img src={doctor.photo} alt={doctor.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xs bg-primary-50 text-primary-600">
+                                                        {doctor.name.split(' ').map(n => n[0]).join('')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span>{doctor.name}</span>
+                                        </div>
+                                    </td>
+
                                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">{doctor.name}</td>
+
                                     <td className="px-6 py-4 text-sm text-gray-600">{doctor.specialization}</td>
                                     <td className="px-6 py-4 text-sm text-gray-600">{doctor.email}</td>
                                     <td className="px-6 py-4 text-sm text-gray-600">{doctor.phone}</td>
@@ -232,6 +275,29 @@ const DoctorManagement = () => {
                                     placeholder="+1-555-0000"
                                 />
                             </div>
+
+
+                            {!editingId && (
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-900 mb-2">Profile Picture</label>
+                                    <div className="flex items-center space-x-4">
+                                        <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center">
+                                            {formData.photo ? (
+                                                <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <FiPlus className="text-gray-400" />
+                                            )}
+                                        </div>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handlePhotoChange}
+                                            className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
 
                             <div>
                                 <label className="block text-sm font-semibold text-gray-900 mb-2">Status</label>

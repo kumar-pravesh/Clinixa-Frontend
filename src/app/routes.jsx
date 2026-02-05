@@ -1,12 +1,28 @@
+
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LandingPage from './components/LandingPage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import DashboardLayout from './components/dashboard/DashboardLayout';
+import AdminDashboard from './pages/dashboards/AdminDashboard';
+import DoctorDashboard from './pages/dashboards/DoctorDashboard';
+import PatientDashboard from './pages/dashboards/PatientDashboard';
+import ReceptionistDashboard from './pages/dashboards/ReceptionistDashboard';
+import LabTechnicianDashboard from './pages/dashboards/LabTechnicianDashboard';
+import MyPatients from './pages/dashboards/MyPatients';
+import DoctorAppointments from './pages/dashboards/DoctorAppointments';
+
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from '../pages/LandingPage';
 import LoginPage from '../pages/LoginPage';
 import SignupPage from '../pages/SignupPage';
 import DashboardLayout from '../layouts/DashboardLayout';
 
+
 // Doctor New Pages
 import MyPatients from '../modules/doctor/pages/MyPatients';
 import DoctorAppointments from '../modules/doctor/pages/DoctorAppointments';
+
 
 // Admin Module
 import AdminDashboard from '../modules/admin/pages/AdminDashboard';

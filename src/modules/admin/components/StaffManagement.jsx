@@ -21,7 +21,12 @@ const StaffManagement = () => {
     });
 
     useEffect(() => {
+
+        try { localStorage.setItem('staffList', JSON.stringify(staffList)); } catch (e) { }
+
         try { localStorage.setItem('staffList', JSON.stringify(staffList)); } catch (e) {}
+
+      
     }, [staffList]);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -34,7 +39,15 @@ const StaffManagement = () => {
         email: '',
         phone: '',
         department: '',
+
+      
+        status: 'active',
+        photo: ''
+
+      
         status: 'active'
+
+      
     });
 
     const filteredStaff = staffList.filter(staff => {
@@ -50,7 +63,14 @@ const StaffManagement = () => {
             setFormData(staff);
         } else {
             setEditingId(null);
+
+          
+            setFormData({ name: '', role: 'Lab Technician', email: '', phone: '', department: '', status: 'active', photo: '' });
+
+          
             setFormData({ name: '', role: 'Lab Technician', email: '', phone: '', department: '', status: 'active' });
+
+          
         }
         setShowModal(true);
     };
@@ -65,7 +85,22 @@ const StaffManagement = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSave = () => {
+
+  const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, photo: reader.result }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+
+  
+
+  const handleSave = () => {
         if (editingId) {
             setStaffList(staffList.map(s => s.id === editingId ? { ...formData, id: editingId } : s));
         } else {
@@ -152,8 +187,26 @@ const StaffManagement = () => {
                         <tbody className="divide-y divide-gray-200">
                             {filteredStaff.map(staff => (
                                 <tr key={staff.id} className="hover:bg-gray-50 transition">
+
+                                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
+                                                {staff.photo ? (
+                                                    <img src={staff.photo} alt={staff.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xs bg-blue-50 text-blue-600">
+                                                        {staff.name.split(' ').map(n => n[0]).join('')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span>{staff.name}</span>
+                                        </div>
+                                    </td>
+
+
                                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">{staff.name}</td>
-                                    <td className="px-6 py-4 text-sm">
+
+<td className="px-6 py-4 text-sm">
                                         <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">
                                             {staff.role}
                                         </span>
@@ -248,7 +301,32 @@ const StaffManagement = () => {
                                 />
                             </div>
 
-                            <div>
+
+{!editingId && (
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-900 mb-2">Profile Picture</label>
+                                    <div className="flex items-center space-x-4">
+                                        <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center">
+                                            {formData.photo ? (
+                                                <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <FiPlus className="text-gray-400" />
+                                            )}
+                                        </div>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handlePhotoChange}
+                                            className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+
+
+
+<div>
                                 <label className="block text-sm font-semibold text-gray-900 mb-2">Department</label>
                                 <input
                                     type="text"

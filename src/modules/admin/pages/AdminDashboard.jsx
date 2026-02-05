@@ -2,6 +2,18 @@ import { FiTrendingUp, FiUsers, FiDollarSign, FiClock, FiAlertCircle } from 'rea
 import { useState } from 'react';
 
 const AdminDashboard = () => {
+    const [patients, setPatients] = useState(() => JSON.parse(localStorage.getItem('patients') || '[]'));
+    const [billingRecords, setBillingRecords] = useState(() => JSON.parse(localStorage.getItem('billingRecords') || '[]'));
+    const [departments, setDepartments] = useState(() => JSON.parse(localStorage.getItem('departments') || '[]'));
+
+    const totalRevenue = billingRecords.reduce((sum, record) => sum + (Number(record.totalAmount) || 0), 0);
+    const totalPatientsCount = patients.length || 1240; // Fallback to dummy if empty
+
+    const stats = [
+        { label: "Today's Appointments", value: '48', icon: <FiClock />, color: 'bg-blue-500', trend: '+12%' },
+        { label: 'Total Patients', value: totalPatientsCount.toLocaleString(), icon: <FiUsers />, color: 'bg-green-500', trend: '+5%' },
+        { label: 'Revenue (Total)', value: `₹${totalRevenue.toLocaleString()}`, icon: <FiDollarSign />, color: 'bg-yellow-500', trend: '+8%' },
+
     const stats = [
         { label: "Today's Appointments", value: '48', icon: <FiClock />, color: 'bg-blue-500', trend: '+12%' },
         { label: 'Total Patients', value: '1,240', icon: <FiUsers />, color: 'bg-green-500', trend: '+5%' },
@@ -13,6 +25,14 @@ const AdminDashboard = () => {
         { id: 3, patient: 'Michael Johnson', doctor: 'Dr. Emily Rodriguez', time: '02:00 PM', status: 'scheduled' },
         { id: 4, patient: 'Emily Brown', doctor: 'Dr. James Wilson', time: '03:30 PM', status: 'pending' },
     ];
+
+    const displayDepartments = departments.length > 0 ? departments : [
+        { name: 'Cardiology', doctorCount: 10, staffCount: 8, doctorsWorking: 8, bedCount: 20 },
+        { name: 'Pediatrics', doctorCount: 7, staffCount: 6, doctorsWorking: 5, bedCount: 30 },
+        { name: 'Neurology', doctorCount: 5, staffCount: 4, doctorsWorking: 3, bedCount: 15 },
+        { name: 'Orthopedics', doctorCount: 5, staffCount: 5, doctorsWorking: 4, bedCount: 20 },
+    ];
+
 
     const departmentLoad = [
         { name: 'Cardiology', load: 85, beds: '18/20' },
@@ -77,6 +97,28 @@ const AdminDashboard = () => {
                 <div className="card p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-4">Department Load</h3>
                     <div className="space-y-4">
+                        {displayDepartments.map(dept => {
+                            const doctorsWorking = dept.doctorsWorking || Math.floor(Number(dept.doctorCount) * 0.8) || 0;
+                            const totalDoctors = Number(dept.doctorCount) || 1;
+                            const loadPercentage = Math.round((doctorsWorking / totalDoctors) * 100);
+                            return (
+                                <div key={dept.name}>
+                                    <div className="flex justify-between text-sm font-semibold mb-2">
+                                        <span className="text-gray-900">{dept.name}</span>
+                                        <span className={`text-xs ${loadPercentage > 80 ? 'text-red-600' : loadPercentage > 70 ? 'text-orange-600' : 'text-green-600'}`}>
+                                            {loadPercentage}% • {doctorsWorking}/{totalDoctors} Drs • {dept.bedCount || dept.beds} Beds
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-2.5">
+                                        <div
+                                            className={`h-2.5 rounded-full ${loadPercentage > 80 ? 'bg-red-500' : loadPercentage > 70 ? 'bg-orange-500' : 'bg-green-500'}`}
+                                            style={{ width: `${loadPercentage}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+
                         {departmentLoad.map(dept => (
                             <div key={dept.name}>
                                 <div className="flex justify-between text-sm font-semibold mb-2">
@@ -93,7 +135,8 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
                         ))}
-                    </div>
+
+</div>
                 </div>
 
                 {/* Removed Daily Income and Pending Bills overview - managed in Billing Control */}

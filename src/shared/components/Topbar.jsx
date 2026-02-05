@@ -5,7 +5,10 @@ import { FiBell, FiUser, FiMenu, FiX } from 'react-icons/fi';
 const Topbar = ({ role, toggleSidebar }) => {
     const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
+
+
     
+ 
     // Load notifications from localStorage and listen for updates
     const [notifications, setNotifications] = useState(() => {
         try {
@@ -54,9 +57,24 @@ const Topbar = ({ role, toggleSidebar }) => {
     };
 
     const handleNotificationClick = (notification) => {
+        // Mark as read
+        const updatedNotifications = notifications.map(n =>
+            n.id === notification.id ? { ...n, read: true } : n
+        );
+        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        window.dispatchEvent(new Event('notificationUpdate'));
+
+
         setShowNotifications(false);
         navigate(notification.actionPath || '/dashboard/admin');
     };
+
+    const handleMarkAllAsRead = () => {
+        const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
+        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        window.dispatchEvent(new Event('notificationUpdate'));
+    };
+
 
     return (
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-20">
@@ -87,6 +105,25 @@ const Topbar = ({ role, toggleSidebar }) => {
                     {/* Notification Dropdown */}
                     {showNotifications && (
                         <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-100 max-h-96 overflow-y-auto z-50">
+                            <div className="sticky top-0 bg-white border-b border-gray-100 p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="font-bold text-gray-900">Notifications</h3>
+                                    <button
+                                        onClick={() => setShowNotifications(false)}
+                                        className="p-1 hover:bg-gray-100 rounded-lg transition"
+                                    >
+                                        <FiX size={18} />
+                                    </button>
+                                </div>
+                                {unreadCount > 0 && (
+                                    <button
+                                        onClick={handleMarkAllAsRead}
+                                        className="text-xs text-primary-600 hover:text-primary-700 font-bold uppercase tracking-wider"
+                                    >
+                                        Mark all as read
+                                    </button>
+                                )}
+
                             <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
                                 <h3 className="font-bold text-gray-900">Notifications</h3>
                                 <button
@@ -107,6 +144,12 @@ const Topbar = ({ role, toggleSidebar }) => {
                                         >
                                             <div className="flex items-start space-x-3">
                                                 <span className="text-2xl">
+                                                    {notification.type.includes('staff') || notification.type.includes('registration') ? '👨‍⚕️' :
+                                                        notification.type.includes('appointment') ? '📅' :
+                                                            notification.type.includes('doctor') ? '🏥' :
+                                                                notification.type.includes('billing') ? '💰' :
+                                                                    notification.type.includes('department') ? '🏢' : '📢'}
+
                                                     {notification.type.includes('staff') || notification.type.includes('registration') ? '👨‍⚕️' : 
                                                      notification.type.includes('appointment') ? '📅' : 
                                                      notification.type.includes('doctor') ? '🏥' :
@@ -132,6 +175,8 @@ const Topbar = ({ role, toggleSidebar }) => {
                             </div>
 
                             <div className="border-t border-gray-100 p-3 text-center">
+                                <button
+
                                 <button 
                                     onClick={() => {
                                         setShowNotifications(false);
