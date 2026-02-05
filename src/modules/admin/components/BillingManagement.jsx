@@ -41,12 +41,12 @@ const BillingManagement = () => {
                 { id: 5, patientName: 'David Lee', patientId: 'P005', department: 'Cardiology', services: [{ name: 'consultant', price: 500 }, { name: 'medication', price: 100 }], totalAmount: 600, totalPaid: 600, date: '2025-02-04' },
                 { id: 6, patientName: 'Lisa Thompson', patientId: 'P006', department: 'Orthopedics', services: [{ name: 'consultant', price: 500 }, { name: 'lab', price: 200 }], totalAmount: 700, totalPaid: 0, date: '2025-01-15' },
 
-                { id: 1, patientName: 'John Doe', patientId: 'P001', department: 'Cardiology', services: [{name:'consultant', price:500}], totalAmount:500, totalPaid:500, date:'2025-02-01' },
-                { id: 2, patientName: 'Sarah Smith', patientId: 'P002', department: 'Orthopedics', services:[{name:'consultant', price:500},{name:'xray', price:150}], totalAmount:650, totalPaid:0, date:'2025-02-02' },
-                { id: 3, patientName: 'Michael Johnson', patientId: 'P003', department: 'Pediatrics', services:[{name:'consultant', price:500},{name:'lab', price:200}], totalAmount:700, totalPaid:0, date:'2025-01-25' },
-                { id: 4, patientName: 'Emily Brown', patientId: 'P004', department: 'Neurology', services:[{name:'consultant', price:500}], totalAmount:500, totalPaid:0, date:'2025-02-03' },
-                { id: 5, patientName: 'David Lee', patientId: 'P005', department: 'Cardiology', services:[{name:'consultant', price:500},{name:'medication', price:100}], totalAmount:600, totalPaid:600, date:'2025-02-04' },
-                { id: 6, patientName: 'Lisa Thompson', patientId: 'P006', department: 'Orthopedics', services:[{name:'consultant', price:500},{name:'lab', price:200}], totalAmount:700, totalPaid:0, date:'2025-01-15' },
+                { id: 1, patientName: 'John Doe', patientId: 'P001', department: 'Cardiology', services: [{ name: 'consultant', price: 500 }], totalAmount: 500, totalPaid: 500, date: '2025-02-01' },
+                { id: 2, patientName: 'Sarah Smith', patientId: 'P002', department: 'Orthopedics', services: [{ name: 'consultant', price: 500 }, { name: 'xray', price: 150 }], totalAmount: 650, totalPaid: 0, date: '2025-02-02' },
+                { id: 3, patientName: 'Michael Johnson', patientId: 'P003', department: 'Pediatrics', services: [{ name: 'consultant', price: 500 }, { name: 'lab', price: 200 }], totalAmount: 700, totalPaid: 0, date: '2025-01-25' },
+                { id: 4, patientName: 'Emily Brown', patientId: 'P004', department: 'Neurology', services: [{ name: 'consultant', price: 500 }], totalAmount: 500, totalPaid: 0, date: '2025-02-03' },
+                { id: 5, patientName: 'David Lee', patientId: 'P005', department: 'Cardiology', services: [{ name: 'consultant', price: 500 }, { name: 'medication', price: 100 }], totalAmount: 600, totalPaid: 600, date: '2025-02-04' },
+                { id: 6, patientName: 'Lisa Thompson', patientId: 'P006', department: 'Orthopedics', services: [{ name: 'consultant', price: 500 }, { name: 'lab', price: 200 }], totalAmount: 700, totalPaid: 0, date: '2025-01-15' },
 
             ];
         } catch (e) {
@@ -59,11 +59,9 @@ const BillingManagement = () => {
         try {
             localStorage.setItem('billingRecords', JSON.stringify(billingRecords));
             localStorage.setItem('servicePrices', JSON.stringify(servicePrices));
-
-        } catch (e) { }
-
-        } catch (e) {}
-
+        } catch (e) {
+            console.error('Error saving billing data:', e);
+        }
     }, [billingRecords, servicePrices]);
 
     // Listen for patient updates
@@ -100,28 +98,28 @@ const BillingManagement = () => {
 
     const formatMoney = (v) => `₹${Number(v || 0)}`;
 
-        { label: 'Total Billed', value: `$${totalBilled}`, icon: '💳', color: 'bg-blue-100' },
-        { label: 'Total Paid', value: `$${totalPaid}`, icon: '✓', color: 'bg-green-100' },
-        { label: 'Unpaid Bills', value: `${unpaidCount}`, icon: '⏳', color: 'bg-yellow-100' },
-    ];
-
-    const formatMoney = (v) => `$${Number(v || 0)}`;
-
-
     const handleRecordPayment = (id) => {
         const record = billingRecords.find(r => r.id === id);
         const input = window.prompt(`Enter amount paid by patient (remaining ${formatMoney((record.totalAmount || 0) - (record.totalPaid || 0))}):`, String(record.totalAmount - (record.totalPaid || 0) || 0));
         if (!input) return;
         const paid = Number(input) || 0;
         setBillingRecords(prev => prev.map(r => r.id === id ? { ...r, totalPaid: (Number(r.totalPaid || 0) + paid) } : r));
+
         // Create notification
         const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-        notifications.unshift({ id: Date.now(), type: 'billing_paid', title: 'Payment Recorded', message: `${formatMoney(paid)} received for ${record.patientName}`, timestamp: new Date().toLocaleTimeString(), actionPath: '/dashboard/admin/billing', relatedId: id, read: false });
+        notifications.unshift({
+            id: Date.now(),
+            type: 'billing_paid',
+            title: 'Payment Recorded',
+            message: `${formatMoney(paid)} received for ${record.patientName}`,
+            timestamp: new Date().toLocaleTimeString(),
+            actionPath: '/dashboard/admin/billing',
+            relatedId: id,
+            read: false
+        });
         localStorage.setItem('notifications', JSON.stringify(notifications));
         window.dispatchEvent(new Event('notificationUpdate'));
     };
-
-    // overdue handling removed
 
     const handleDeleteBill = (id) => {
         if (window.confirm('Are you sure you want to delete this bill?')) {
@@ -201,10 +199,7 @@ const BillingManagement = () => {
                                     <td className="px-6 py-4 text-sm text-gray-600">{record.department}</td>
 
                                     <td className="px-6 py-4 text-sm text-gray-600">{(record.services || []).map(s => `${s.name} (₹${s.price})`).join(', ')}</td>
-                                    <td className="px-6 py-4 text-sm font-bold text-gray-900 flex items-center space-x-1"><span className="text-green-600 font-bold">₹</span> <span>{formatMoney(record.totalAmount).replace('₹', '')}</span></td>
-
-                                    <td className="px-6 py-4 text-sm text-gray-600">{(record.services || []).map(s => `${s.name} ($${s.price})`).join(', ')}</td>
-                                    <td className="px-6 py-4 text-sm font-bold text-gray-900 flex items-center space-x-1"><FiDollarSign size={16} className="text-green-500" /> <span>{formatMoney(record.totalAmount)}</span></td>
+                                    <td className="px-6 py-4 text-sm font-bold text-gray-900">{formatMoney(record.totalAmount)}</td>
 
                                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">{formatMoney(record.totalPaid)}</td>
                                     <td className="px-6 py-4 text-sm space-x-1 flex">
