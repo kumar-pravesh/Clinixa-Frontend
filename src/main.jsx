@@ -6,8 +6,8 @@ window.onerror = function (message, source, lineno, colno, error) {
   console.error('GLOBAL ERROR:', message, 'at', source, ':', lineno, ':', colno);
 };
 
-import './index.css'
-import App from './App.jsx'
+import './styles/globals.css'
+import App from './app/App.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

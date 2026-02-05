@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import Sidebar from './Sidebar';
-import Topbar from './Topbar';
+import Sidebar from '../shared/components/Sidebar';
+import Topbar from '../shared/components/Topbar';
 
 const DashboardLayout = ({ children, role }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);

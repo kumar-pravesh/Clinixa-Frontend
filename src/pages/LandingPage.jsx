@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import Navbar from './Navbar';
-import Hero from './Hero';
-import QuickActions from './QuickActions';
-import FindDoctor from './FindDoctor';
-import CentresOfExcellence from './CentresOfExcellence';
-import Services from './Services';
-import Stats from './Stats';
-import FAQ from './FAQ';
-import Footer from './Footer';
-import BookingModal from './dashboard/features/BookingModal';
+import Navbar from '../shared/components/Navbar';
+import Hero from '../shared/components/Hero';
+import QuickActions from '../shared/components/QuickActions';
+import FindDoctor from '../shared/components/FindDoctor';
+import CentresOfExcellence from '../shared/components/CentresOfExcellence';
+import Services from '../shared/components/Services';
+import Stats from '../shared/components/Stats';
+import FAQ from '../shared/components/FAQ';
+import Footer from '../shared/components/Footer';
+import BookingModal from '../modules/patient/components/BookingModal';
 
 const LandingPage = () => {
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);

@@ -1,3 +1,4 @@
+<<<<<<< HEAD:src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -10,27 +11,43 @@ import ReceptionistDashboard from './pages/dashboards/ReceptionistDashboard';
 import LabTechnicianDashboard from './pages/dashboards/LabTechnicianDashboard';
 import MyPatients from './pages/dashboards/MyPatients';
 import DoctorAppointments from './pages/dashboards/DoctorAppointments';
+=======
+import { Routes, Route } from 'react-router-dom';
+import LandingPage from '../pages/LandingPage';
+import LoginPage from '../pages/LoginPage';
+import SignupPage from '../pages/SignupPage';
+import DashboardLayout from '../layouts/DashboardLayout';
+>>>>>>> db8e1ad (Folder structure changed):src/app/routes.jsx
 
-// Feature Views
-import AppointmentBooking from './components/dashboard/features/AppointmentBooking';
-import BillingForm from './components/dashboard/features/BillingForm';
-import MedicalRecords from './components/dashboard/features/MedicalRecords';
-import LabReportUpload from './components/dashboard/features/LabReportUpload';
+// Admin Module
+import AdminDashboard from '../modules/admin/pages/AdminDashboard';
+import StaffRegistrationApproval from '../modules/admin/components/StaffRegistrationApproval';
+import DoctorManagement from '../modules/admin/components/DoctorManagement';
+import StaffManagement from '../modules/admin/components/StaffManagement';
+import DepartmentManagement from '../modules/admin/components/DepartmentManagement';
+import PatientRecords from '../modules/admin/components/PatientRecords';
+import AppointmentApproval from '../modules/admin/components/AppointmentApproval';
+import BillingManagement from '../modules/admin/components/BillingManagement';
+import ReportsGeneration from '../modules/admin/components/ReportsGeneration';
 
-// Admin Features
-import DoctorManagement from './components/dashboard/features/DoctorManagement';
-import DepartmentManagement from './components/dashboard/features/DepartmentManagement';
-import StaffManagement from './components/dashboard/features/StaffManagement';
-import PatientRecords from './components/dashboard/features/PatientRecords';
-import AppointmentApproval from './components/dashboard/features/AppointmentApproval';
-import BillingManagement from './components/dashboard/features/BillingManagement';
-import ReportsGeneration from './components/dashboard/features/ReportsGeneration';
-import StaffRegistrationApproval from './components/dashboard/features/StaffRegistrationApproval';
+// Doctor Module
+import DoctorDashboard from '../modules/doctor/pages/DoctorDashboard';
 
-function App() {
-  return (
-    <Router>
-      <Routes>
+// Patient Module
+import PatientDashboard from '../modules/patient/pages/PatientDashboard';
+import AppointmentBooking from '../modules/patient/components/AppointmentBooking';
+import MedicalRecords from '../shared/components/MedicalRecords';
+
+// Receptionist Module
+import ReceptionistDashboard from '../modules/receptionist/pages/ReceptionistDashboard';
+import BillingForm from '../modules/receptionist/components/BillingForm';
+
+// Lab Module
+import LabTechnicianDashboard from '../modules/lab/pages/LabTechnicianDashboard';
+import LabReportUpload from '../modules/lab/components/LabReportUpload';
+
+const AppRoutes = () => (
+    <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
@@ -64,9 +81,7 @@ function App() {
         {/* Lab Technician Dashboard Routes */}
         <Route path="/dashboard/lab-technician" element={<DashboardLayout role="lab-technician"><LabTechnicianDashboard /></DashboardLayout>} />
         <Route path="/dashboard/lab-technician/upload" element={<DashboardLayout role="lab-technician"><LabReportUpload /></DashboardLayout>} />
-      </Routes>
-    </Router>
-  );
-}
+    </Routes>
+);
 
-export default App;
+export default AppRoutes;
