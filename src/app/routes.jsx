@@ -1,4 +1,4 @@
-<<<<<<< HEAD:src/App.jsx
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -11,13 +11,18 @@ import ReceptionistDashboard from './pages/dashboards/ReceptionistDashboard';
 import LabTechnicianDashboard from './pages/dashboards/LabTechnicianDashboard';
 import MyPatients from './pages/dashboards/MyPatients';
 import DoctorAppointments from './pages/dashboards/DoctorAppointments';
-=======
+
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from '../pages/LandingPage';
 import LoginPage from '../pages/LoginPage';
 import SignupPage from '../pages/SignupPage';
 import DashboardLayout from '../layouts/DashboardLayout';
->>>>>>> db8e1ad (Folder structure changed):src/app/routes.jsx
+
+
+// Doctor New Pages
+import MyPatients from '../modules/doctor/pages/MyPatients';
+import DoctorAppointments from '../modules/doctor/pages/DoctorAppointments';
+
 
 // Admin Module
 import AdminDashboard from '../modules/admin/pages/AdminDashboard';

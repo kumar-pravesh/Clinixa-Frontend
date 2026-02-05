@@ -21,7 +21,12 @@ const StaffManagement = () => {
     });
 
     useEffect(() => {
+
         try { localStorage.setItem('staffList', JSON.stringify(staffList)); } catch (e) { }
+
+        try { localStorage.setItem('staffList', JSON.stringify(staffList)); } catch (e) {}
+
+      
     }, [staffList]);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -34,8 +39,15 @@ const StaffManagement = () => {
         email: '',
         phone: '',
         department: '',
+
+      
         status: 'active',
         photo: ''
+
+      
+        status: 'active'
+
+      
     });
 
     const filteredStaff = staffList.filter(staff => {
@@ -51,7 +63,14 @@ const StaffManagement = () => {
             setFormData(staff);
         } else {
             setEditingId(null);
+
+          
             setFormData({ name: '', role: 'Lab Technician', email: '', phone: '', department: '', status: 'active', photo: '' });
+
+          
+            setFormData({ name: '', role: 'Lab Technician', email: '', phone: '', department: '', status: 'active' });
+
+          
         }
         setShowModal(true);
     };
@@ -66,7 +85,8 @@ const StaffManagement = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handlePhotoChange = (e) => {
+
+  const handlePhotoChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
@@ -77,7 +97,10 @@ const StaffManagement = () => {
         }
     };
 
-    const handleSave = () => {
+
+  
+
+  const handleSave = () => {
         if (editingId) {
             setStaffList(staffList.map(s => s.id === editingId ? { ...formData, id: editingId } : s));
         } else {
@@ -164,7 +187,8 @@ const StaffManagement = () => {
                         <tbody className="divide-y divide-gray-200">
                             {filteredStaff.map(staff => (
                                 <tr key={staff.id} className="hover:bg-gray-50 transition">
-                                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+
+                                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                                         <div className="flex items-center space-x-3">
                                             <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
                                                 {staff.photo ? (
@@ -178,7 +202,11 @@ const StaffManagement = () => {
                                             <span>{staff.name}</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm">
+
+
+                                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">{staff.name}</td>
+
+<td className="px-6 py-4 text-sm">
                                         <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">
                                             {staff.role}
                                         </span>
@@ -273,7 +301,8 @@ const StaffManagement = () => {
                                 />
                             </div>
 
-                            {!editingId && (
+
+{!editingId && (
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-900 mb-2">Profile Picture</label>
                                     <div className="flex items-center space-x-4">
@@ -294,7 +323,10 @@ const StaffManagement = () => {
                                 </div>
                             )}
 
-                            <div>
+
+
+
+<div>
                                 <label className="block text-sm font-semibold text-gray-900 mb-2">Department</label>
                                 <input
                                     type="text"

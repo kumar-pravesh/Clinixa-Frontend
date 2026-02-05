@@ -12,6 +12,7 @@ const AppointmentBooking = () => {
 
     const doctors = [
         { name: 'Dr. Chandan Shashank', specialty: 'Cardiologist', available: '10:00 AM - 04:00 PM' },
+        { name: 'Dr. Rajesh Kumar', specialty: 'Cardiologist', available: '10:00 AM - 04:00 PM' },
         { name: 'Dr. Anita Sharma', specialty: 'Pediatrician', available: '09:00 AM - 02:00 PM' },
         { name: 'Dr. Sameer Khan', specialty: 'Neurologist', available: '11:00 AM - 06:00 PM' },
     ];
@@ -56,6 +57,9 @@ const AppointmentBooking = () => {
                                     className={`p-4 rounded-2xl border-2 text-left transition-all ${bookingData.doctor === doc.name
                                         ? 'border-primary-500 bg-primary-50 ring-4 ring-primary-50'
                                         : 'border-gray-100 hover:border-primary-200'
+
+                                            ? 'border-primary-500 bg-primary-50 ring-4 ring-primary-50'
+                                            : 'border-gray-100 hover:border-primary-200'
                                         }`}
                                 >
                                     <p className="font-bold text-gray-900">{doc.name}</p>
@@ -108,6 +112,9 @@ const AppointmentBooking = () => {
                                         className={`py-2 text-xs font-bold rounded-lg border-2 transition-all ${bookingData.slot === s
                                             ? 'border-primary-500 bg-primary-50 text-primary-600'
                                             : 'border-gray-100 hover:border-gray-200 text-gray-600'
+
+                                                ? 'border-primary-500 bg-primary-50 text-primary-600'
+                                                : 'border-gray-100 hover:border-gray-200 text-gray-600'
                                             }`}
                                     >
                                         {s}

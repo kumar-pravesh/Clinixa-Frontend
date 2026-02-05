@@ -13,6 +13,10 @@ const AdminDashboard = () => {
         { label: "Today's Appointments", value: '48', icon: <FiClock />, color: 'bg-blue-500', trend: '+12%' },
         { label: 'Total Patients', value: totalPatientsCount.toLocaleString(), icon: <FiUsers />, color: 'bg-green-500', trend: '+5%' },
         { label: 'Revenue (Total)', value: `₹${totalRevenue.toLocaleString()}`, icon: <FiDollarSign />, color: 'bg-yellow-500', trend: '+8%' },
+
+    const stats = [
+        { label: "Today's Appointments", value: '48', icon: <FiClock />, color: 'bg-blue-500', trend: '+12%' },
+        { label: 'Total Patients', value: '1,240', icon: <FiUsers />, color: 'bg-green-500', trend: '+5%' },
     ];
 
     const todayAppointments = [
@@ -28,6 +32,16 @@ const AdminDashboard = () => {
         { name: 'Neurology', doctorCount: 5, staffCount: 4, doctorsWorking: 3, bedCount: 15 },
         { name: 'Orthopedics', doctorCount: 5, staffCount: 5, doctorsWorking: 4, bedCount: 20 },
     ];
+
+
+    const departmentLoad = [
+        { name: 'Cardiology', load: 85, beds: '18/20' },
+        { name: 'Pediatrics', load: 72, beds: '22/30' },
+        { name: 'Neurology', load: 65, beds: '10/15' },
+        { name: 'Orthopedics', load: 78, beds: '16/20' },
+    ];
+
+    // pending bills overview removed (billing moved to Billing Control)
 
     return (
         <div className="space-y-8">
@@ -104,7 +118,25 @@ const AdminDashboard = () => {
                                 </div>
                             );
                         })}
-                    </div>
+
+                        {departmentLoad.map(dept => (
+                            <div key={dept.name}>
+                                <div className="flex justify-between text-sm font-semibold mb-2">
+                                    <span className="text-gray-900">{dept.name}</span>
+                                    <span className={`text-xs ${dept.load > 80 ? 'text-red-600' : dept.load > 70 ? 'text-orange-600' : 'text-green-600'}`}>
+                                        {dept.load}% • {dept.beds}
+                                    </span>
+                                </div>
+                                <div className="w-full bg-gray-100 rounded-full h-2.5">
+                                    <div
+                                        className={`h-2.5 rounded-full ${dept.load > 80 ? 'bg-red-500' : dept.load > 70 ? 'bg-orange-500' : 'bg-green-500'}`}
+                                        style={{ width: `${dept.load}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        ))}
+
+</div>
                 </div>
 
                 {/* Removed Daily Income and Pending Bills overview - managed in Billing Control */}

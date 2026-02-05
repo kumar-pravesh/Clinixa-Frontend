@@ -25,7 +25,11 @@ const DoctorManagement = () => {
             localStorage.setItem('doctors', JSON.stringify(doctors));
             // Dispatch event to notify other components that doctors have been updated
             window.dispatchEvent(new Event('doctorUpdate'));
+
         } catch (e) { }
+
+        } catch (e) {}
+
     }, [doctors]);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -36,8 +40,12 @@ const DoctorManagement = () => {
         specialization: '',
         email: '',
         phone: '',
+
         status: 'active',
         photo: ''
+
+        status: 'active'
+
     });
 
     const filteredDoctors = doctors.filter(doc =>
@@ -52,7 +60,11 @@ const DoctorManagement = () => {
             setFormData(doctor);
         } else {
             setEditingId(null);
+
             setFormData({ name: '', specialization: '', email: '', phone: '', status: 'active', photo: '' });
+
+            setFormData({ name: '', specialization: '', email: '', phone: '', status: 'active' });
+
         }
         setShowModal(true);
     };
@@ -67,6 +79,7 @@ const DoctorManagement = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+
     const handlePhotoChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -77,6 +90,7 @@ const DoctorManagement = () => {
             reader.readAsDataURL(file);
         }
     };
+
 
     const handleSave = () => {
         if (editingId) {
@@ -155,6 +169,7 @@ const DoctorManagement = () => {
                         <tbody className="divide-y divide-gray-200">
                             {filteredDoctors.map(doctor => (
                                 <tr key={doctor.id} className="hover:bg-gray-50 transition">
+
                                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                                         <div className="flex items-center space-x-3">
                                             <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
@@ -169,6 +184,9 @@ const DoctorManagement = () => {
                                             <span>{doctor.name}</span>
                                         </div>
                                     </td>
+
+                                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">{doctor.name}</td>
+
                                     <td className="px-6 py-4 text-sm text-gray-600">{doctor.specialization}</td>
                                     <td className="px-6 py-4 text-sm text-gray-600">{doctor.email}</td>
                                     <td className="px-6 py-4 text-sm text-gray-600">{doctor.phone}</td>
@@ -258,6 +276,7 @@ const DoctorManagement = () => {
                                 />
                             </div>
 
+
                             {!editingId && (
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-900 mb-2">Profile Picture</label>
@@ -278,6 +297,7 @@ const DoctorManagement = () => {
                                     </div>
                                 </div>
                             )}
+
 
                             <div>
                                 <label className="block text-sm font-semibold text-gray-900 mb-2">Status</label>

@@ -6,6 +6,9 @@ const Topbar = ({ role, toggleSidebar }) => {
     const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
 
+
+    
+ 
     // Load notifications from localStorage and listen for updates
     const [notifications, setNotifications] = useState(() => {
         try {
@@ -61,6 +64,7 @@ const Topbar = ({ role, toggleSidebar }) => {
         localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
         window.dispatchEvent(new Event('notificationUpdate'));
 
+
         setShowNotifications(false);
         navigate(notification.actionPath || '/dashboard/admin');
     };
@@ -70,6 +74,7 @@ const Topbar = ({ role, toggleSidebar }) => {
         localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
         window.dispatchEvent(new Event('notificationUpdate'));
     };
+
 
     return (
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-20">
@@ -118,6 +123,15 @@ const Topbar = ({ role, toggleSidebar }) => {
                                         Mark all as read
                                     </button>
                                 )}
+
+                            <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
+                                <h3 className="font-bold text-gray-900">Notifications</h3>
+                                <button
+                                    onClick={() => setShowNotifications(false)}
+                                    className="p-1 hover:bg-gray-100 rounded-lg transition"
+                                >
+                                    <FiX size={18} />
+                                </button>
                             </div>
 
                             <div className="divide-y divide-gray-100">
@@ -135,6 +149,12 @@ const Topbar = ({ role, toggleSidebar }) => {
                                                             notification.type.includes('doctor') ? '🏥' :
                                                                 notification.type.includes('billing') ? '💰' :
                                                                     notification.type.includes('department') ? '🏢' : '📢'}
+
+                                                    {notification.type.includes('staff') || notification.type.includes('registration') ? '👨‍⚕️' : 
+                                                     notification.type.includes('appointment') ? '📅' : 
+                                                     notification.type.includes('doctor') ? '🏥' :
+                                                     notification.type.includes('billing') ? '💰' :
+                                                     notification.type.includes('department') ? '🏢' : '📢'}
                                                 </span>
                                                 <div className="flex-1">
                                                     <p className="font-semibold text-gray-900 text-sm">{notification.title}</p>
@@ -156,6 +176,8 @@ const Topbar = ({ role, toggleSidebar }) => {
 
                             <div className="border-t border-gray-100 p-3 text-center">
                                 <button
+
+                                <button 
                                     onClick={() => {
                                         setShowNotifications(false);
                                         navigate('/dashboard/admin/registrations');

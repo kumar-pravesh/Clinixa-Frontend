@@ -33,12 +33,21 @@ const BillingManagement = () => {
             if (raw) return JSON.parse(raw);
             // Default billing records include services, totalAmount and totalPaid
             return [
+
                 { id: 1, patientName: 'Aryan Kumar', patientId: 'P001', department: 'Cardiology', services: [{ name: 'consultant', price: 500 }], totalAmount: 500, totalPaid: 500, date: '2025-02-01' },
                 { id: 2, patientName: 'Shubham Sekhar', patientId: 'P002', department: 'Orthopedics', services: [{ name: 'consultant', price: 500 }, { name: 'xray', price: 150 }], totalAmount: 650, totalPaid: 0, date: '2025-02-02' },
                 { id: 3, patientName: 'Michael Johnson', patientId: 'P003', department: 'Pediatrics', services: [{ name: 'consultant', price: 500 }, { name: 'lab', price: 200 }], totalAmount: 700, totalPaid: 0, date: '2025-01-25' },
                 { id: 4, patientName: 'Emily Brown', patientId: 'P004', department: 'Neurology', services: [{ name: 'consultant', price: 500 }], totalAmount: 500, totalPaid: 0, date: '2025-02-03' },
                 { id: 5, patientName: 'David Lee', patientId: 'P005', department: 'Cardiology', services: [{ name: 'consultant', price: 500 }, { name: 'medication', price: 100 }], totalAmount: 600, totalPaid: 600, date: '2025-02-04' },
                 { id: 6, patientName: 'Lisa Thompson', patientId: 'P006', department: 'Orthopedics', services: [{ name: 'consultant', price: 500 }, { name: 'lab', price: 200 }], totalAmount: 700, totalPaid: 0, date: '2025-01-15' },
+
+                { id: 1, patientName: 'John Doe', patientId: 'P001', department: 'Cardiology', services: [{name:'consultant', price:500}], totalAmount:500, totalPaid:500, date:'2025-02-01' },
+                { id: 2, patientName: 'Sarah Smith', patientId: 'P002', department: 'Orthopedics', services:[{name:'consultant', price:500},{name:'xray', price:150}], totalAmount:650, totalPaid:0, date:'2025-02-02' },
+                { id: 3, patientName: 'Michael Johnson', patientId: 'P003', department: 'Pediatrics', services:[{name:'consultant', price:500},{name:'lab', price:200}], totalAmount:700, totalPaid:0, date:'2025-01-25' },
+                { id: 4, patientName: 'Emily Brown', patientId: 'P004', department: 'Neurology', services:[{name:'consultant', price:500}], totalAmount:500, totalPaid:0, date:'2025-02-03' },
+                { id: 5, patientName: 'David Lee', patientId: 'P005', department: 'Cardiology', services:[{name:'consultant', price:500},{name:'medication', price:100}], totalAmount:600, totalPaid:600, date:'2025-02-04' },
+                { id: 6, patientName: 'Lisa Thompson', patientId: 'P006', department: 'Orthopedics', services:[{name:'consultant', price:500},{name:'lab', price:200}], totalAmount:700, totalPaid:0, date:'2025-01-15' },
+
             ];
         } catch (e) {
             return [];
@@ -50,7 +59,11 @@ const BillingManagement = () => {
         try {
             localStorage.setItem('billingRecords', JSON.stringify(billingRecords));
             localStorage.setItem('servicePrices', JSON.stringify(servicePrices));
+
         } catch (e) { }
+
+        } catch (e) {}
+
     }, [billingRecords, servicePrices]);
 
     // Listen for patient updates
@@ -79,12 +92,21 @@ const BillingManagement = () => {
     const unpaidCount = billingRecords.filter(r => (Number(r.totalPaid) || 0) < (Number(r.totalAmount) || 0)).length;
 
     const stats = [
+
         { label: 'Total Billed', value: `₹${totalBilled}`, icon: '💳', color: 'bg-blue-100' },
         { label: 'Total Paid', value: `₹${totalPaid}`, icon: '✓', color: 'bg-green-100' },
         { label: 'Unpaid Bills', value: `${unpaidCount}`, icon: '⏳', color: 'bg-yellow-100' },
     ];
 
     const formatMoney = (v) => `₹${Number(v || 0)}`;
+
+        { label: 'Total Billed', value: `$${totalBilled}`, icon: '💳', color: 'bg-blue-100' },
+        { label: 'Total Paid', value: `$${totalPaid}`, icon: '✓', color: 'bg-green-100' },
+        { label: 'Unpaid Bills', value: `${unpaidCount}`, icon: '⏳', color: 'bg-yellow-100' },
+    ];
+
+    const formatMoney = (v) => `$${Number(v || 0)}`;
+
 
     const handleRecordPayment = (id) => {
         const record = billingRecords.find(r => r.id === id);
@@ -177,8 +199,13 @@ const BillingManagement = () => {
                                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">{record.patientName}</td>
                                     <td className="px-6 py-4 text-sm text-gray-600">{record.patientId}</td>
                                     <td className="px-6 py-4 text-sm text-gray-600">{record.department}</td>
+
                                     <td className="px-6 py-4 text-sm text-gray-600">{(record.services || []).map(s => `${s.name} (₹${s.price})`).join(', ')}</td>
                                     <td className="px-6 py-4 text-sm font-bold text-gray-900 flex items-center space-x-1"><span className="text-green-600 font-bold">₹</span> <span>{formatMoney(record.totalAmount).replace('₹', '')}</span></td>
+
+                                    <td className="px-6 py-4 text-sm text-gray-600">{(record.services || []).map(s => `${s.name} ($${s.price})`).join(', ')}</td>
+                                    <td className="px-6 py-4 text-sm font-bold text-gray-900 flex items-center space-x-1"><FiDollarSign size={16} className="text-green-500" /> <span>{formatMoney(record.totalAmount)}</span></td>
+
                                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">{formatMoney(record.totalPaid)}</td>
                                     <td className="px-6 py-4 text-sm space-x-1 flex">
                                         <button onClick={() => handleRecordPayment(record.id)} className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition" title="Record Payment"><FiCheck /></button>
