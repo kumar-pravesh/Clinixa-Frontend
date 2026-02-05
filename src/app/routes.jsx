@@ -34,6 +34,10 @@ import BillingForm from '../modules/receptionist/components/BillingForm';
 // Lab Module
 import LabTechnicianDashboard from '../modules/lab/pages/LabTechnicianDashboard';
 import LabReportUpload from '../modules/lab/components/LabReportUpload';
+import Ragesterwalkin from '../modules/receptionist/components/Regesterwalkin';
+import GenerateToken from '../modules/receptionist/components/GenerateToken';
+import ReceptionistRegistration from '../modules/receptionist/components/ReceptionistRagistration';
+import ReceptionistLogin from '../modules/receptionist/components/ReceptionistLogin';
 
 const AppRoutes = () => (
     <Routes>
@@ -66,6 +70,10 @@ const AppRoutes = () => (
         {/* Receptionist Dashboard Routes */}
         <Route path="/dashboard/receptionist" element={<DashboardLayout role="receptionist"><ReceptionistDashboard /></DashboardLayout>} />
         <Route path="/dashboard/receptionist/billing" element={<DashboardLayout role="receptionist"><BillingForm /></DashboardLayout>} />
+        <Route path="/dashboard/receptionist/walkin" element={<DashboardLayout role="receptionist"><Ragesterwalkin /></DashboardLayout>} />
+        <Route path="/dashboard/receptionist/tokens" element={<DashboardLayout role="receptionist"><GenerateToken /></DashboardLayout>} />
+        <Route path="/dashboard/receptionist/regestration" element={<ReceptionistRegistration role="receptionist" />} />
+        <Route path="/dashboard/receptionist/login" element={<ReceptionistLogin role="receptionist" />} />
 
         {/* Lab Technician Dashboard Routes */}
         <Route path="/dashboard/lab-technician" element={<DashboardLayout role="lab-technician"><LabTechnicianDashboard /></DashboardLayout>} />

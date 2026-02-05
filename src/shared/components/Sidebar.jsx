@@ -41,7 +41,8 @@ const Sidebar = ({ role }) => {
 
     const receptionistLinks = [
         { name: 'Reception', icon: <FiHome />, path: '/dashboard/receptionist' },
-        { name: 'Tokens', icon: <FiActivity />, path: '/dashboard/receptionist' },
+        { name: 'Tokens', icon: <FiActivity />, path: '/dashboard/receptionist/tokens' },
+        { name: 'Regester Walk in', icon: <FiActivity />, path: '/dashboard/receptionist/walkin' },
         { name: 'Billing', icon: <FiFileText />, path: '/dashboard/receptionist/billing' },
     ];
 
