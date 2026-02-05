@@ -12,6 +12,7 @@ import DoctorAppointments from '../modules/doctor/pages/DoctorAppointments';
 
 // Admin Module
 import AdminDashboard from '../modules/admin/pages/AdminDashboard';
+import AdminLoginPage from '../modules/admin/pages/AdminLoginPage';
 import StaffRegistrationApproval from '../modules/admin/components/StaffRegistrationApproval';
 import DoctorManagement from '../modules/admin/components/DoctorManagement';
 import StaffManagement from '../modules/admin/components/StaffManagement';
@@ -41,6 +42,7 @@ const AppRoutes = () => (
     <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
 
         {/* Admin Dashboard Routes */}

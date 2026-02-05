@@ -145,9 +145,9 @@ const Navbar = ({ searchTerm, setSearchTerm, onOpenBooking }) => {
 
                             {/* Profile Icon */}
                             <Link
-                                to="/login"
+                                to="/dashboard/patient"
                                 className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary-600 shadow-md hover:shadow-lg transition-all border border-gray-100 group relative"
-                                title="Patient Login"
+                                title="Patient Dashboard"
                             >
                                 <FiUser className="w-6 h-6 group-hover:scale-110 transition-transform" />
                                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
@@ -277,12 +277,12 @@ const Navbar = ({ searchTerm, setSearchTerm, onOpenBooking }) => {
                                 <span>Emergency: 79970 79970</span>
                             </a>
                             <Link
-                                to="/login"
+                                to="/dashboard/patient"
                                 className="flex items-center justify-center space-x-3 p-5 bg-gray-900 text-white rounded-2xl font-black"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 <FiUser className="w-5 h-5" />
-                                <span>Patient Portal Login</span>
+                                <span>Patient Health Dashboard</span>
                             </Link>
                         </div>
                     </div>

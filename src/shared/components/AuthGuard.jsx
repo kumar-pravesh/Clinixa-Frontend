@@ -11,28 +11,24 @@ import { Navigate, useLocation } from 'react-router-dom';
 const AuthGuard = ({ children, requiredRole }) => {
     const location = useLocation();
 
-    // Check if user is logged in
-    const isLogged = localStorage.getItem('isLogged') === 'true';
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const role = user.role;
+    // ONLY the 'admin' role requires a login session for now
+    if (requiredRole === 'admin') {
+        const isLogged = localStorage.getItem('isLogged') === 'true';
+        const adminIsLogged = localStorage.getItem('adminIsLogged') === 'true';
 
-    // Admin backward compatibility (if needed)
-    const adminIsLogged = localStorage.getItem('adminIsLogged') === 'true';
-
-    // If not logged in, redirect to login page with state for redirection after login
-    if (!isLogged && !adminIsLogged) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
-    }
-
-    // If role is required but doesn't match, redirect to landing page (or unauthorized page)
-    if (requiredRole && role !== requiredRole) {
-        // Exception for legacy admin check until fully migrated
-        if (requiredRole === 'admin' && adminIsLogged) {
-            return children;
+        if (!isLogged && !adminIsLogged) {
+            return <Navigate to="/admin/login" state={{ from: location }} replace />;
         }
-        return <Navigate to="/" replace />;
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const role = user.role;
+
+        if (role !== 'admin' && !adminIsLogged) {
+            return <Navigate to="/" replace />;
+        }
     }
 
+    // Direct access for other roles (patient, doctor, etc.) as requested
     return children;
 };
 

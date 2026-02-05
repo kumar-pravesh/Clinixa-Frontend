@@ -36,7 +36,7 @@ const QuickActions = ({ onOpenBooking }) => {
             desc: 'View test results',
             color: 'bg-gray-900',
             bgLight: 'bg-gray-100',
-            action: () => navigate('/login')
+            action: () => navigate('/dashboard/patient/records')
         },
     ];
 
