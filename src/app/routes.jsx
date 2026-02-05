@@ -1,28 +1,14 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LandingPage from './components/LandingPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import DashboardLayout from './components/dashboard/DashboardLayout';
-import AdminDashboard from './pages/dashboards/AdminDashboard';
-import DoctorDashboard from './pages/dashboards/DoctorDashboard';
-import PatientDashboard from './pages/dashboards/PatientDashboard';
-import ReceptionistDashboard from './pages/dashboards/ReceptionistDashboard';
-import LabTechnicianDashboard from './pages/dashboards/LabTechnicianDashboard';
-import MyPatients from './pages/dashboards/MyPatients';
-import DoctorAppointments from './pages/dashboards/DoctorAppointments';
-
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from '../pages/LandingPage';
 import LoginPage from '../pages/LoginPage';
 import SignupPage from '../pages/SignupPage';
 import DashboardLayout from '../layouts/DashboardLayout';
-
+import AuthGuard from '../shared/components/AuthGuard';
 
 // Doctor New Pages
 import MyPatients from '../modules/doctor/pages/MyPatients';
 import DoctorAppointments from '../modules/doctor/pages/DoctorAppointments';
-
 
 // Admin Module
 import AdminDashboard from '../modules/admin/pages/AdminDashboard';
@@ -58,34 +44,34 @@ const AppRoutes = () => (
         <Route path="/signup" element={<SignupPage />} />
 
         {/* Admin Dashboard Routes */}
-        <Route path="/dashboard/admin" element={<DashboardLayout role="admin"><AdminDashboard /></DashboardLayout>} />
-        <Route path="/dashboard/admin/registrations" element={<DashboardLayout role="admin"><StaffRegistrationApproval /></DashboardLayout>} />
-        <Route path="/dashboard/admin/doctors" element={<DashboardLayout role="admin"><DoctorManagement /></DashboardLayout>} />
-        <Route path="/dashboard/admin/staff" element={<DashboardLayout role="admin"><StaffManagement /></DashboardLayout>} />
-        <Route path="/dashboard/admin/departments" element={<DashboardLayout role="admin"><DepartmentManagement /></DashboardLayout>} />
-        <Route path="/dashboard/admin/patients" element={<DashboardLayout role="admin"><PatientRecords /></DashboardLayout>} />
-        <Route path="/dashboard/admin/appointments" element={<DashboardLayout role="admin"><AppointmentApproval /></DashboardLayout>} />
-        <Route path="/dashboard/admin/billing" element={<DashboardLayout role="admin"><BillingManagement /></DashboardLayout>} />
-        <Route path="/dashboard/admin/reports" element={<DashboardLayout role="admin"><ReportsGeneration /></DashboardLayout>} />
+        <Route path="/dashboard/admin" element={<AuthGuard requiredRole="admin"><DashboardLayout role="admin"><AdminDashboard /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/admin/registrations" element={<AuthGuard requiredRole="admin"><DashboardLayout role="admin"><StaffRegistrationApproval /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/admin/doctors" element={<AuthGuard requiredRole="admin"><DashboardLayout role="admin"><DoctorManagement /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/admin/staff" element={<AuthGuard requiredRole="admin"><DashboardLayout role="admin"><StaffManagement /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/admin/departments" element={<AuthGuard requiredRole="admin"><DashboardLayout role="admin"><DepartmentManagement /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/admin/patients" element={<AuthGuard requiredRole="admin"><DashboardLayout role="admin"><PatientRecords /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/admin/appointments" element={<AuthGuard requiredRole="admin"><DashboardLayout role="admin"><AppointmentApproval /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/admin/billing" element={<AuthGuard requiredRole="admin"><DashboardLayout role="admin"><BillingManagement /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/admin/reports" element={<AuthGuard requiredRole="admin"><DashboardLayout role="admin"><ReportsGeneration /></DashboardLayout></AuthGuard>} />
 
         {/* Doctor Dashboard Routes */}
-        <Route path="/dashboard/doctor" element={<DashboardLayout role="doctor"><DoctorDashboard /></DashboardLayout>} />
-        <Route path="/dashboard/doctor/prescriptions" element={<DashboardLayout role="doctor"><MedicalRecords /></DashboardLayout>} />
-        <Route path="/dashboard/doctor/patients" element={<DashboardLayout role="doctor"><MyPatients /></DashboardLayout>} />
-        <Route path="/dashboard/doctor/appointments" element={<DashboardLayout role="doctor"><DoctorAppointments /></DashboardLayout>} />
+        <Route path="/dashboard/doctor" element={<AuthGuard requiredRole="doctor"><DashboardLayout role="doctor"><DoctorDashboard /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/doctor/prescriptions" element={<AuthGuard requiredRole="doctor"><DashboardLayout role="doctor"><MedicalRecords /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/doctor/patients" element={<AuthGuard requiredRole="doctor"><DashboardLayout role="doctor"><MyPatients /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/doctor/appointments" element={<AuthGuard requiredRole="doctor"><DashboardLayout role="doctor"><DoctorAppointments /></DashboardLayout></AuthGuard>} />
 
         {/* Patient Dashboard Routes */}
-        <Route path="/dashboard/patient" element={<DashboardLayout role="patient"><PatientDashboard /></DashboardLayout>} />
-        <Route path="/dashboard/patient/book" element={<DashboardLayout role="patient"><AppointmentBooking /></DashboardLayout>} />
-        <Route path="/dashboard/patient/records" element={<DashboardLayout role="patient"><MedicalRecords /></DashboardLayout>} />
+        <Route path="/dashboard/patient" element={<AuthGuard requiredRole="patient"><DashboardLayout role="patient"><PatientDashboard /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/patient/book" element={<AuthGuard requiredRole="patient"><DashboardLayout role="patient"><AppointmentBooking /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/patient/records" element={<AuthGuard requiredRole="patient"><DashboardLayout role="patient"><MedicalRecords /></DashboardLayout></AuthGuard>} />
 
         {/* Receptionist Dashboard Routes */}
-        <Route path="/dashboard/receptionist" element={<DashboardLayout role="receptionist"><ReceptionistDashboard /></DashboardLayout>} />
-        <Route path="/dashboard/receptionist/billing" element={<DashboardLayout role="receptionist"><BillingForm /></DashboardLayout>} />
+        <Route path="/dashboard/receptionist" element={<AuthGuard requiredRole="receptionist"><DashboardLayout role="receptionist"><ReceptionistDashboard /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/receptionist/billing" element={<AuthGuard requiredRole="receptionist"><DashboardLayout role="receptionist"><BillingForm /></DashboardLayout></AuthGuard>} />
 
         {/* Lab Technician Dashboard Routes */}
-        <Route path="/dashboard/lab-technician" element={<DashboardLayout role="lab-technician"><LabTechnicianDashboard /></DashboardLayout>} />
-        <Route path="/dashboard/lab-technician/upload" element={<DashboardLayout role="lab-technician"><LabReportUpload /></DashboardLayout>} />
+        <Route path="/dashboard/lab-technician" element={<AuthGuard requiredRole="lab-technician"><DashboardLayout role="lab-technician"><LabTechnicianDashboard /></DashboardLayout></AuthGuard>} />
+        <Route path="/dashboard/lab-technician/upload" element={<AuthGuard requiredRole="lab-technician"><DashboardLayout role="lab-technician"><LabReportUpload /></DashboardLayout></AuthGuard>} />
     </Routes>
 );
 

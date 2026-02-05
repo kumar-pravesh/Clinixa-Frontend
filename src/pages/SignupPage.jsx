@@ -11,8 +11,20 @@ const SignupPage = () => {
 
     const handleSignup = (e) => {
         e.preventDefault();
-        // Specifically registering as a patient
-        console.log(`Registering as PATIENT: ${name}, ${email}`);
+
+        const userData = {
+            name,
+            email,
+            phone,
+            role: 'patient'
+        };
+
+        // For simulation, we'll store this user in an "accounts" array
+        const accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
+        accounts.push(userData);
+        localStorage.setItem('accounts', JSON.stringify(accounts));
+
+        console.log(`Successfully registered: ${name}`);
         navigate('/login');
     };
 

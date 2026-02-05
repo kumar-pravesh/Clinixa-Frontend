@@ -23,13 +23,10 @@ const DoctorManagement = () => {
     useEffect(() => {
         try {
             localStorage.setItem('doctors', JSON.stringify(doctors));
-            // Dispatch event to notify other components that doctors have been updated
             window.dispatchEvent(new Event('doctorUpdate'));
-
-        } catch (e) { }
-
-        } catch (e) {}
-
+        } catch (e) {
+            console.error('Error saving doctors:', e);
+        }
     }, [doctors]);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -40,12 +37,8 @@ const DoctorManagement = () => {
         specialization: '',
         email: '',
         phone: '',
-
         status: 'active',
         photo: ''
-
-        status: 'active'
-
     });
 
     const filteredDoctors = doctors.filter(doc =>

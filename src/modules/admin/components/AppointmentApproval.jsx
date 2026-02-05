@@ -112,10 +112,9 @@ const AppointmentApproval = () => {
     useEffect(() => {
         try {
             localStorage.setItem('appointments', JSON.stringify(appointments));
-
-        } catch (e) { }
-        } catch (e) {}
-
+        } catch (e) {
+            console.error('Error saving appointments:', e);
+        }
     }, [appointments]);
 
     // Listen for updates from DoctorManagement and PatientRecords

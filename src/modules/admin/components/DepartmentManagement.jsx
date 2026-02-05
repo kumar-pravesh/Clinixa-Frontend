@@ -14,9 +14,7 @@ const DepartmentManagement = () => {
                     name: 'Cardiology',
                     head: 'Dr. Sarah Johnson',
                     bedCount: '15',
-
                     doctorCount: '10',
-
                     staffCount: '8',
                     status: 'active'
                 },
@@ -25,9 +23,7 @@ const DepartmentManagement = () => {
                     name: 'Pediatrics',
                     head: 'Dr. Emily Rodriguez',
                     bedCount: '12',
-
                     doctorCount: '6',
-
                     staffCount: '6',
                     status: 'active'
                 },
@@ -36,9 +32,7 @@ const DepartmentManagement = () => {
                     name: 'Orthopedics',
                     head: 'Dr. Michael Chen',
                     bedCount: '10',
-
                     doctorCount: '5',
-
                     staffCount: '5',
                     status: 'active'
                 },
@@ -47,9 +41,7 @@ const DepartmentManagement = () => {
                     name: 'Neurology',
                     head: 'Dr. James Wilson',
                     bedCount: '8',
-
                     doctorCount: '4',
-
                     staffCount: '4',
                     status: 'active'
                 },
@@ -60,11 +52,11 @@ const DepartmentManagement = () => {
     });
 
     useEffect(() => {
-
-        try { localStorage.setItem('departments', JSON.stringify(departments)); } catch (e) { }
-
-        try { localStorage.setItem('departments', JSON.stringify(departments)); } catch (e) {}
-
+        try {
+            localStorage.setItem('departments', JSON.stringify(departments));
+        } catch (e) {
+            console.error('Error saving departments:', e);
+        }
     }, [departments]);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -74,9 +66,7 @@ const DepartmentManagement = () => {
         name: '',
         head: '',
         bedCount: '',
-
         doctorCount: '',
-
         staffCount: '',
         status: 'active'
     });
@@ -92,7 +82,7 @@ const DepartmentManagement = () => {
             setFormData(department);
         } else {
             setEditingId(null);
-            setFormData({ name: '', head: '', bedCount: '', staffCount: '', status: 'active' });
+            setFormData({ name: '', head: '', bedCount: '', doctorCount: '', staffCount: '', status: 'active' });
         }
         setShowModal(true);
     };
@@ -181,7 +171,6 @@ const DepartmentManagement = () => {
                             </span>
                         </div>
 
-
                         <div className="grid grid-cols-3 gap-2 mb-4">
                             <div className="bg-blue-50 p-3 rounded-lg text-center">
                                 <p className="text-[10px] text-gray-600 mb-1 font-bold uppercase">Beds</p>
@@ -193,15 +182,6 @@ const DepartmentManagement = () => {
                             </div>
                             <div className="bg-purple-50 p-3 rounded-lg text-center">
                                 <p className="text-[10px] text-gray-600 mb-1 font-bold uppercase">Staff</p>
-
-                     <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="bg-blue-50 p-3 rounded-lg">
-                                <p className="text-xs text-gray-600 mb-1">Available Beds</p>
-                                <p className="text-lg font-bold text-blue-600">{dept.bedCount}</p>
-                            </div>
-                            <div className="bg-purple-50 p-3 rounded-lg">
-                                <p className="text-xs text-gray-600 mb-1">Staff Count</p>
-
                                 <p className="text-lg font-bold text-purple-600">{dept.staffCount}</p>
                             </div>
                         </div>
@@ -229,7 +209,7 @@ const DepartmentManagement = () => {
             {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-2xl max-w-md w-full">
+                    <div className="bg-white rounded-lg shadow-2xl max-w-md w-full overflow-hidden">
                         <div className="flex items-center justify-between p-6 border-b border-gray-200">
                             <h3 className="text-lg font-bold text-gray-900">{editingId ? 'Edit Department' : 'Add New Department'}</h3>
                             <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600">
@@ -237,7 +217,7 @@ const DepartmentManagement = () => {
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-900 mb-2">Department Name</label>
                                 <input
@@ -262,18 +242,31 @@ const DepartmentManagement = () => {
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-900 mb-2">Available Beds</label>
-                                <input
-                                    type="number"
-                                    name="bedCount"
-                                    value={formData.bedCount}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
-                                    placeholder="25"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-900 mb-2">Available Beds</label>
+                                    <input
+                                        type="number"
+                                        name="bedCount"
+                                        value={formData.bedCount}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
+                                        placeholder="25"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-900 mb-2">Status</label>
+                                    <select
+                                        name="status"
+                                        value={formData.status}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
+                                    >
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
                             </div>
-
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -298,31 +291,6 @@ const DepartmentManagement = () => {
                                         placeholder="12"
                                     />
                                 </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-900 mb-2">Staff Count</label>
-                                <input
-                                    type="number"
-                                    name="staffCount"
-                                    value={formData.staffCount}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
-                                    placeholder="12"
-                                />
-
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-900 mb-2">Status</label>
-                                <select
-                                    name="status"
-                                    value={formData.status}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
-                                >
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
                             </div>
                         </div>
 

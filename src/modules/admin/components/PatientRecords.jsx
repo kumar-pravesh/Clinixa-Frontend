@@ -96,9 +96,10 @@ const PatientRecords = () => {
     useEffect(() => {
         try {
             localStorage.setItem('patients', JSON.stringify(patients));
-            // Dispatch event to notify other components that patients have been updated
             window.dispatchEvent(new Event('patientUpdate'));
-        } catch (e) {}
+        } catch (e) {
+            console.error('Error saving patients:', e);
+        }
     }, [patients]);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -136,7 +137,7 @@ const PatientRecords = () => {
     ALLERGIES:
     ${patient.allergies.length > 0 ? patient.allergies.join('\n') : 'None'}
         `;
-        
+
         const element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(recordData));
         element.setAttribute('download', `${patient.name}_Medical_Record.txt`);

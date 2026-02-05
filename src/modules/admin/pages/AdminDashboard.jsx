@@ -13,10 +13,6 @@ const AdminDashboard = () => {
         { label: "Today's Appointments", value: '48', icon: <FiClock />, color: 'bg-blue-500', trend: '+12%' },
         { label: 'Total Patients', value: totalPatientsCount.toLocaleString(), icon: <FiUsers />, color: 'bg-green-500', trend: '+5%' },
         { label: 'Revenue (Total)', value: `₹${totalRevenue.toLocaleString()}`, icon: <FiDollarSign />, color: 'bg-yellow-500', trend: '+8%' },
-
-    const stats = [
-        { label: "Today's Appointments", value: '48', icon: <FiClock />, color: 'bg-blue-500', trend: '+12%' },
-        { label: 'Total Patients', value: '1,240', icon: <FiUsers />, color: 'bg-green-500', trend: '+5%' },
     ];
 
     const todayAppointments = [

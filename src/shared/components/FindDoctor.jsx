@@ -14,7 +14,7 @@ const FindDoctor = ({ searchTerm, setSearchTerm }) => {
             name: 'Dr. Pravesh Kumar',
             specialty: 'Cardiologist',
             experience: '15 years',
-            image: '/public/21004063.jpg',
+            image: '/21004063.jpg',
             department: 'Cardiology',
         },
         {
@@ -22,7 +22,7 @@ const FindDoctor = ({ searchTerm, setSearchTerm }) => {
             name: 'Dr. Subham Shekhar Das',
             specialty: 'Pediatrician',
             experience: '12 years',
-            image: '/public/21004063.jpg',
+            image: '/21004063.jpg',
             department: 'Pediatrics',
         },
         {
@@ -30,7 +30,7 @@ const FindDoctor = ({ searchTerm, setSearchTerm }) => {
             name: 'Dr. Chandan Shashank',
             specialty: 'Orthopedic Surgeon',
             experience: '18 years',
-            image: '/public/21004063.jpg',
+            image: '/21004063.jpg',
             department: 'Orthopedics',
         },
         {
@@ -38,7 +38,7 @@ const FindDoctor = ({ searchTerm, setSearchTerm }) => {
             name: 'Dr. Nikitha Reddy',
             specialty: 'Gynecologist',
             experience: '10 years',
-            image: '/public/21004063.jpg',
+            image: '/21004063.jpg',
             department: 'Gynecology',
         },
         {
@@ -46,7 +46,7 @@ const FindDoctor = ({ searchTerm, setSearchTerm }) => {
             name: 'Dr. Achyut Shivarao',
             specialty: 'Neurologist',
             experience: '20 years',
-            image: '/public/21004063.jpg',
+            image: '/21004063.jpg',
             department: 'Neurology',
         },
         {
@@ -54,7 +54,7 @@ const FindDoctor = ({ searchTerm, setSearchTerm }) => {
             name: 'Dr. Aishwarya',
             specialty: 'Cardiologist',
             experience: '14 years',
-            image: '/public/21004063.jpg',
+            image: '/21004063.jpg',
             department: 'Cardiology',
         },
     ];

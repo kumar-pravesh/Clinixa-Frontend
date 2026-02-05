@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
     FiHome,
     FiUsers,
@@ -14,6 +14,17 @@ import {
 } from 'react-icons/fi';
 
 const Sidebar = ({ role }) => {
+    const navigate = useNavigate();
+
+    const handleLogout = (e) => {
+        e.preventDefault();
+        localStorage.removeItem('isLogged');
+        localStorage.removeItem('user');
+        localStorage.removeItem('adminIsLogged');
+        localStorage.removeItem('adminUser');
+        navigate('/login');
+    };
+
     const adminLinks = [
         { name: 'Overview', icon: <FiHome />, path: '/dashboard/admin' },
         { name: 'Staff Registration', icon: <FiActivity />, path: '/dashboard/admin/registrations' },
@@ -89,13 +100,13 @@ const Sidebar = ({ role }) => {
             </nav>
 
             <div className="p-4 border-t border-gray-100">
-                <NavLink
-                    to="/"
-                    className="flex items-center space-x-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all duration-200"
+                <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all duration-200"
                 >
                     <FiLogOut className="text-xl" />
                     <span className="font-semibold">Log Out</span>
-                </NavLink>
+                </button>
             </div>
         </div>
     );
