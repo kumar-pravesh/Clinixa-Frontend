@@ -5,18 +5,18 @@ const initiate = async (req, res) => {
         const { appointmentId } = req.body;
         const result = await paymentService.initiatePayment(req.user.id, appointmentId);
         res.json(result);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+    } catch (err) {
+        res.status(400).json({ message: err.message });
     }
 };
 
 const confirm = async (req, res) => {
     try {
-        const { paymentId, status } = req.body; // status: 'SUCCESS' | 'FAILED'
-        const result = await paymentService.confirmPayment(paymentId, status);
+        const { paymentId, verificationData } = req.body;
+        const result = await paymentService.confirmPayment(paymentId, verificationData);
         res.json(result);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+    } catch (err) {
+        res.status(400).json({ message: err.message });
     }
 };
 
