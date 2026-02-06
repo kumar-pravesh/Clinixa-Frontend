@@ -8,6 +8,7 @@ import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import PatientDashboard from './pages/patient/PatientDashboard';
 import AppointmentDashboard from './pages/appointment/AppointmentDashboard';
 import BillingDashboard from './pages/payment/BillingDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
             <Route path="/patient" element={<PatientDashboard />} />
             <Route path="/appointments" element={<AppointmentDashboard />} />
             <Route path="/billing" element={<BillingDashboard />} />
+            <Route path="/admin/*" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

@@ -14,7 +14,7 @@ const authService = {
         return response.data;
     },
     refresh: async () => {
-        const response = await api.get('/auth/refresh');
+        const response = await api.post('/auth/refresh');
         return response.data;
     },
 };
