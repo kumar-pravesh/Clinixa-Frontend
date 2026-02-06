@@ -10,15 +10,23 @@ const LoginPage = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await authService.login(email, password);
-            navigate('/patient/dashboard');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Login failed');
-        }
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+        const data = await authService.login(email, password);
+
+        // 🔑 STORE AUTH DATA
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('accessToken', data.accessToken);
+
+        // 🔁 REDIRECT
+        navigate('/patient/dashboard');
+    } catch (err) {
+        setError(err.response?.data?.message || 'Login failed');
+    }
+};
+
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
