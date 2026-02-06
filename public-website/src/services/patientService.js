@@ -1,35 +1,43 @@
 import api from './api';
 
 export const patientService = {
+    // Profile (protected)
     getProfile: async () => {
-        const response = await api.get('/patient/profile');
-        return response.data;
+        const res = await api.get('/patient/profile');
+        return res.data;
     },
 
-    // Doctors are public but also needed here for booking
+    // Doctors (used for booking)
     getDoctors: async () => {
-        const response = await api.get('/appointment/doctors');
-        return response.data;
+        const res = await api.get('/appointment/doctors');
+        return res.data;
     },
 
+    // Book appointment
     bookAppointment: async (data) => {
-        const response = await api.post('/appointment/book', data);
-        return response.data;
+        const res = await api.post('/appointment/book', data);
+        return res.data;
     },
 
+    // Patient appointments
     getMyAppointments: async () => {
-        const response = await api.get('/appointment/my-appointments');
-        return response.data;
+        const res = await api.get('/appointment/my-appointments');
+        return res.data;
     },
 
-    // Payment
+    // 🔐 PAYMENT — FIXED
     initiatePayment: async (appointmentId) => {
-        const response = await api.post('/payment/initiate', { appointmentId });
-        return response.data;
+        const res = await api.post('/payments/initiate', {
+            appointmentId
+        });
+        return res.data;
     },
 
-    confirmPayment: async (paymentId, status) => {
-        const response = await api.post('/payment/confirm', { paymentId, status });
-        return response.data;
+    confirmPayment: async (paymentId, verificationData) => {
+        const res = await api.post('/payments/confirm', {
+            paymentId,
+            verificationData
+        });
+        return res.data;
     }
 };

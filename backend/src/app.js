@@ -23,7 +23,7 @@ app.use(cookieParser());
 app.use('/auth', authRoutes);
 app.use('/patient', patientRoutes);
 app.use('/appointment', appointmentRoutes);
-app.use('/payment', paymentRoutes);
+app.use('/payments', paymentRoutes);
 // app.use('/medical', medicalRoutes);
 
 app.get('/', (req, res) => {

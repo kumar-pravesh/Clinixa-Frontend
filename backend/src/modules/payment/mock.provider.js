@@ -1,11 +1,10 @@
 const PaymentProvider = require('./payment.interface');
-const { v4: uuidv4 } = require('uuid'); // Assume uuid is not installed, use random string
+const { v4: uuidv4 } = require('uuid');
 
 class MockPaymentProvider extends PaymentProvider {
     async initiate(amount, currency, metadata) {
         console.log(`[MockProvider] Initiating payment of ${amount} ${currency}`);
-        // Simulate a transaction ID
-        const transactionId = 'mock_txn_' + Math.random().toString(36).substring(7);
+        const transactionId = 'mock_' + uuidv4();
         return {
             transactionId,
             payload: {
@@ -14,7 +13,8 @@ class MockPaymentProvider extends PaymentProvider {
         };
     }
 
-    async verify(transactionId, status) {
+    async verify(transactionId, verificationData) {
+        const status = verificationData.status || verificationData;
         console.log(`[MockProvider] Verifying payment ${transactionId} with status ${status}`);
         return status === 'SUCCESS';
     }

@@ -2,6 +2,17 @@ import { useState, useEffect } from 'react';
 import { patientService } from '../../services/patientService';
 import { useNavigate } from 'react-router-dom';
 
+// Helper to load Razorpay SDK
+const loadScript = (src) => {
+    return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+    });
+};
+
 const BookAppointment = () => {
     const [doctors, setDoctors] = useState([]);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -26,7 +37,7 @@ const BookAppointment = () => {
                 ...formData
             });
 
-            // 2. Initiate Payment (Mock)
+            // 2. Initiate Payment
             // In a real app, this would open Razorpay/Stripe
             if (window.confirm(`Proceed to pay ₹${selectedDoctor.fees} for appointment?`)) {
                 await processPayment(appointment.id);
@@ -45,21 +56,69 @@ const BookAppointment = () => {
         try {
             const initData = await patientService.initiatePayment(appointmentId);
 
-            // SIMULATE PAYMENT GATEWAY INTERACTION
-            // Here we just immediately confirm success for strict "Mock provider" requirement
-            // In real integration, Razorpay would return a success callback
+            if (initData.provider === 'razorpay') {
+                const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+                if (!res) {
+                    alert('Razorpay SDK failed to load. Are you online?');
+                    setProcessing(false);
+                    return;
+                }
 
-            const confirmData = await patientService.confirmPayment(initData.paymentId, 'SUCCESS');
+                const options = {
+                    key: initData.payload.key,
+                    amount: initData.payload.amount,
+                    currency: initData.payload.currency,
+                    name: "Clinixa Hospital",
+                    description: "Appointment Payment",
+                    order_id: initData.payload.orderId,
+                    handler: async function (response) {
+                        try {
+                            const confirmData = await patientService.confirmPayment(initData.paymentId, response);
+                            if (confirmData.status === 'SUCCESS') {
+                                alert('Appointment Confirmed!');
+                                navigate('/patient/appointments');
+                            } else {
+                                alert('Payment Failed!');
+                            }
+                        } catch (error) {
+                            alert('Payment Verification Failed: ' + error.message);
+                        } finally {
+                            setProcessing(false);
+                        }
+                    },
+                    prefill: {
+                        name: "Patient", // In real app, fetch from user profile
+                        email: "patient@example.com",
+                        contact: "9999999999"
+                    },
+                    theme: {
+                        color: "#3399cc"
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            setProcessing(false);
+                        }
+                    }
+                };
+                const paymentObject = new window.Razorpay(options);
+                paymentObject.open();
 
-            if (confirmData.status === 'SUCCESS') {
-                alert('Appointment Confirmed!');
-                navigate('/patient/appointments');
             } else {
-                alert('Payment Failed!');
+                // MOCK PROVIDER
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+                const confirmData = await patientService.confirmPayment(initData.paymentId, { status: 'SUCCESS' });
+
+                if (confirmData.status === 'SUCCESS') {
+                    alert('Appointment Confirmed!');
+                    navigate('/patient/appointments');
+                } else {
+                    alert('Payment Failed!');
+                }
+                setProcessing(false);
             }
+
         } catch (err) {
             alert('Payment Error: ' + err.message);
-        } finally {
             setProcessing(false);
         }
     };
@@ -79,8 +138,8 @@ const BookAppointment = () => {
                                     key={doc.id}
                                     onClick={() => setSelectedDoctor(doc)}
                                     className={`p-4 border rounded cursor-pointer transition ${selectedDoctor?.id === doc.id
-                                            ? 'border-primary bg-primary/10'
-                                            : 'hover:bg-gray-50'
+                                        ? 'border-primary bg-primary/10'
+                                        : 'hover:bg-gray-50'
                                         }`}
                                 >
                                     <div className="font-bold">{doc.name}</div>
