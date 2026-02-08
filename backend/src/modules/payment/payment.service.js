@@ -57,6 +57,10 @@ const initiatePayment = async (userId, appointmentId) => {
     }
 };
 
+const notificationService = require('../notification/notification.service');
+
+// ... (existing code)
+
 const confirmPayment = async (paymentId, verificationData) => {
     const client = await pool.connect();
     try {
@@ -91,7 +95,23 @@ const confirmPayment = async (paymentId, verificationData) => {
             ]
         );
 
+        // Fetch user details for notification
+        const userRes = await client.query(`
+            SELECT u.name, u.email 
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.id
+            JOIN users u ON p.user_id = u.id
+            WHERE a.id = $1
+        `, [payment.appointment_id]);
+        const user = userRes.rows[0];
+
         await client.query('COMMIT');
+
+        if (status === 'SUCCESS') {
+            notificationService.sendPaymentSuccess(user.email, user.name, payment.amount, payment.transaction_id)
+                .catch(err => console.error('Payment Email Failed:', err.message));
+        }
+
         return { status };
     } catch (err) {
         await client.query('ROLLBACK');
