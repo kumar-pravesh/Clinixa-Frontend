@@ -8,6 +8,12 @@ import './App.css';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
+import AssignedPatients from './pages/doctor/AssignedPatients';
+import Prescriptions from './pages/doctor/Prescriptions';
+import AddPrescription from './pages/doctor/AddPrescription';
+import LabReports from './pages/doctor/LabReports';
+import FollowUps from './pages/doctor/FollowUps';
+import DoctorLayout from './components/doctor/DoctorLayout';
 import PatientDashboard from './pages/patient/PatientDashboard';
 import NotFound from './pages/NotFound';
 
@@ -61,10 +67,17 @@ function App() {
                     path="/doctor"
                     element={
                       <ProtectedRoute allowedRoles={['doctor']}>
-                        <DoctorDashboard />
+                        <DoctorLayout />
                       </ProtectedRoute>
                     }
-                  />
+                  >
+                    <Route index element={<DoctorDashboard />} />
+                    <Route path="patients" element={<AssignedPatients />} />
+                    <Route path="prescriptions" element={<Prescriptions />} />
+                    <Route path="prescriptions/new" element={<AddPrescription />} />
+                    <Route path="lab-reports" element={<LabReports />} />
+                    <Route path="appointments" element={<FollowUps />} />
+                  </Route>
 
                   <Route
                     path="/patient"
