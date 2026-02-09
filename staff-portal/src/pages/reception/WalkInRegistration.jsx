@@ -28,6 +28,9 @@ const WalkInRegistration = () => {
         name: '',
         gender: '',
         dob: '',
+        bloodGroup: '',
+        createdAtDate: new Date().toISOString().split('T')[0],
+        createdAtTime: new Date().toTimeString().slice(0, 5),
         address: '',
         reason: ''
     });
@@ -37,6 +40,9 @@ const WalkInRegistration = () => {
             name: 'Emma Wilson',
             gender: 'Female',
             dob: '1992-05-14',
+            bloodGroup: 'O+',
+            createdAtDate: '2025-01-15',
+            createdAtTime: '10:30',
             address: 'Park Avenue, Suite 4',
             lastVisit: '12 days ago'
         },
@@ -44,6 +50,9 @@ const WalkInRegistration = () => {
             name: 'John Doe',
             gender: 'Male',
             dob: '1980-08-22',
+            bloodGroup: 'A-',
+            createdAtDate: '2025-02-01',
+            createdAtTime: '14:15',
             address: '123 Hospital St, Medical District',
             lastVisit: '3 weeks ago'
         },
@@ -51,6 +60,9 @@ const WalkInRegistration = () => {
             name: 'Robert Brown',
             gender: 'Male',
             dob: '1975-11-30',
+            bloodGroup: 'B+',
+            createdAtDate: '2025-01-28',
+            createdAtTime: '09:45',
             address: 'Downtown Street, Apt 12',
             lastVisit: '5 days ago'
         }
@@ -67,6 +79,9 @@ const WalkInRegistration = () => {
                 name: found.name,
                 gender: found.gender,
                 dob: found.dob,
+                bloodGroup: found.bloodGroup,
+                createdAtDate: found.createdAtDate,
+                createdAtTime: found.createdAtTime,
                 address: found.address,
                 reason: 'Follow-up consultation' // Default for existing
             });
@@ -97,6 +112,11 @@ const WalkInRegistration = () => {
 
     const handleInputChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const getBloodGroupColor = (bloodGroup) => {
+        const positiveGroups = ['O+', 'A+', 'B+', 'AB+'];
+        return positiveGroups.includes(bloodGroup) ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700';
     };
 
     return (
@@ -276,6 +296,55 @@ const WalkInRegistration = () => {
                                             required
                                         />
                                     </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Blood Group</label>
+                                    <select
+                                        className={cn(
+                                            "input-field appearance-none h-11 font-bold",
+                                            isExisting && "bg-primary/[0.03] border-primary/20 text-primary"
+                                        )}
+                                        value={formData.bloodGroup}
+                                        onChange={(e) => handleInputChange('bloodGroup', e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Select Blood Group</option>
+                                        <option>O+</option>
+                                        <option>O-</option>
+                                        <option>A+</option>
+                                        <option>A-</option>
+                                        <option>B+</option>
+                                        <option>B-</option>
+                                        <option>AB+</option>
+                                        <option>AB-</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Created At Date</label>
+                                    <input
+                                        type="date"
+                                        className={cn(
+                                            "input-field h-11 font-bold w-full mb-3",
+                                            isExisting && "bg-primary/[0.03] border-primary/20 text-primary"
+                                        )}
+                                        value={formData.createdAtDate}
+                                        onChange={(e) => handleInputChange('createdAtDate', e.target.value)}
+                                        required
+                                    />
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Created At Time</label>
+                                    <input
+                                        type="time"
+                                        className={cn(
+                                            "input-field h-11 font-bold w-full",
+                                            isExisting && "bg-primary/[0.03] border-primary/20 text-primary"
+                                        )}
+                                        value={formData.createdAtTime}
+                                        onChange={(e) => handleInputChange('createdAtTime', e.target.value)}
+                                        required
+                                    />
                                 </div>
                             </div>
 

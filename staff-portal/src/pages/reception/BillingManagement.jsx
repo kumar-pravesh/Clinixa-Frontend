@@ -18,6 +18,7 @@ import {
 import { Link } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import html2pdf from 'html2pdf.js';
+import { createInvoiceElement } from '../../services/invoiceGenerator';
 import { useNotification } from '../../context/NotificationContext';
 
 const BillingManagement = () => {
@@ -105,9 +106,19 @@ const BillingManagement = () => {
         setIsGenerating(true);
         console.log('Generating PDF Bill...');
 
-        if (!invoiceTemplateRef.current) return;
+        const element = createInvoiceElement({
+            id: `Clinixa_Bill_${selectedPatient?.id || 'New'}`,
+            patient: selectedPatient?.name,
+            date: new Date().toLocaleDateString(),
+            paymentMode,
+            consultationFee,
+            labCharges,
+            medicineCharges,
+            discount,
+            items: billItems,
+            total
+        });
 
-        const element = invoiceTemplateRef.current;
         const opt = {
             margin: [10, 5, 10, 5],
             filename: `Clinixa_Bill_${selectedPatient?.id || 'New'}_${new Date().toISOString().split('T')[0]}.pdf`,

@@ -11,6 +11,7 @@ import {
     Loader2
 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
+import { createInvoiceElement } from '../../services/invoiceGenerator';
 
 const RecentReceipts = () => {
     const navigate = useNavigate();
@@ -21,6 +22,7 @@ const RecentReceipts = () => {
     const [isExporting, setIsExporting] = useState(false);
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
     const [reprintingId, setReprintingId] = useState(null);
+    const [downloadingId, setDownloadingId] = useState(null);
 
     // HEX Color Constants for PDF Compatibility
     const colors = {
@@ -49,12 +51,102 @@ const RecentReceipts = () => {
     );
 
     const handleReprint = (id) => {
+        const receipt = receipts.find(r => r.id === id);
+        if (!receipt) return;
         setReprintingId(id);
-        // Simulate PDF generation for quick reprint button
-        setTimeout(() => {
+
+        const element = createInvoiceElement({
+            id: receipt.id,
+            patient: receipt.patient,
+            date: receipt.date,
+            mode: receipt.mode,
+            items: receipt.items || [],
+            consultationFee: receipt.consultationFee || 0,
+            labCharges: receipt.labCharges || 0,
+            medicineCharges: receipt.medicineCharges || 0,
+            discount: receipt.discount || 0,
+            total: receipt.amount
+        });
+
+        const win = window.open('', '_blank');
+        if (!win) {
+            alert('Popup blocked. Allow popups for this site to print receipts.');
             setReprintingId(null);
-            alert(`Invoice ${id} has been exported as PDF successfully!`);
-        }, 1500);
+            return;
+        }
+
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>${receipt.id} - Receipt</title>
+                <style>
+                    body { margin: 0; padding: 20px; font-family: sans-serif; background: #f8fafc; }
+                    @media print { 
+                        body { background: white; margin: 0; padding: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                ${element.outerHTML}
+            </body>
+            </html>
+        `;
+
+        win.document.write(htmlContent);
+        win.document.close();
+
+        setTimeout(() => {
+            try {
+                win.focus();
+                win.print();
+            } catch (err) {
+                console.error('Print error:', err);
+                alert('Unable to print the receipt. Please try again.');
+            } finally {
+                setReprintingId(null);
+            }
+        }, 800);
+    };
+
+    const handleDownload = async (id) => {
+        const receipt = receipts.find(r => r.id === id);
+        if (!receipt) return;
+        setDownloadingId(id);
+
+        // Create a temporary element with invoice markup and generate PDF
+        const element = createInvoiceElement({
+            id: receipt.id,
+            patient: receipt.patient,
+            date: receipt.date,
+            mode: receipt.mode,
+            items: receipt.items || [],
+            consultationFee: receipt.consultationFee || 0,
+            labCharges: receipt.labCharges || 0,
+            medicineCharges: receipt.medicineCharges || 0,
+            discount: receipt.discount || 0,
+            total: receipt.amount
+        });
+
+        document.body.appendChild(element);
+
+        const opt = {
+            margin: [10, 5, 10, 5],
+            filename: `${receipt.id}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        try {
+            await html2pdf().set(opt).from(element).save();
+        } catch (err) {
+            console.error('Download PDF error:', err);
+            alert('Failed to download receipt.');
+        } finally {
+            document.body.removeChild(element);
+            setDownloadingId(null);
+        }
     };
 
     const handleViewDetails = (id) => {
@@ -265,13 +357,21 @@ const RecentReceipts = () => {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center justify-center gap-2">
                                             <button
-                                                onClick={() => handleReprint(receipt.id)}
-                                                disabled={reprintingId === receipt.id}
-                                                title="Reprint PDF"
-                                                className="p-2 text-slate-400 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200 rounded-lg transition-all disabled:opacity-50"
-                                            >
-                                                {reprintingId === receipt.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Printer className="w-5 h-5" />}
-                                            </button>
+                                                    onClick={() => handleReprint(receipt.id)}
+                                                    disabled={reprintingId === receipt.id}
+                                                    title="Print Receipt"
+                                                    className="p-2 text-slate-400 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200 rounded-lg transition-all disabled:opacity-50"
+                                                >
+                                                    {reprintingId === receipt.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Printer className="w-5 h-5" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDownload(receipt.id)}
+                                                    disabled={downloadingId === receipt.id}
+                                                    title="Download PDF"
+                                                    className="p-2 text-slate-400 hover:text-primary hover:bg-white border border-transparent hover:border-slate-200 rounded-lg transition-all disabled:opacity-50"
+                                                >
+                                                    {downloadingId === receipt.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-4 h-4" />}
+                                                </button>
                                             <button
                                                 onClick={() => handleViewDetails(receipt.id)}
                                                 title="View Detail"

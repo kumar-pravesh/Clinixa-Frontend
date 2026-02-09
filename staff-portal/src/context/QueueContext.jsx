@@ -12,9 +12,10 @@ export const useQueue = () => {
 
 export const QueueProvider = ({ children }) => {
     // Initial mock data
+    const today = new Date().toISOString().slice(0,10);
     const [tokens, setTokens] = useState([
-        { id: 'TK-1024', patient: 'John Doe', dept: 'General Medicine', doctor: 'Dr. Smith', status: 'Waiting', time: '10:30 AM', mobile: '9876543210' },
-        { id: 'TK-1025', patient: 'Emma Wilson', dept: 'Pediatrics', doctor: 'Dr. Brown', status: 'In Progress', time: '10:35 AM', mobile: '9876543211' },
+        { id: 'TK-1024', patient: 'John Doe', dept: 'General Medicine', doctor: 'Dr. Smith', status: 'Waiting', date: today, time: '10:30 AM', mobile: '9876543210' },
+        { id: 'TK-1025', patient: 'Emma Wilson', dept: 'Pediatrics', doctor: 'Dr. Brown', status: 'In Progress', date: today, time: '10:35 AM', mobile: '9876543211' },
     ]);
 
     const generateToken = (patientData) => {
@@ -29,7 +30,8 @@ export const QueueProvider = ({ children }) => {
             doctor: patientData.doctor || 'Dr. Smith',
             mobile: patientData.mobile,
             status: 'Waiting',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            date: patientData.date || new Date().toISOString().slice(0,10),
+            time: patientData.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
         setTokens(prev => [newToken, ...prev]);

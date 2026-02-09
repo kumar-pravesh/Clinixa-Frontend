@@ -23,7 +23,9 @@ export const GenerateTokenModal = ({ isOpen, onClose, onGenerate }) => {
         patient: '',
         dept: 'General Medicine',
         doctor: 'Dr. Smith',
-        mobile: ''
+        mobile: '',
+        date: new Date().toISOString().slice(0,10),
+        time: new Date().toISOString().slice(11,16)
     });
 
     const handleSubmit = (e) => {
@@ -55,6 +57,29 @@ export const GenerateTokenModal = ({ isOpen, onClose, onGenerate }) => {
                             value={formData.patient}
                             onChange={(e) => setFormData({ ...formData, patient: e.target.value })}
                         />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
+                            <input
+                                required
+                                type="date"
+                                className="input-field !pl-4 h-11"
+                                value={formData.date}
+                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Time</label>
+                            <input
+                                required
+                                type="time"
+                                className="input-field !pl-4 h-11"
+                                value={formData.time}
+                                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                            />
+                        </div>
                     </div>
 
                     <div>
@@ -120,8 +145,10 @@ const TokenManagement = () => {
 
     const filteredTokens = tokens.filter(t => {
         const matchesTab = activeTab === 'All' ? true : t.status === activeTab;
-        const matchesSearch = t.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            t.id.toLowerCase().includes(searchQuery.toLowerCase());
+        const q = searchQuery.toLowerCase();
+        const matchesSearch = t.patient.toLowerCase().includes(q) ||
+            t.id.toLowerCase().includes(q) ||
+            (t.date || '').toLowerCase().includes(q);
         return matchesTab && matchesSearch;
     });
 
@@ -206,7 +233,7 @@ const TokenManagement = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-black text-slate-800 text-sm">{token.patient}</h3>
-                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider">{token.time}</p>
+                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider">{token.date} • {token.time}</p>
                                 </div>
                             </div>
                             <span className={cn(
@@ -281,6 +308,7 @@ const TokenManagement = () => {
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Patient Details</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Dept & Doctor</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Date</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Time</th>
                                 <th className="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Quick Actions</th>
                             </tr>
@@ -308,6 +336,7 @@ const TokenManagement = () => {
                                             {token.status}
                                         </span>
                                     </td>
+                                    <td className="px-6 py-5 text-sm font-bold text-slate-400">{token.date}</td>
                                     <td className="px-6 py-5 text-sm font-bold text-slate-400">{token.time}</td>
                                     <td className="px-6 py-5">
                                         <div className="flex items-center justify-end gap-2">
@@ -352,7 +381,7 @@ const TokenManagement = () => {
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center">
+                                    <td colSpan="7" className="px-6 py-12 text-center">
                                         <p className="text-slate-400 font-bold italic">No active tokens found in this queue.</p>
                                     </td>
                                 </tr>
