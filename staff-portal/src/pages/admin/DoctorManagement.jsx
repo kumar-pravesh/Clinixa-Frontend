@@ -57,7 +57,7 @@ const DoctorManagement = () => {
         dept: 'General Medicine',
         email: '',
         phone: '',
-        phone: '',
+
         consultation_fee: '',
         status: 'Active',
         password: '' // Added password field for creating user
@@ -83,7 +83,7 @@ const DoctorManagement = () => {
                 dept: 'General Medicine',
                 email: '',
                 phone: '',
-                phone: '',
+
                 consultation_fee: '',
                 status: 'Active',
                 password: ''
