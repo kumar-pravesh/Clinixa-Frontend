@@ -1,0 +1,164 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Trash2, Save, ArrowLeft, Search } from 'lucide-react';
+import { useDoctor } from '../../context/DoctorContext';
+
+const AddPrescription = () => {
+    const navigate = useNavigate();
+    const { addPrescription } = useDoctor();
+    const [patientName, setPatientName] = useState('');
+    const [medications, setMedications] = useState([
+        { id: 1, name: '', dosage: '', frequency: '', duration: '' }
+    ]);
+
+    const addMedication = () => {
+        setMedications([
+            ...medications,
+            { id: Date.now(), name: '', dosage: '', frequency: '', duration: '' }
+        ]);
+    };
+
+    const removeMedication = (id) => {
+        setMedications(medications.filter(med => med.id !== id));
+    };
+
+    const updateMedication = (id, field, value) => {
+        setMedications(medications.map(med =>
+            med.id === id ? { ...med, [field]: value } : med
+        ));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        addPrescription({
+            patient: patientName,
+            medications: medications
+        });
+        navigate('/doctor/prescriptions');
+    };
+
+    return (
+        <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
+            <div className="flex items-center gap-4">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 transition-colors"
+                >
+                    <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-800">New Prescription</h1>
+                    <p className="text-slate-500">Create a new prescription for a patient.</p>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-8">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* Patient Selection */}
+                    <div className="space-y-4">
+                        <label className="block text-sm font-bold text-slate-700 uppercase tracking-wide">Patient Details</label>
+                        <div className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search for patient by name or ID..."
+                                value={patientName}
+                                onChange={(e) => setPatientName(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-xl text-sm font-medium outline-none transition-all"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="h-px bg-slate-100"></div>
+
+                    {/* Medications */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-sm font-bold text-slate-700 uppercase tracking-wide">Medications</label>
+                            <button
+                                type="button"
+                                onClick={addMedication}
+                                className="text-primary text-sm font-bold flex items-center gap-2 hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                                <Plus className="w-4 h-4" /> Add Medication
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {medications.map((med, index) => (
+                                <div key={med.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start bg-slate-50 p-4 rounded-xl border border-slate-100 group hover:border-primary/20 transition-all">
+                                    <div className="md:col-span-4">
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Drug Name</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ex: Amoxicillin"
+                                            value={med.name}
+                                            onChange={(e) => updateMedication(med.id, 'name', e.target.value)}
+                                            className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-primary/50 outline-none"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dosage</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ex: 500mg"
+                                            value={med.dosage}
+                                            onChange={(e) => updateMedication(med.id, 'dosage', e.target.value)}
+                                            className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-primary/50 outline-none"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="md:col-span-3">
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Frequency</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ex: Twice daily"
+                                            value={med.frequency}
+                                            onChange={(e) => updateMedication(med.id, 'frequency', e.target.value)}
+                                            className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-primary/50 outline-none"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Duration</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ex: 5 days"
+                                            value={med.duration}
+                                            onChange={(e) => updateMedication(med.id, 'duration', e.target.value)}
+                                            className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-primary/50 outline-none"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="md:col-span-1 flex justify-center pt-6">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeMedication(med.id)}
+                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            disabled={medications.length === 1}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end pt-6 border-t border-slate-100">
+                        <button
+                            type="submit"
+                            className="btn-primary flex items-center gap-2 px-8 py-3 text-sm"
+                        >
+                            <Save className="w-4 h-4" /> Save Prescription
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default AddPrescription;
