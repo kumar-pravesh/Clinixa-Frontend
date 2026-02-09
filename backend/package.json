@@ -14,9 +14,14 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+<<<<<<< HEAD
     "mysql2": "^3.16.3",
+=======
+    "nodemailer": "^8.0.1",
+>>>>>>> 588477aacda05a8d0d0347e3839e957f16c7593c
     "pg": "^8.11.5",
     "razorpay": "^2.9.6",
+    "twilio": "^5.12.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

@@ -79,7 +79,7 @@ const confirmPayment = async (paymentId, verificationData) => {
         const payment = paymentRes[0];
         if (!payment) throw new Error('Payment not found');
 
-        const provider = getProvider(payment.method); // provider -> method
+        const provider = getProvider(payment.method);
         const isValid = await provider.verify(payment.transaction_id, verificationData);
 
         const status = isValid ? 'SUCCESS' : 'FAILED';

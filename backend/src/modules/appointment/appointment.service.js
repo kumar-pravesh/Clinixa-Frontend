@@ -27,7 +27,7 @@ const createAppointment = async (userId, doctorId, date, timeSlot) => {
         if (patientRes.length === 0) throw new Error('Patient profile not found');
         const patientId = patientRes[0].id;
 
-        // Check availability (Mock)
+        // Check availability
         const [existing] = await connection.query(
             'SELECT * FROM appointments WHERE doctor_id = ? AND date = ? AND time = ? AND status != ?',
             [doctorId, date, timeSlot, 'Cancelled']
@@ -41,13 +41,13 @@ const createAppointment = async (userId, doctorId, date, timeSlot) => {
             `INSERT INTO appointments (patient_id, doctor_id, date, time, status)
        VALUES (?, ?, ?, ?, 'Scheduled')`,
             [patientId, doctorId, date, timeSlot]
-        ); // Note: Removed payment_status and time_slot -> time based on new schema/setupMySQL.js
+        );
 
         const appointmentId = result.insertId;
 
         await connection.commit();
 
-        // Return constructed object or fetch
+        // Return constructed object
         return {
             id: appointmentId,
             patient_id: patientId,
@@ -83,7 +83,6 @@ const getAppointments = async (userId) => {
     console.log('Found appointments:', rows.length);
     return rows;
 };
-
 
 module.exports = {
     getDoctors,
