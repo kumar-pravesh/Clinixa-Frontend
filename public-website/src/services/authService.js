@@ -15,4 +15,18 @@ export const authService = {
         await api.post('/auth/logout');
         window.location.href = '/login';
     },
+
+    forgotPassword: async (email) => {
+        const response = await api.post('/auth/forgot-password', { email });
+        return response.data;
+    },
+
+    resetPassword: async (token, newPassword, confirmPassword) => {
+        const response = await api.post('/auth/reset-password', {
+            token,
+            newPassword,
+            confirmPassword,
+        });
+        return response.data;
+    },
 };

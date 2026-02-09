@@ -1,6 +1,8 @@
 const { pool } = require('../../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { sendPasswordResetEmail } = require('../../services/emailService');
 
 const generateTokens = (user) => {
     const accessToken = jwt.sign(
@@ -89,8 +91,85 @@ const refreshToken = async (token) => {
     }
 };
 
+const forgotPassword = async (email) => {
+    try {
+        // Check if user exists
+        const result = await pool.query('SELECT id, name FROM users WHERE email = $1', [email]);
+        const user = result.rows[0];
+
+        if (!user) {
+            // For security, don't reveal if email exists or not
+            throw new Error('If this email is registered, you will receive a password reset link');
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenHash = await bcrypt.hash(resetToken, 10);
+        
+        // Set token expiry to 1 hour
+        const expiryTime = new Date(Date.now() + 60 * 60 * 1000);
+
+        // Store reset token in database
+        await pool.query(
+            'UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE id = $3',
+            [resetTokenHash, expiryTime, user.id]
+        );
+
+        // Send email with reset link
+        await sendPasswordResetEmail(email, resetToken, user.name);
+
+        return { message: 'Password reset link sent to your email' };
+    } catch (error) {
+        throw error;
+    }
+};
+
+const resetPassword = async (token, newPassword) => {
+    try {
+        // Find user with matching reset token
+        const result = await pool.query(
+            'SELECT id, reset_token, reset_token_expiry FROM users WHERE reset_token IS NOT NULL'
+        );
+
+        let user = null;
+        for (const row of result.rows) {
+            // Verify token hash
+            const isValidToken = await bcrypt.compare(token, row.reset_token);
+            if (isValidToken) {
+                user = row;
+                break;
+            }
+        }
+
+        if (!user) {
+            throw new Error('Invalid or expired reset token');
+        }
+
+        // Check if token is expired
+        if (new Date() > new Date(user.reset_token_expiry)) {
+            throw new Error('Reset token has expired');
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(newPassword, salt);
+
+        // Update password and clear reset token
+        await pool.query(
+            'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expiry = NULL WHERE id = $2',
+            [passwordHash, user.id]
+        );
+
+        return { message: 'Password reset successfully' };
+    } catch (error) {
+        throw error;
+    }
+};
+
 module.exports = {
     register,
     login,
     refreshToken,
+    forgotPassword,
+    resetPassword,
 };

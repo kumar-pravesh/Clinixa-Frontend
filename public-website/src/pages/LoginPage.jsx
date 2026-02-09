@@ -3,11 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { motion } from "framer-motion";
 import { ArrowRight, Activity, Mail, Lock } from "lucide-react";
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
     const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -113,23 +115,13 @@ const LoginPage = () => {
                             </label>
                         </div>
 
-                        <div className="text-sm">
-                            <a href="#" className="font-medium text-primary hover:text-teal-700">
-                                Forgot password?
-                            </a>
-                        </div>
-                    </div>
-
-                    <div>
-                        <button
-                            type="submit"
-                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-primary hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary shadow-lg hover:shadow-xl transition-all"
-                        >
-                            Sign in
-                        </button>
-                    </div>
-                </form>
-
+                                            <button
+                                                type="button"
+                                                onClick={() => setForgotPasswordOpen(true)}
+                                                className="font-medium text-primary hover:text-teal-700 bg-none border-none cursor-pointer p-0"
+                                            >
+                                                Forgot password?
+                                            </button>
                 <div className="text-center mt-4">
                     <p className="text-sm text-gray-600">
                         Don't have an account?{' '}
@@ -144,3 +136,8 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+    <ForgotPasswordModal
+                isOpen={forgotPasswordOpen}
+                onClose={() => setForgotPasswordOpen(false)}
+            />
+        

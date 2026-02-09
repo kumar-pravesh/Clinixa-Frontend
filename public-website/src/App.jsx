@@ -9,6 +9,7 @@ import DepartmentsPage from "./pages/DepartmentsPage.jsx";
 import DoctorsPage from "./pages/DoctorsPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
+import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 
 import PatientDashboard from "./pages/patient/Dashboard.jsx";
 import BookAppointment from "./pages/patient/BookAppointment.jsx";
@@ -28,6 +29,7 @@ function App() {
           <Route path="/doctors" element={<DoctorsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
 
         {/* PATIENT ROUTES (PROTECTED) */}
