@@ -26,22 +26,41 @@ const DoctorManagement = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState(null);
     const [activeFilter, setActiveFilter] = useState('All');
+    const [doctors, setDoctors] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const [doctors, setDoctors] = useState([
-        { id: 'DOC001', name: 'Dr. Arun Kumar', dept: 'Cardiology', email: 'arun.k@clinixa.life', phone: '+91 9988001122', status: 'Active', experience: '12 Years', shifts: 'Morning' },
-        { id: 'DOC002', name: 'Dr. Sarah Paul', dept: 'Pediatrics', email: 'sarah.p@clinixa.life', phone: '+91 9988001133', status: 'On Leave', experience: '8 Years', shifts: 'Evening' },
-        { id: 'DOC003', name: 'Dr. James Bond', dept: 'Surgery', email: 'james.b@clinixa.life', phone: '+91 9988001144', status: 'Active', experience: '15 Years', shifts: 'Night' },
-        { id: 'DOC004', name: 'Dr. Emily Watson', dept: 'Dermatology', email: 'emily.w@clinixa.life', phone: '+91 9988001155', status: 'Active', experience: '6 Years', shifts: 'Morning' },
-    ]);
+    // Fetch Doctors from Backend
+    React.useEffect(() => {
+        const fetchDoctors = async () => {
+            try {
+                // Determine API URL based on environment or hardcode for dev
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const response = await fetch(`${API_URL}/doctors`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setDoctors(data);
+                } else {
+                    console.error('Failed to fetch doctors');
+                }
+            } catch (error) {
+                console.error('Error loading doctors:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDoctors();
+    }, []);
 
     const [formData, setFormData] = useState({
         name: '',
         dept: 'General Medicine',
         email: '',
         phone: '',
-        experience: '0 Years',
-        shifts: 'Morning',
-        status: 'Active'
+        phone: '',
+        consultation_fee: '',
+        status: 'Active',
+        password: '' // Added password field for creating user
     });
 
     const getStatusStyle = (status) => {
@@ -64,16 +83,18 @@ const DoctorManagement = () => {
                 dept: 'General Medicine',
                 email: '',
                 phone: '',
-                experience: '0 Years',
-                shifts: 'Morning',
-                status: 'Active'
+                phone: '',
+                consultation_fee: '',
+                status: 'Active',
+                password: ''
             });
         }
         setIsModalOpen(true);
     };
 
-    const handleDelete = (id, name) => {
+    const handleDelete = async (id, name) => {
         if (window.confirm(`Are you sure you want to remove ${name}?`)) {
+            // TODO: call delete API
             setDoctors(prev => prev.filter(d => d.id !== id));
             addNotification({
                 type: 'info',
@@ -83,34 +104,78 @@ const DoctorManagement = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (editingDoctor) {
-            setDoctors(prev => prev.map(d => d.id === editingDoctor.id ? { ...formData } : d));
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+            if (editingDoctor) {
+                // Update existing doctor
+                const response = await fetch(`${API_URL}/admin/doctors/${editingDoctor.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.message || 'Failed to update');
+                }
+
+                const result = await response.json();
+
+                // Update the doctor in the list
+                setDoctors(prev => prev.map(d =>
+                    d.id === editingDoctor.id ? { ...d, ...formData } : d
+                ));
+
+                addNotification({
+                    type: 'success',
+                    title: 'Doctor Updated',
+                    message: `${formData.name}'s profile has been updated successfully.`
+                });
+            } else {
+                // Create New Doctor
+                const response = await fetch(`${API_URL}/admin/doctors`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.message || 'Failed to register');
+                }
+
+                const result = await response.json();
+
+                // Add to list optimistically or refetch
+                const newDoc = {
+                    ...formData,
+                    id: result.data.id
+                };
+                setDoctors(prev => [...prev, newDoc]);
+
+                addNotification({
+                    type: 'success',
+                    title: 'Doctor Onboarded',
+                    message: `${formData.name} has been registered successfully.`
+                });
+            }
+            setIsModalOpen(false);
+        } catch (error) {
             addNotification({
-                type: 'success',
-                title: 'Profile Updated',
-                message: `Credentials for ${formData.name} updated successfully.`
-            });
-        } else {
-            const newDoc = {
-                ...formData,
-                id: `DOC00${doctors.length + 1}`
-            };
-            setDoctors(prev => [...prev, newDoc]);
-            addNotification({
-                type: 'success',
-                title: 'Doctor Onboarded',
-                message: `${formData.name} has been added to the medical staff.`
+                type: 'error',
+                title: 'Registration Failed',
+                message: error.message
             });
         }
-        setIsModalOpen(false);
     };
 
     const filteredDoctors = doctors.filter(doc => {
         const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             doc.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            doc.dept.toLowerCase().includes(searchQuery.toLowerCase());
+            doc.dept?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesFilter = activeFilter === 'All' || doc.status === activeFilter;
         return matchesSearch && matchesFilter;
     });
@@ -193,7 +258,6 @@ const DoctorManagement = () => {
                             <tr className="bg-slate-50/50 border-b border-slate-100">
                                 <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Doctor Details</th>
                                 <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Department</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Experience</th>
                                 <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
                                 <th className="px-8 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Actions</th>
                             </tr>
@@ -218,7 +282,6 @@ const DoctorManagement = () => {
                                             <span className="text-sm font-bold text-slate-600">{doc.dept}</span>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6 text-sm font-bold text-slate-500">{doc.experience}</td>
                                     <td className="px-8 py-6">
                                         <span className={cn(
                                             "inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border",
@@ -315,13 +378,24 @@ const DoctorManagement = () => {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Experience</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Consultation Fee (₹)</label>
                                         <input
-                                            type="text"
-                                            placeholder="5 Years"
+                                            type="number"
+                                            placeholder="500"
                                             className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold"
-                                            value={formData.experience}
-                                            onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                                            value={formData.consultation_fee}
+                                            onChange={(e) => setFormData({ ...formData, consultation_fee: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Set Password</label>
+                                        <input
+                                            type="password"
+                                            placeholder="Default: Doctor@123"
+                                            className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold"
+                                            value={formData.password}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
