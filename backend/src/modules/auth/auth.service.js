@@ -19,13 +19,13 @@ const generateTokens = (user) => {
 };
 
 const register = async (name, email, password, gender, dob, phone) => {
-    const client = await pool.connect();
+    const connection = await pool.getConnection();
     try {
-        await client.query('BEGIN');
+        await connection.beginTransaction();
 
         // Check if user exists
-        const userCheck = await client.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (userCheck.rows.length > 0) {
+        const [userCheck] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
+        if (userCheck.length > 0) {
             throw new Error('User already exists');
         }
 
@@ -34,31 +34,33 @@ const register = async (name, email, password, gender, dob, phone) => {
         const passwordHash = await bcrypt.hash(password, salt);
 
         // Create User
-        const userResult = await client.query(
-            'INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, role',
+        const [userResult] = await connection.query(
+            'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
             [name, email, passwordHash, 'patient']
         );
-        const user = userResult.rows[0];
+
+        const userId = userResult.insertId;
+        const user = { id: userId, name, role: 'patient' };
 
         // Create Patient Profile
-        await client.query(
-            'INSERT INTO patients (user_id, dob, gender, phone) VALUES ($1, $2, $3, $4)',
-            [user.id, dob, gender, phone]
+        await connection.query(
+            'INSERT INTO patients (user_id, dob, gender, phone) VALUES (?, ?, ?, ?)',
+            [userId, dob, gender, phone] // Note: Standard MySQL date format is YYYY-MM-DD
         );
 
-        await client.query('COMMIT');
+        await connection.commit();
         return user;
     } catch (error) {
-        await client.query('ROLLBACK');
+        await connection.rollback();
         throw error;
     } finally {
-        client.release();
+        connection.release();
     }
 };
 
 const login = async (email, password) => {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    const user = result.rows[0];
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    const user = rows[0];
 
     if (!user) {
         throw new Error('Invalid credentials');
@@ -76,8 +78,8 @@ const login = async (email, password) => {
 const refreshToken = async (token) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-        const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
-        const user = result.rows[0];
+        const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [decoded.id]);
+        const user = rows[0];
 
         if (!user) {
             throw new Error('User not found');

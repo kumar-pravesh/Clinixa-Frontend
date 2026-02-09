@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../api/axios';
 import {
     CalendarCheck,
     Users,
@@ -10,10 +11,13 @@ import {
     Clock,
     Stethoscope,
     Building2,
-    CheckCircle2
+    CheckCircle2,
+    Check,
+    X
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useNotification } from '../../context/NotificationContext';
+import { adminService } from '../../services/adminService';
 
 const DashboardStat = ({ title, value, icon: Icon, color, trend, detail }) => (
     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:border-primary/20 transition-all group overflow-hidden relative">
@@ -47,28 +51,132 @@ const DashboardStat = ({ title, value, icon: Icon, color, trend, detail }) => (
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const { addNotification } = useNotification();
-    const [alerts, setAlerts] = useState([
-        { id: 1, type: 'New Appointment', patient: 'Rahul Sharma', dept: 'Cardiology', time: '10:30 AM' },
-        { id: 2, type: 'New Appointment', patient: 'Nisha Verma', dept: 'Pediatrics', time: '11:45 AM' },
-        { id: 3, type: 'Emergency Alert', patient: 'Tejas Kumar', dept: 'Surgery', time: 'ASAP' },
-    ]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [stats, setStats] = useState({
+        dailyAppointments: 0,
+        activePatients: 0,
+        dailyRevenue: 0,
+        pendingApprovals: 0
+    });
+    const [todaySchedule, setTodaySchedule] = useState([]);
+    const [assignmentModal, setAssignmentModal] = useState(null);
+    const [availableDoctors, setAvailableDoctors] = useState([]);
+    const [selectedDoctor, setSelectedDoctor] = useState('');
 
-    const handleApprove = (id, patient) => {
-        setAlerts(prev => prev.filter(a => a.id !== id));
-        addNotification({
-            type: 'appointment',
-            title: 'Appointment Approved',
-            message: `Appointment for ${patient} has been successfully approved.`
-        });
+    // Fetch Dashboard Data
+    const fetchDashboardData = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const [statsData, scheduleData] = await Promise.all([
+                adminService.getDashboardStats(),
+                adminService.getTodaysAppointments()
+            ]);
+            setStats(statsData);
+            setTodaySchedule(scheduleData);
+        } catch (err) {
+            console.error('Error loading dashboard data:', err);
+            addNotification({
+                type: 'error',
+                title: 'Data Sync Error',
+                message: 'Failed to fetch latest dashboard updates.'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [addNotification]);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]);
+
+    const handleApprove = async (id, patientName, appointment) => {
+        // Check if doctor is assigned
+        if (!appointment.doctor_id) {
+            setAssignmentModal({
+                appointmentId: id,
+                dept: appointment.dept,
+                patientName: patientName
+            });
+            // Fetch available doctors
+            try {
+                const response = await api.get('/doctors');
+                const deptDoctors = response.data.filter(d =>
+                    d.dept === appointment.dept && d.status === 'Active'
+                );
+                setAvailableDoctors(deptDoctors);
+            } catch (err) {
+                console.error('Error fetching doctors:', err);
+            }
+            return;
+        }
+
+        try {
+            await adminService.updateAppointmentStatus(id, 'Confirmed');
+            addNotification({
+                type: 'success',
+                title: 'Slot Confirmed',
+                message: `Appointment for ${patientName} has been approved.`
+            });
+            fetchDashboardData(); // Refresh data
+        } catch (err) {
+            addNotification({
+                type: 'error',
+                title: 'Action Failed',
+                message: 'Could not approve the appointment.'
+            });
+        }
     };
 
-    const handleReschedule = (id, patient) => {
-        // Simple mock behavior: moves it to a "later" state or just notifies
-        addNotification({
-            type: 'appointment',
-            title: 'Reschedule Requested',
-            message: `Reschedule request sent to ${patient}.`
-        });
+    const handleAssignAndApprove = async () => {
+        if (!selectedDoctor) {
+            addNotification({
+                type: 'error',
+                title: 'Selection Required',
+                message: 'Please select a doctor before approving.'
+            });
+            return;
+        }
+
+        try {
+            await adminService.assignDoctor(assignmentModal.appointmentId, selectedDoctor);
+            await adminService.updateAppointmentStatus(assignmentModal.appointmentId, 'Confirmed');
+
+            addNotification({
+                type: 'success',
+                title: 'Appointment Confirmed',
+                message: `Doctor assigned and appointment approved for ${assignmentModal.patientName}.`
+            });
+
+            setAssignmentModal(null);
+            setSelectedDoctor('');
+            fetchDashboardData();
+        } catch (err) {
+            addNotification({
+                type: 'error',
+                title: 'Action Failed',
+                message: 'Could not assign doctor and approve appointment.'
+            });
+        }
+    };
+
+    const handleReject = async (id, patientName) => {
+        if (window.confirm(`Are you sure you want to reject ${patientName}'s appointment?`)) {
+            try {
+                await adminService.updateAppointmentStatus(id, 'Rejected');
+                addNotification({
+                    type: 'info',
+                    title: 'Appointment Rejected',
+                    message: `Slot for ${patientName} has been declined.`
+                });
+                fetchDashboardData(); // Refresh data
+            } catch (err) {
+                addNotification({
+                    type: 'error',
+                    title: 'Action Failed',
+                    message: 'Could not reject the appointment.'
+                });
+            }
+        }
     };
 
     return (
@@ -81,36 +189,36 @@ const AdminDashboard = () => {
             {/* Quick Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <DashboardStat
-                    title="Daily Appointments"
-                    value="42"
+                    title="Appointments Today"
+                    value={stats.dailyAppointments}
                     icon={CalendarCheck}
-                    color="bg-sky-500"
+                    color="bg-primary"
                     trend={12}
-                    detail="Scheduled Today"
+                    detail="Scheduled Slots"
                 />
                 <DashboardStat
                     title="Active Patients"
-                    value="1.2k"
+                    value={stats.activePatients}
                     icon={Users}
-                    color="bg-violet-500"
+                    color="bg-blue-500"
                     trend={8}
-                    detail="This Month"
+                    detail="Hospital Directory"
                 />
                 <DashboardStat
                     title="Daily Revenue"
-                    value="₹1.8L"
+                    value={`₹${(stats.dailyRevenue / 1000).toFixed(1)}k`}
                     icon={TrendingUp}
                     color="bg-emerald-500"
                     trend={15}
-                    detail="Target: ₹2L"
+                    detail="Clinical Billing"
                 />
                 <DashboardStat
-                    title="Pending Dues"
-                    value="₹45k"
-                    icon={CreditCard}
-                    color="bg-orange-500"
-                    trend={-5}
-                    detail="12 Invoices"
+                    title="Pending Actions"
+                    value={stats.pendingApprovals}
+                    icon={Clock}
+                    color="bg-amber-500"
+                    trend={-2}
+                    detail="Requires Review"
                 />
             </div>
 
@@ -129,40 +237,72 @@ const AdminDashboard = () => {
                         </div>
 
                         <div className="space-y-4">
-                            {alerts.length > 0 ? alerts.map((alert) => (
-                                <div key={alert.id} className="flex items-center justify-between p-5 bg-slate-50/50 rounded-3xl border border-transparent hover:border-slate-100 hover:bg-white transition-all group">
+                            {isLoading ? (
+                                <p className="text-slate-400 text-xs italic p-4 text-center">Loading pending slots...</p>
+                            ) : todaySchedule.filter(apt => apt.status === 'Scheduled').length === 0 ? (
+                                <p className="text-slate-400 text-xs italic p-4 text-center">No pending approvals today.</p>
+                            ) : todaySchedule.filter(apt => apt.status === 'Scheduled').map((apt) => (
+                                <div key={apt.id} className="p-5 bg-slate-50 rounded-2xl border border-slate-100/50 flex items-center justify-between group hover:bg-white hover:shadow-xl hover:shadow-slate-100 transition-all">
                                     <div className="flex items-center gap-4">
-                                        <div className={cn(
-                                            "w-12 h-12 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm group-hover:text-amber-500 transition-colors",
-                                            alert.dept === 'Surgery' ? 'text-red-500' : 'text-slate-400'
-                                        )}>
-                                            <CalendarCheck className="w-6 h-6" />
+                                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
+                                            {apt.patient_name?.[0] || 'P'}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-black text-slate-800 tracking-tight">{alert.type}</p>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Patient: {alert.patient} • Dept: {alert.dept}</p>
+                                            <p className="text-xs font-black text-slate-800">{apt.patient_name}</p>
+                                            <p className="text-[10px] text-slate-400 font-bold">{apt.time} • {apt.dept}</p>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
-                                            onClick={() => handleReschedule(alert.id, alert.patient)}
-                                            className="px-5 py-2.5 bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600 rounded-xl hover:bg-slate-50 transition-all"
+                                            onClick={() => handleApprove(apt.id, apt.patient_name)}
+                                            className="p-2 bg-emerald-500 text-white rounded-lg hover:scale-110 active:scale-95 transition-all shadow-lg shadow-emerald-100"
                                         >
-                                            Reschedule
+                                            <Check className="w-4 h-4" />
                                         </button>
                                         <button
-                                            onClick={() => handleApprove(alert.id, alert.patient)}
-                                            className="px-5 py-2.5 bg-emerald-500 text-[10px] font-black uppercase tracking-widest text-white rounded-xl shadow-lg shadow-emerald-200 hover:scale-105 active:scale-95 transition-all"
+                                            onClick={() => handleReject(apt.id, apt.patient_name)}
+                                            className="p-2 bg-rose-500 text-white rounded-lg hover:scale-110 active:scale-95 transition-all shadow-lg shadow-rose-100"
                                         >
-                                            Approve
+                                            <X className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
-                            )) : (
-                                <div className="text-center py-10">
-                                    <p className="text-slate-400 font-bold italic text-sm">All clear! No pending alerts.</p>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Today's Schedule */}
+                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-lg font-black text-slate-900 tracking-tight">Today's Schedule</h3>
+                            <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Full View</button>
+                        </div>
+                        <div className="space-y-4">
+                            {isLoading ? (
+                                <p className="text-slate-400 text-xs italic p-4 text-center">Loading schedule...</p>
+                            ) : todaySchedule.length === 0 ? (
+                                <p className="text-slate-400 text-xs italic p-4 text-center">No appointments scheduled for today.</p>
+                            ) : todaySchedule.map((apt) => (
+                                <div key={apt.id} className="p-4 flex items-center justify-between border-b border-slate-50 last:border-0 hover:bg-slate-50/50 rounded-xl transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-center min-w-[60px]">
+                                            <p className="text-xs font-black text-slate-900">{apt.time.split(' ')[0]}</p>
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">{apt.time.split(' ')[1]}</p>
+                                        </div>
+                                        <div className="w-px h-8 bg-slate-100" />
+                                        <div>
+                                            <p className="text-xs font-black text-slate-800">{apt.patient_name}</p>
+                                            <p className="text-[10px] text-slate-400 font-bold">with {apt.doctor_name || <span className="text-amber-600">Unassigned</span>}</p>
+                                        </div>
+                                    </div>
+                                    <span className={cn(
+                                        "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                                        apt.status === 'Confirmed' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                                    )}>
+                                        {apt.status}
+                                    </span>
                                 </div>
-                            )}
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -205,26 +345,57 @@ const AdminDashboard = () => {
                         <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                     </div>
 
-                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8 text-center">
-                        <div className="w-16 h-16 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-4 text-primary">
-                            <CheckCircle2 className="w-8 h-8" />
-                        </div>
-                        <h3 className="text-sm font-black text-slate-800">System Pulse</h3>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">All modules functional</p>
-                        <div className="mt-6 flex justify-center gap-4">
-                            <div className="text-center">
-                                <p className="text-xl font-black text-slate-900 tracking-tighter">98%</p>
-                                <p className="text-[8px] text-slate-400 font-black uppercase tracking-[0.2em]">Uptime</p>
+
+                </div>
+            </div>
+
+            {/* Doctor Assignment Modal */}
+            {assignmentModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden relative">
+                        <div className="p-12">
+                            <div className="mb-8">
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Assign Doctor</h2>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-1">Select physician for {assignmentModal.patientName}</p>
                             </div>
-                            <div className="w-px h-8 bg-slate-100"></div>
-                            <div className="text-center">
-                                <p className="text-xl font-black text-slate-900 tracking-tighter">2ms</p>
-                                <p className="text-[8px] text-slate-400 font-black uppercase tracking-[0.2em]">Latency</p>
+
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Available Doctors ({assignmentModal.dept})</label>
+                                    <select
+                                        className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold appearance-none w-full"
+                                        value={selectedDoctor}
+                                        onChange={(e) => setSelectedDoctor(e.target.value)}
+                                    >
+                                        <option value="">Select a doctor...</option>
+                                        {availableDoctors.map(doc => (
+                                            <option key={doc.id} value={doc.id}>{doc.name} - ₹{doc.consultation_fee}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => {
+                                            setAssignmentModal(null);
+                                            setSelectedDoctor('');
+                                        }}
+                                        className="flex-1 h-14 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-200 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleAssignAndApprove}
+                                        className="flex-1 h-14 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-emerald-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                    >
+                                        Assign & Approve
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

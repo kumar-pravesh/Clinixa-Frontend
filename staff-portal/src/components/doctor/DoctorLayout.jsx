@@ -3,24 +3,22 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     Users,
-    Stethoscope,
-    Building2,
-    CalendarCheck,
-    CreditCard,
-    BarChart3,
+    FileText,
+    Activity,
+    Calendar,
     LogOut,
     Bell,
     Search,
     Menu,
     X,
     LayoutGrid,
-    Settings,
-    ShieldCheck
+    Upload
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
-import { useAuth } from '../../context/AuthContext';
-import { useNotification } from '../../context/NotificationContext';
 import NotificationDropdown from '../reception/NotificationDropdown';
+import { useNotification } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
+import { DoctorProvider } from '../../context/DoctorContext';
 
 const SidebarLink = ({ to, icon: Icon, children, end, onClick }) => (
     <NavLink
@@ -30,8 +28,8 @@ const SidebarLink = ({ to, icon: Icon, children, end, onClick }) => (
         className={({ isActive }) => cn(
             "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
             isActive
-                ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
-                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
+                : "text-slate-600 hover:bg-slate-100/80 hover:text-primary"
         )}
     >
         <Icon className="w-5 h-5 transition-transform group-hover:scale-110" />
@@ -39,7 +37,7 @@ const SidebarLink = ({ to, icon: Icon, children, end, onClick }) => (
     </NavLink>
 );
 
-const AdminLayout = () => {
+const DoctorLayout = () => {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const { unreadCount } = useNotification();
@@ -50,9 +48,10 @@ const AdminLayout = () => {
     const handleLogout = async () => {
         try {
             await logout();
-            navigate('/login');
         } catch (error) {
             console.error('Logout failed:', error);
+        } finally {
+            navigate('/login');
         }
     };
 
@@ -67,8 +66,8 @@ const AdminLayout = () => {
     }, []);
 
     return (
-        <div className="flex min-h-screen bg-slate-50/50">
-            {/* Mobile Sidebar Overlay */}
+        <div className="flex min-h-screen bg-slate-50">
+            {/* Sidebar Overlay */}
             {isMobileMenuOpen && (
                 <div
                     className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-300"
@@ -83,14 +82,12 @@ const AdminLayout = () => {
             )}>
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-slate-900/30">
+                        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary/30">
                             C
                         </div>
                         <div>
                             <h1 className="font-bold text-xl text-slate-800 leading-tight">Clinixa</h1>
-                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5 flex items-center gap-1">
-                                <ShieldCheck className="w-3 h-3 text-emerald-500" /> Admin
-                            </p>
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">Doctor</p>
                         </div>
                     </div>
                     <button
@@ -102,23 +99,23 @@ const AdminLayout = () => {
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-                    <SidebarLink to="/admin" icon={LayoutDashboard} end onClick={() => setIsMobileMenuOpen(false)}>Dashboard</SidebarLink>
-                    <SidebarLink to="/admin/doctors" icon={Stethoscope} onClick={() => setIsMobileMenuOpen(false)}>Doctors</SidebarLink>
-                    <SidebarLink to="/admin/departments" icon={Building2} onClick={() => setIsMobileMenuOpen(false)}>Departments</SidebarLink>
-                    <SidebarLink to="/admin/patients" icon={Users} onClick={() => setIsMobileMenuOpen(false)}>Patients</SidebarLink>
-                    <SidebarLink to="/admin/appointments" icon={CalendarCheck} onClick={() => setIsMobileMenuOpen(false)}>Appointments</SidebarLink>
-                    <SidebarLink to="/admin/billing" icon={CreditCard} onClick={() => setIsMobileMenuOpen(false)}>Financials</SidebarLink>
-                    <SidebarLink to="/admin/reports" icon={BarChart3} onClick={() => setIsMobileMenuOpen(false)}>Reports</SidebarLink>
+                    <SidebarLink to="/doctor" icon={LayoutDashboard} end onClick={() => setIsMobileMenuOpen(false)}>Dashboard</SidebarLink>
+                    <SidebarLink to="/doctor/patients" icon={Users} onClick={() => setIsMobileMenuOpen(false)}>My Patients</SidebarLink>
+                    <SidebarLink to="/doctor/prescriptions" icon={FileText} onClick={() => setIsMobileMenuOpen(false)}>Prescriptions</SidebarLink>
+                    <SidebarLink to="/doctor/lab-reports" icon={Upload} onClick={() => setIsMobileMenuOpen(false)}>Lab Reports</SidebarLink>
+                    <SidebarLink to="/doctor/appointments" icon={Calendar} onClick={() => setIsMobileMenuOpen(false)}>Appointments</SidebarLink>
                 </nav>
 
-                <div className="p-4 border-t border-slate-100 space-y-2">
-
+                <div className="p-4 border-t border-slate-100">
                     <button
-                        onClick={handleLogout}
+                        onClick={() => {
+                            handleLogout();
+                            setIsMobileMenuOpen(false);
+                        }}
                         className="flex items-center gap-3 px-4 py-3 w-full text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all group"
                     >
                         <LogOut className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-                        <span className="font-bold tracking-tight">System Logout</span>
+                        <span className="font-bold tracking-tight">Logout</span>
                     </button>
                 </div>
             </aside>
@@ -126,7 +123,7 @@ const AdminLayout = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 shrink-0">
+                <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 shrink-0">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
@@ -136,23 +133,35 @@ const AdminLayout = () => {
                         </button>
                         <div className="hidden lg:flex items-center gap-2 text-slate-400">
                             <LayoutGrid className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Management / Command Center</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Doctor / Overview</span>
+                        </div>
+                        <div className="relative w-full max-w-md hidden sm:block md:ml-4">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search patients, prescriptions..."
+                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-slate-100 focus:bg-white focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-2xl text-xs font-bold outline-none transition-all"
+                            />
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3 md:gap-6">
+                        <button className="sm:hidden p-2 text-slate-400 hover:text-primary transition-colors">
+                            <Search className="w-6 h-6" />
+                        </button>
+
                         <div className="relative" ref={notificationRef}>
                             <button
                                 onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                                 className={cn(
                                     "relative p-2.5 transition-all rounded-xl",
-                                    isNotificationOpen ? "text-slate-900 bg-slate-100" : "text-slate-400 hover:text-slate-900 hover:bg-slate-50"
+                                    isNotificationOpen ? "text-primary bg-primary/5" : "text-slate-400 hover:text-primary hover:bg-slate-50"
                                 )}
                             >
                                 <Bell className="w-6 h-6" />
                                 {unreadCount > 0 && (
                                     <span className="absolute top-2.5 right-2.5 w-4 h-4 bg-red-500 rounded-full border-2 border-white text-[8px] font-black text-white flex items-center justify-center">
-                                        {unreadCount}
+                                        {unreadCount > 9 ? '9+' : unreadCount}
                                     </span>
                                 )}
                             </button>
@@ -166,25 +175,28 @@ const AdminLayout = () => {
 
                         <div className="flex items-center gap-3 pl-2">
                             <div className="hidden lg:block text-right">
-                                <p className="text-sm font-black text-slate-900 tracking-tight">Super Admin</p>
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-900 rounded-lg">
-                                    <span className="w-1 h-1 bg-emerald-400 rounded-full"></span>
-                                    <span className="text-[8px] font-black text-white uppercase tracking-widest">Root</span>
+                                <p className="text-sm font-black text-slate-900 tracking-tight">Dr. Smith</p>
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 rounded-lg">
+                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Available</span>
                                 </span>
                             </div>
                             <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black text-xs shadow-lg shadow-slate-900/10 border-2 border-white">
-                                AD
+                                DS
                             </div>
                         </div>
                     </div>
                 </header>
 
+                {/* Page Outlet */}
                 <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
-                    <Outlet />
+                    <DoctorProvider>
+                        <Outlet />
+                    </DoctorProvider>
                 </main>
             </div>
         </div>
     );
 };
 
-export default AdminLayout;
+export default DoctorLayout;

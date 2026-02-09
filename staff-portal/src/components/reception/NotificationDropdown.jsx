@@ -18,9 +18,9 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="absolute top-full right-0 mt-4 w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="absolute top-full right-0 mt-4 w-96 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 z-[100] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
             {/* Header */}
-            <div className="p-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+            <div className="p-4 border-b border-slate-50 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-2">
                     <h3 className="font-black text-slate-800 uppercase tracking-widest text-xs">Notifications</h3>
                     {unreadCount > 0 && (
@@ -40,13 +40,8 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
                 {notifications.map((notif) => (
                     <div
                         key={notif.id}
-                        onClick={() => markAsRead(notif.id)}
-                        className={cn(
-                            "p-4 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer group relative",
-                            !notif.read && "bg-primary/[0.02]"
-                        )}
+                        className="p-4 flex gap-4 hover:bg-slate-50 transition-colors group relative"
                     >
-                        {!notif.read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>}
                         <div className={cn(
                             "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm",
                             notif.bg

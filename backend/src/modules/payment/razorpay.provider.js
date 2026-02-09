@@ -9,23 +9,28 @@ const razorpay = new Razorpay({
 
 class RazorpayProvider extends PaymentProvider {
     async initiate(amount, currency, metadata) {
-        const order = await razorpay.orders.create({
-            amount: amount * 100, // paise
-            currency,
-            receipt: `appt_${metadata.appointmentId}`,
-            payment_capture: 1
-        });
+        try {
+            const order = await razorpay.orders.create({
+                amount: Math.round(amount * 100), // paise, ensure integer
+                currency,
+                receipt: `appt_${metadata.appointmentId}`,
+                payment_capture: 1
+            });
 
-        return {
-            transactionId: order.id,
-            payload: {
-                provider: 'razorpay',
-                orderId: order.id,
-                amount: order.amount,
-                currency: order.currency,
-                key: process.env.RAZORPAY_KEY_ID
-            }
-        };
+            return {
+                transactionId: order.id,
+                payload: {
+                    provider: 'razorpay',
+                    orderId: order.id,
+                    amount: order.amount,
+                    currency: order.currency,
+                    key: process.env.RAZORPAY_KEY_ID
+                }
+            };
+        } catch (error) {
+            console.error('Razorpay Error:', error);
+            throw new Error(`Razorpay Error: ${error.statusCode} ${error.plugin?.name || ''} - ${error.error?.description || error.message}`);
+        }
     }
 
     async verify(transactionId, verificationData) {

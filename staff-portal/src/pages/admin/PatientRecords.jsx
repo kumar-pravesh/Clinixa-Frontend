@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Users,
     Search,
@@ -15,19 +15,47 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useNotification } from '../../context/NotificationContext';
+import { adminService } from '../../services/adminService';
 
 const PatientRecords = () => {
     const { addNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPatient, setSelectedPatient] = useState(null);
 
-    const [patients, setPatients] = useState([
-        { id: 'PID-8821', name: 'Rahul Sharma', age: '32', gender: 'Male', contact: '+91 9988001122', lastVisit: '2026-02-05', bloodGroup: 'O+', status: 'OPD', condition: 'Hypertension', address: '123, MG Road, Mumbai' },
-        { id: 'PID-8822', name: 'Priya Singh', age: '28', gender: 'Female', contact: '+91 9988001133', lastVisit: '2026-02-04', bloodGroup: 'A+', status: 'IPD', condition: 'Pneumonia', address: 'Apartment 4B, Skyview, Delhi' },
-        { id: 'PID-8823', name: 'Amit Patel', age: '45', gender: 'Male', contact: '+91 9988001144', lastVisit: '2026-02-01', bloodGroup: 'B-', status: 'Emergency', condition: 'Multiple Fractures', address: 'Sector 15, Chandigarh' },
-        { id: 'PID-8824', name: 'John Doe', age: '45', gender: 'Male', contact: '+91 9988665544', lastVisit: '2026-02-07', bloodGroup: 'AB+', status: 'OPD', condition: 'General Checkup', address: 'Greenwood Lane, Bangalore' },
-        { id: 'PID-8825', name: 'Emma Wilson', age: '28', gender: 'Female', contact: '+91 9900112233', lastVisit: '2026-01-30', bloodGroup: 'O-', status: 'Completed', condition: 'Allergy Treatment', address: 'Ocean Ave, Chennai' },
-    ]);
+    const calculateAge = (dob) => {
+        if (!dob) return 'N/A';
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    const [patients, setPatients] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPatients = async () => {
+            try {
+                const data = await adminService.getPatients();
+                setPatients(data);
+            } catch (err) {
+                console.error('Error fetching patients:', err);
+                addNotification({
+                    type: 'error',
+                    title: 'Data Load Failed',
+                    message: 'Could not retrieve patient records from backend.'
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPatients();
+    }, [addNotification]);
 
     const getStatusStyle = (status) => {
         switch (status) {
@@ -49,7 +77,7 @@ const PatientRecords = () => {
         });
 
         setTimeout(() => {
-            const content = `---- CLINIXA MASTER PATIENT INDEX ----\n\nGenerated on: ${new Date().toLocaleString()}\nTotal Records: ${patients.length}\n\n${patients.map(p => `ID: ${p.id} | Name: ${p.name} | Age: ${p.age} | Blood: ${p.bloodGroup} | Last Visit: ${p.lastVisit}`).join('\n')}\n\n© 2026 CLINIXA HOSPITAL SYSTEMS`;
+            const content = `---- CLINIXA MASTER PATIENT INDEX ----\n\nGenerated on: ${new Date().toLocaleString()}\nTotal Records: ${patients.length}\n\n${patients.map(p => `ID: ${p.id} | Name: ${p.name} | Age: ${calculateAge(p.dob)} | Phone: ${p.phone || p.contact} | Email: ${p.email}`).join('\n')}\n\n© 2026 CLINIXA HOSPITAL SYSTEMS`;
             const blob = new Blob([content], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -121,73 +149,67 @@ const PatientRecords = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Patient Profile</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Medical Info</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Contact & Location</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Id</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Name</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Age</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Phone</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Email</th>
                                 <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {filteredPatients.length > 0 ? filteredPatients.map((patient) => (
-                                <tr key={patient.id} className="group hover:bg-slate-50/30 transition-all">
-                                    <td className="px-8 py-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 font-black group-hover:bg-primary/5 group-hover:text-primary transition-colors text-xs">
-                                                {patient.name.split(' ').map(n => n[0]).join('')}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-black text-slate-800 tracking-tight">{patient.name}</p>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">{patient.id}</span>
-                                                    <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
-                                                    <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">{patient.age}Y • {patient.gender}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <div className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded text-[9px] font-black">{patient.bloodGroup}</div>
-                                                <span className="text-xs font-bold text-slate-600">Blood Group</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="w-3.5 h-3.5 text-slate-300" />
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Last: {patient.lastVisit}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2 text-slate-600">
-                                                <Smartphone className="w-3.5 h-3.5 text-slate-400" />
-                                                <span className="text-xs font-bold">{patient.contact}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-slate-400">
-                                                <MapPin className="w-3.5 h-3.5 text-slate-300" />
-                                                <span className="text-[10px] font-bold uppercase tracking-wider truncate max-w-[150px]">{patient.address}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <span className={cn(
-                                            "inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm",
-                                            getStatusStyle(patient.status)
-                                        )}>
-                                            {patient.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-8 py-6 text-right">
-                                        <button
-                                            onClick={() => handleViewDetails(patient)}
-                                            className="p-3 bg-slate-50 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-2xl transition-all group-hover:scale-110"
-                                        >
-                                            <ArrowUpRight className="w-5 h-5" />
-                                        </button>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="5" className="px-8 py-20 text-center text-slate-400 italic">
+                                        Loading real-time records...
                                     </td>
                                 </tr>
-                            )) : (
+                            ) : filteredPatients.length > 0 ? filteredPatients.map((patient) => {
+                                const calculateAge = (dob) => {
+                                    if (!dob) return 'N/A';
+                                    const birthDate = new Date(dob);
+                                    const today = new Date();
+                                    let age = today.getFullYear() - birthDate.getFullYear();
+                                    const m = today.getMonth() - birthDate.getMonth();
+                                    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                        age--;
+                                    }
+                                    return age;
+                                };
+
+                                return (
+                                    <tr key={patient.id} className="group hover:bg-slate-50/30 transition-all">
+                                        <td className="px-8 py-6">
+                                            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">#{patient.id}</span>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 font-black group-hover:bg-primary/5 group-hover:text-primary transition-colors text-[10px]">
+                                                    {patient.name.split(' ').map(n => n[0]).join('')}
+                                                </div>
+                                                <p className="text-sm font-black text-slate-800 tracking-tight">{patient.name}</p>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <p className="text-sm font-bold text-slate-600">{calculateAge(patient.dob)} Years</p>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <p className="text-sm font-bold text-slate-600">{patient.phone || patient.contact}</p>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <p className="text-sm font-bold text-slate-500">{patient.email}</p>
+                                        </td>
+                                        <td className="px-8 py-6 text-right">
+                                            <button
+                                                onClick={() => handleViewDetails(patient)}
+                                                className="p-3 bg-slate-50 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-2xl transition-all group-hover:scale-110"
+                                            >
+                                                <ArrowUpRight className="w-5 h-5" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            }) : (
                                 <tr>
                                     <td colSpan="5" className="px-8 py-20 text-center">
                                         <p className="text-slate-400 font-bold italic">No patient records found matching your search.</p>
@@ -224,11 +246,11 @@ const PatientRecords = () => {
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
                                             <span className="text-xs font-bold text-slate-500">Blood Group</span>
-                                            <span className="text-sm font-black text-rose-500">{selectedPatient.bloodGroup}</span>
+                                            <span className="text-sm font-black text-rose-500">{selectedPatient.blood_group || 'N/A'}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
                                             <span className="text-xs font-bold text-slate-500">Age / Gender</span>
-                                            <span className="text-sm font-black text-slate-800">{selectedPatient.age}y / {selectedPatient.gender}</span>
+                                            <span className="text-sm font-black text-slate-800">{calculateAge(selectedPatient.dob)}y / {selectedPatient.gender}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -237,10 +259,10 @@ const PatientRecords = () => {
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
                                             <span className="text-xs font-bold text-slate-500">Primary Condition</span>
-                                            <span className="text-sm font-black text-slate-800">{selectedPatient.condition}</span>
+                                            <span className="text-sm font-black text-slate-800">{selectedPatient.clinical_condition || 'Normal Observation'}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                                            <span className="text-xs font-bold text-slate-500">Care Unit</span>
+                                            <span className="text-xs font-bold text-slate-500">Care Unit / Status</span>
                                             <span className="text-sm font-black text-primary">{selectedPatient.status}</span>
                                         </div>
                                     </div>

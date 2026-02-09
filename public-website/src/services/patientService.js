@@ -9,7 +9,7 @@ export const patientService = {
 
     // Doctors (used for booking)
     getDoctors: async () => {
-        const res = await api.get('/appointment/doctors');
+        const res = await api.get('/doctors');
         return res.data;
     },
 

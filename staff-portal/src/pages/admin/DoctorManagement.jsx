@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import api from '../../api/axios';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Stethoscope,
     Search,
@@ -26,22 +27,39 @@ const DoctorManagement = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState(null);
     const [activeFilter, setActiveFilter] = useState('All');
+    const [doctors, setDoctors] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const [doctors, setDoctors] = useState([
-        { id: 'DOC001', name: 'Dr. Arun Kumar', dept: 'Cardiology', email: 'arun.k@clinixa.life', phone: '+91 9988001122', status: 'Active', experience: '12 Years', shifts: 'Morning' },
-        { id: 'DOC002', name: 'Dr. Sarah Paul', dept: 'Pediatrics', email: 'sarah.p@clinixa.life', phone: '+91 9988001133', status: 'On Leave', experience: '8 Years', shifts: 'Evening' },
-        { id: 'DOC003', name: 'Dr. James Bond', dept: 'Surgery', email: 'james.b@clinixa.life', phone: '+91 9988001144', status: 'Active', experience: '15 Years', shifts: 'Night' },
-        { id: 'DOC004', name: 'Dr. Emily Watson', dept: 'Dermatology', email: 'emily.w@clinixa.life', phone: '+91 9988001155', status: 'Active', experience: '6 Years', shifts: 'Morning' },
-    ]);
+    // Fetch Doctors from Backend
+    const fetchDoctors = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/doctors');
+            setDoctors(response.data);
+        } catch (error) {
+            console.error('Error loading doctors:', error);
+            addNotification({
+                type: 'error',
+                title: 'Sync Error',
+                message: 'Failed to load doctor directory.'
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [addNotification]);
+
+    React.useEffect(() => {
+        fetchDoctors();
+    }, [fetchDoctors]);
 
     const [formData, setFormData] = useState({
         name: '',
         dept: 'General Medicine',
         email: '',
         phone: '',
-        experience: '0 Years',
-        shifts: 'Morning',
-        status: 'Active'
+        consultation_fee: '',
+        status: 'Active',
+        password: ''
     });
 
     const getStatusStyle = (status) => {
@@ -64,53 +82,78 @@ const DoctorManagement = () => {
                 dept: 'General Medicine',
                 email: '',
                 phone: '',
-                experience: '0 Years',
-                shifts: 'Morning',
-                status: 'Active'
+                consultation_fee: '',
+                status: 'Active',
+                password: ''
             });
         }
         setIsModalOpen(true);
     };
 
-    const handleDelete = (id, name) => {
+    const handleDelete = async (id, name) => {
         if (window.confirm(`Are you sure you want to remove ${name}?`)) {
-            setDoctors(prev => prev.filter(d => d.id !== id));
-            addNotification({
-                type: 'info',
-                title: 'Personnel Removed',
-                message: `${name} has been removed from the directory.`
-            });
+            try {
+                await api.delete(`/admin/doctors/${id}`);
+                setDoctors(prev => prev.filter(d => d.id !== id));
+                addNotification({
+                    type: 'info',
+                    title: 'Personnel Removed',
+                    message: `${name} has been removed from the directory.`
+                });
+            } catch (err) {
+                addNotification({
+                    type: 'error',
+                    title: 'Action Failed',
+                    message: `Could not remove ${name}.`
+                });
+            }
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (editingDoctor) {
-            setDoctors(prev => prev.map(d => d.id === editingDoctor.id ? { ...formData } : d));
+        try {
+            if (editingDoctor) {
+                await api.put(`/admin/doctors/${editingDoctor.id}`, formData);
+
+                setDoctors(prev => prev.map(d =>
+                    d.id === editingDoctor.id ? { ...d, ...formData } : d
+                ));
+
+                addNotification({
+                    type: 'success',
+                    title: 'Doctor Updated',
+                    message: `${formData.name}'s profile has been updated successfully.`
+                });
+            } else {
+                const response = await api.post('/admin/doctors', formData);
+
+                const newDoc = {
+                    ...formData,
+                    id: response.data.data.id
+                };
+                setDoctors(prev => [...prev, newDoc]);
+
+                addNotification({
+                    type: 'success',
+                    title: 'Doctor Onboarded',
+                    message: `${formData.name} has been registered successfully.`
+                });
+            }
+            setIsModalOpen(false);
+        } catch (error) {
             addNotification({
-                type: 'success',
-                title: 'Profile Updated',
-                message: `Credentials for ${formData.name} updated successfully.`
-            });
-        } else {
-            const newDoc = {
-                ...formData,
-                id: `DOC00${doctors.length + 1}`
-            };
-            setDoctors(prev => [...prev, newDoc]);
-            addNotification({
-                type: 'success',
-                title: 'Doctor Onboarded',
-                message: `${formData.name} has been added to the medical staff.`
+                type: 'error',
+                title: 'Action Failed',
+                message: error.response?.data?.message || error.message
             });
         }
-        setIsModalOpen(false);
     };
 
     const filteredDoctors = doctors.filter(doc => {
         const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             doc.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            doc.dept.toLowerCase().includes(searchQuery.toLowerCase());
+            doc.dept?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesFilter = activeFilter === 'All' || doc.status === activeFilter;
         return matchesSearch && matchesFilter;
     });
@@ -141,12 +184,19 @@ const DoctorManagement = () => {
             {/* Stats Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Total staff', val: doctors.length, color: 'bg-primary' },
-                    { label: 'Currently Active', val: doctors.filter(d => d.status === 'Active').length, color: 'bg-emerald-500' },
-                    { label: 'On Leave', val: doctors.filter(d => d.status === 'On Leave').length, color: 'bg-amber-500' },
-                    { label: 'Inactive', val: doctors.filter(d => d.status === 'Inactive').length, color: 'bg-slate-500' },
+                    { label: 'Total staff', val: doctors.length, color: 'bg-primary', filter: 'All' },
+                    { label: 'Currently Active', val: doctors.filter(d => d.status === 'Active').length, color: 'bg-emerald-500', filter: 'Active' },
+                    { label: 'On Leave', val: doctors.filter(d => d.status === 'On Leave').length, color: 'bg-amber-500', filter: 'On Leave' },
+                    { label: 'Inactive', val: doctors.filter(d => d.status === 'Inactive').length, color: 'bg-slate-500', filter: 'Inactive' },
                 ].map((stat, i) => (
-                    <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:border-primary/20 transition-all">
+                    <button
+                        key={i}
+                        onClick={() => setActiveFilter(stat.filter)}
+                        className={cn(
+                            "bg-white p-6 rounded-[2rem] border shadow-sm flex items-center justify-between group transition-all text-left w-full",
+                            activeFilter === stat.filter ? "border-primary ring-2 ring-primary/10" : "border-slate-100 hover:border-primary/20"
+                        )}
+                    >
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
                             <p className="text-2xl font-black text-slate-900 tracking-tighter">{stat.val}</p>
@@ -154,7 +204,7 @@ const DoctorManagement = () => {
                         <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-slate-200 group-hover:scale-110 transition-transform", stat.color)}>
                             <Users className="w-6 h-6" />
                         </div>
-                    </div>
+                    </button>
                 ))}
             </div>
 
@@ -172,7 +222,7 @@ const DoctorManagement = () => {
                         />
                     </div>
                     <div className="flex gap-2">
-                        {['All', 'Active', 'On Leave'].map(filter => (
+                        {['All', 'Active', 'On Leave', 'Inactive'].map(filter => (
                             <button
                                 key={filter}
                                 onClick={() => setActiveFilter(filter)}
@@ -193,7 +243,6 @@ const DoctorManagement = () => {
                             <tr className="bg-slate-50/50 border-b border-slate-100">
                                 <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Doctor Details</th>
                                 <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Department</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Experience</th>
                                 <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
                                 <th className="px-8 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Actions</th>
                             </tr>
@@ -218,7 +267,6 @@ const DoctorManagement = () => {
                                             <span className="text-sm font-bold text-slate-600">{doc.dept}</span>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6 text-sm font-bold text-slate-500">{doc.experience}</td>
                                     <td className="px-8 py-6">
                                         <span className={cn(
                                             "inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border",
@@ -315,13 +363,24 @@ const DoctorManagement = () => {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Experience</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Consultation Fee (₹)</label>
                                         <input
-                                            type="text"
-                                            placeholder="5 Years"
+                                            type="number"
+                                            placeholder="500"
                                             className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold"
-                                            value={formData.experience}
-                                            onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                                            value={formData.consultation_fee}
+                                            onChange={(e) => setFormData({ ...formData, consultation_fee: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Set Password</label>
+                                        <input
+                                            type="password"
+                                            placeholder="Default: Doctor@123"
+                                            className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold"
+                                            value={formData.password}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">

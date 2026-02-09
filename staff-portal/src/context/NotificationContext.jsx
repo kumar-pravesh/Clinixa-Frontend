@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
     AlertCircle,
     Calendar,
@@ -7,6 +7,8 @@ import {
     Clock,
     CheckCircle2
 } from 'lucide-react';
+
+import { adminService } from '../services/adminService';
 
 const NotificationContext = createContext();
 
@@ -19,32 +21,53 @@ export const useNotification = () => {
 };
 
 export const NotificationProvider = ({ children }) => {
-    const [notifications, setNotifications] = useState([
-        {
-            id: 1,
-            type: 'emergency',
-            title: 'Emergency Case',
-            message: 'Patient in Room 104 needs immediate billing clearance.',
-            time: '2 mins ago',
-            read: false,
-            icon: AlertCircle,
-            color: 'text-red-500',
-            bg: 'bg-red-50'
-        },
-        {
-            id: 2,
-            type: 'appointment',
-            title: 'New Appointment',
-            message: 'Mr. John Doe booked a consultation with Dr. Smith for 4:30 PM.',
-            time: '15 mins ago',
-            read: false,
-            icon: Calendar,
-            color: 'text-blue-500',
-            bg: 'bg-blue-50'
-        }
-    ]);
-
+    const [notifications, setNotifications] = useState([]);
     const [activeToast, setActiveToast] = useState(null);
+
+    const mapNotification = (notif) => {
+        const icons = {
+            'NEW_APPOINTMENT': Calendar,
+            'EMERGENCY': AlertCircle,
+            'PAYMENT': CheckCircle2,
+        };
+        const colors = {
+            'NEW_APPOINTMENT': 'text-blue-500',
+            'EMERGENCY': 'text-red-500',
+            'PAYMENT': 'text-green-500',
+        };
+        const bgs = {
+            'NEW_APPOINTMENT': 'bg-blue-50',
+            'EMERGENCY': 'bg-red-50',
+            'PAYMENT': 'bg-green-50',
+        };
+
+        return {
+            id: notif.id,
+            title: notif.type.replace('_', ' '),
+            message: notif.message,
+            time: new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            read: !!notif.is_read,
+            icon: icons[notif.type] || Clock,
+            color: colors[notif.type] || 'text-amber-500',
+            bg: bgs[notif.type] || 'bg-amber-50'
+        };
+    };
+
+    const fetchNotifications = async () => {
+        try {
+            const data = await adminService.getNotifications();
+            setNotifications(data.map(mapNotification));
+        } catch (err) {
+            console.error('Failed to fetch notifications:', err);
+        }
+    };
+
+    // Initial fetch and poll
+    useEffect(() => {
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 30000); // 30s poll
+        return () => clearInterval(interval);
+    }, []);
 
     // Auto-clear toast after 5 seconds
     useEffect(() => {
@@ -56,69 +79,55 @@ export const NotificationProvider = ({ children }) => {
         }
     }, [activeToast]);
 
-    const addNotification = (notif) => {
-        const icons = {
-            emergency: AlertCircle,
-            appointment: Calendar,
-            payment: CheckCircle2,
-            system: Clock
-        };
-        const colors = {
-            emergency: 'text-red-500',
-            appointment: 'text-blue-500',
-            payment: 'text-green-500',
-            system: 'text-amber-500'
-        };
-        const bgs = {
-            emergency: 'bg-red-50',
-            appointment: 'bg-blue-50',
-            payment: 'bg-green-50',
-            system: 'bg-amber-50'
-        };
-
-        const newNotif = {
+    const addNotification = useCallback((notif) => {
+        // This is for local manual notifications (e.g. from UI actions)
+        const toast = {
             id: Date.now(),
-            type: notif.type || 'system',
-            title: notif.title,
-            message: notif.message,
+            ...notif,
             time: 'Just now',
             read: false,
-            icon: icons[notif.type] || Clock,
-            color: colors[notif.type] || 'text-amber-500',
-            bg: bgs[notif.type] || 'bg-amber-50'
+            icon: notif.type === 'error' ? AlertCircle : CheckCircle2,
+            color: notif.type === 'error' ? 'text-red-500' : 'text-emerald-500',
+            bg: notif.type === 'error' ? 'bg-red-50' : 'bg-emerald-50'
         };
+        setActiveToast(toast);
+    }, []);
 
-        setNotifications(prev => [newNotif, ...prev]);
-        setActiveToast(newNotif);
-    };
+    const markAsRead = useCallback(async (id) => {
+        try {
+            await adminService.markRead(id);
+            setNotifications(prev => prev.map(n =>
+                n.id === id ? { ...n, read: true } : n
+            ));
+        } catch (err) {
+            console.error('Failed to mark notification as read:', err);
+        }
+    }, []);
 
-    const markAsRead = (id) => {
-        setNotifications(prev => prev.map(n =>
-            n.id === id ? { ...n, read: true } : n
-        ));
-    };
-
-    const markAllAsRead = () => {
+    const markAllAsRead = useCallback(() => {
+        // Backend implementation pending for bulk mark, so doing local for now
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    };
+    }, []);
 
-    const clearNotification = (id) => {
+    const clearNotification = useCallback((id) => {
         setNotifications(prev => prev.filter(n => n.id !== id));
-    };
+    }, []);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
+    const contextValue = useMemo(() => ({
+        notifications,
+        addNotification,
+        markAsRead,
+        markAllAsRead,
+        clearNotification,
+        activeToast,
+        setActiveToast,
+        unreadCount
+    }), [notifications, addNotification, markAsRead, markAllAsRead, clearNotification, activeToast, unreadCount]);
+
     return (
-        <NotificationContext.Provider value={{
-            notifications,
-            addNotification,
-            markAsRead,
-            markAllAsRead,
-            clearNotification,
-            activeToast,
-            setActiveToast,
-            unreadCount
-        }}>
+        <NotificationContext.Provider value={contextValue}>
             {children}
         </NotificationContext.Provider>
     );

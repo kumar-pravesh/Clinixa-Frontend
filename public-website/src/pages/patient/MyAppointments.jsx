@@ -6,8 +6,16 @@ const MyAppointments = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        console.log('Fetching appointments...');
         patientService.getMyAppointments()
-            .then(data => setAppointments(data))
+            .then(data => {
+                console.log('Received appointments:', data);
+                setAppointments(data);
+            })
+            .catch(error => {
+                console.error('Error fetching appointments:', error);
+                console.error('Error response:', error.response?.data);
+            })
             .finally(() => setLoading(false));
     }, []);
 
@@ -40,7 +48,7 @@ const MyAppointments = () => {
                                 <tr key={appt.id}>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm text-gray-900">{new Date(appt.date).toLocaleDateString()}</div>
-                                        <div className="text-sm text-gray-500">{appt.time_slot}</div>
+                                        <div className="text-sm text-gray-500">{appt.time}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm font-medium text-gray-900">{appt.doctor_name}</div>
@@ -52,7 +60,8 @@ const MyAppointments = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {appt.payment_status}
+                                        {/* Payment status not directly in appointment anymore, using status proxy or N/A */}
+                                        {appt.status === 'Confirmed' ? 'Paid' : 'Pending'}
                                     </td>
                                 </tr>
                             ))}

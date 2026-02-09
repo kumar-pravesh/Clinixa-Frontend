@@ -39,7 +39,7 @@ const BookAppointment = () => {
 
             // 2. Initiate Payment
             // In a real app, this would open Razorpay/Stripe
-            if (window.confirm(`Proceed to pay ₹${selectedDoctor.fees} for appointment?`)) {
+            if (window.confirm(`Proceed to pay ₹${selectedDoctor.consultation_fee} for appointment?`)) {
                 await processPayment(appointment.id);
             } else {
                 alert('Payment cancelled. Appointment status: PENDING PAYMENT');
@@ -144,7 +144,7 @@ const BookAppointment = () => {
                                 >
                                     <div className="font-bold">{doc.name}</div>
                                     <div className="text-sm text-gray-600">{doc.specialization}</div>
-                                    <div className="text-accent text-sm font-semibold">₹{doc.fees}</div>
+                                    <div className="text-accent text-sm font-semibold">₹{doc.consultation_fee}</div>
                                 </div>
                             ))}
                         </div>
@@ -187,7 +187,7 @@ const BookAppointment = () => {
                                 disabled={processing}
                                 className="w-full bg-accent text-white font-bold py-3 rounded-md hover:bg-orange-600 disabled:opacity-50 transition"
                             >
-                                {processing ? 'Processing...' : `Pay ₹${selectedDoctor.fees} & Book`}
+                                {processing ? 'Processing...' : `Pay ₹${selectedDoctor.consultation_fee} & Book`}
                             </button>
                         </form>
                     </div>

@@ -8,96 +8,106 @@ const getProvider = (providerName) => {
 };
 
 const initiatePayment = async (userId, appointmentId) => {
-    const client = await pool.connect();
+    const connection = await pool.getConnection();
     try {
-        await client.query('BEGIN');
+        await connection.beginTransaction();
 
-        const apptRes = await client.query(
-            `SELECT a.*, d.fees, p.user_id
+        const [apptRes] = await connection.query(
+            `SELECT a.*, d.consultation_fee, p.user_id
              FROM appointments a
              JOIN patients p ON a.patient_id = p.id
              JOIN doctors d ON a.doctor_id = d.id
-             WHERE a.id = $1`,
+             WHERE a.id = ?`,
             [appointmentId]
         );
 
-        const appointment = apptRes.rows[0];
+        const appointment = apptRes[0];
         if (!appointment) throw new Error('Appointment not found');
         if (appointment.user_id !== userId) throw new Error('Unauthorized');
-        if (appointment.payment_status === 'SUCCESS') throw new Error('Already paid');
+
+        // Ensure consultation_fee is valid
+        const amount = parseFloat(appointment.consultation_fee) || 500;
 
         const providerName = process.env.PAYMENT_PROVIDER || 'mock';
         const provider = getProvider(providerName);
 
         const { transactionId, payload } = await provider.initiate(
-            appointment.fees,
+            amount,
             'INR',
             { appointmentId }
         );
 
-        const paymentRes = await client.query(
-            `INSERT INTO payments (appointment_id, amount, provider, transaction_id, status)
-             VALUES ($1, $2, $3, $4, 'INITIATED')
-             RETURNING id`,
-            [appointmentId, appointment.fees, providerName, transactionId]
+        // Create Invoice first (New Schema)
+        const [invRes] = await connection.query(
+            `INSERT INTO invoices (appointment_id, patient_id, amount, issued_date)
+              VALUES (?, ?, ?, NOW())`,
+            [appointmentId, appointment.patient_id, amount]
+        );
+        const invoiceId = invRes.insertId;
+
+        const [paymentRes] = await connection.query(
+            `INSERT INTO payments (invoice_id, amount, method, transaction_id, status)
+             VALUES (?, ?, ?, ?, 'INITIATED')`,
+            [invoiceId, amount, providerName, transactionId]
         );
 
-        await client.query('COMMIT');
+        await connection.commit();
 
         return {
-            paymentId: paymentRes.rows[0].id,
+            paymentId: paymentRes.insertId,
             provider: providerName,
             payload
         };
     } catch (err) {
-        await client.query('ROLLBACK');
+        await connection.rollback();
         throw err;
     } finally {
-        client.release();
+        connection.release();
     }
 };
 
 const confirmPayment = async (paymentId, verificationData) => {
-    const client = await pool.connect();
+    const connection = await pool.getConnection();
     try {
-        await client.query('BEGIN');
+        await connection.beginTransaction();
 
-        const paymentRes = await client.query(
-            'SELECT * FROM payments WHERE id = $1',
+        const [paymentRes] = await connection.query(
+            'SELECT * FROM payments WHERE id = ?',
             [paymentId]
         );
 
-        const payment = paymentRes.rows[0];
+        const payment = paymentRes[0];
         if (!payment) throw new Error('Payment not found');
 
-        const provider = getProvider(payment.provider);
+        const provider = getProvider(payment.method);
         const isValid = await provider.verify(payment.transaction_id, verificationData);
 
         const status = isValid ? 'SUCCESS' : 'FAILED';
 
-        await client.query(
-            'UPDATE payments SET status = $1 WHERE id = $2',
+        await connection.query(
+            'UPDATE payments SET status = ? WHERE id = ?',
             [status, paymentId]
         );
 
-        await client.query(
-            `UPDATE appointments
-             SET status = $1, payment_status = $2
-             WHERE id = $3`,
-            [
-                isValid ? 'CONFIRMED' : 'CREATED',
-                status,
-                payment.appointment_id
-            ]
-        );
+        // Update appointment status if successful
+        if (isValid) {
+            // Get appointment ID via invoice
+            const [invRes] = await connection.query('SELECT appointment_id FROM invoices WHERE id = ?', [payment.invoice_id]);
+            if (invRes.length > 0) {
+                await connection.query(
+                    'UPDATE appointments SET status = ? WHERE id = ?',
+                    ['Confirmed', invRes[0].appointment_id]
+                );
+            }
+        }
 
-        await client.query('COMMIT');
+        await connection.commit();
         return { status };
     } catch (err) {
-        await client.query('ROLLBACK');
+        await connection.rollback();
         throw err;
     } finally {
-        client.release();
+        connection.release();
     }
 };
 
