@@ -12,7 +12,11 @@ const getDoctors = async (req, res) => {
 const bookAppointment = async (req, res) => {
     try {
         const { doctorId, date, timeSlot } = req.body;
-        const appointment = await appointmentService.createAppointment(req.user.id, doctorId, date, timeSlot);
+
+        // Handle DOC- prefix if present
+        const parsedDoctorId = doctorId.toString().replace('DOC-', '');
+
+        const appointment = await appointmentService.createAppointment(req.user.id, parsedDoctorId, date, timeSlot);
         res.status(201).json(appointment);
     } catch (error) {
         res.status(400).json({ message: error.message });

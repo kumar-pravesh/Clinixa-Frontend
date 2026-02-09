@@ -44,8 +44,8 @@ const register = async (name, email, password, gender, dob, phone) => {
 
         // Create Patient Profile
         await connection.query(
-            'INSERT INTO patients (user_id, dob, gender, phone) VALUES (?, ?, ?, ?)',
-            [userId, dob, gender, phone] // Note: Standard MySQL date format is YYYY-MM-DD
+            'INSERT INTO patients (user_id, name, dob, gender, phone) VALUES (?, ?, ?, ?, ?)',
+            [userId, name, dob, gender, phone]
         );
 
         await connection.commit();
