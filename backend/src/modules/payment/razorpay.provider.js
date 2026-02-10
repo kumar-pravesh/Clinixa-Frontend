@@ -11,9 +11,9 @@ class RazorpayProvider extends PaymentProvider {
     async initiate(amount, currency, metadata) {
         try {
             const order = await razorpay.orders.create({
-                amount: Math.round(amount * 100), // paise, ensure integer
+                amount: Math.round(Number(amount) * 100), // paise, ensure integer
                 currency,
-                receipt: `appt_${metadata.appointmentId}`,
+                receipt: metadata.receipt || `appt_${metadata.appointmentId}_${Date.now()}`,
                 payment_capture: 1
             });
 

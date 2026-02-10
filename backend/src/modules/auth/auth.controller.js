@@ -36,6 +36,10 @@ const refresh = async (req, res) => {
 
         const tokens = await authService.refreshToken(refreshToken);
 
+        // Fetch user info to return with accessToken
+        const decoded = jwt.decode(tokens.accessToken);
+        const user = { id: decoded.id, role: decoded.role, name: decoded.name };
+
         res.cookie('refreshToken', tokens.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -43,8 +47,9 @@ const refresh = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
-        res.json({ accessToken: tokens.accessToken });
+        res.json({ accessToken: tokens.accessToken, user });
     } catch (error) {
+        console.error('Refresh token error:', error.message);
         res.status(403).json({ message: error.message });
     }
 };

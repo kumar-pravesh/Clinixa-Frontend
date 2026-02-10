@@ -174,6 +174,50 @@ const setFollowUp = async (doctorId, data) => {
     return { id: result.insertId, message: 'Follow-up appointment set' };
 };
 
+const getPublicDoctors = async () => {
+    const [rows] = await pool.query(`
+        SELECT 
+            CONCAT('DOC-', LPAD(d.id, 4, '0')) as id,
+            u.name,
+            u.email,
+            u.phone,
+            u.status,
+            d.specialization as dept,
+            d.experience_years,
+            d.consultation_fee,
+            d.qualification,
+            dep.name as department_name
+        FROM doctors d
+        JOIN users u ON d.user_id = u.id
+        LEFT JOIN departments dep ON d.department_id = dep.id
+        WHERE u.role = 'doctor'
+        ORDER BY u.name
+    `);
+    return rows;
+};
+
+const getDoctorById = async (doctorId) => {
+    const cleanId = String(doctorId).replace('DOC-', '');
+    const [rows] = await pool.query(`
+        SELECT 
+            CONCAT('DOC-', LPAD(d.id, 4, '0')) as id,
+            u.name,
+            u.email,
+            u.phone,
+            u.status,
+            d.specialization as dept,
+            d.experience_years,
+            d.consultation_fee,
+            d.qualification,
+            dep.name as department_name
+        FROM doctors d
+        JOIN users u ON d.user_id = u.id
+        LEFT JOIN departments dep ON d.department_id = dep.id
+        WHERE d.id = ?
+    `, [cleanId]);
+    return rows[0];
+};
+
 module.exports = {
     authenticateDoctor,
     getDoctorProfile,
@@ -183,5 +227,7 @@ module.exports = {
     createPrescription,
     addMedicines,
     uploadLabReport,
-    setFollowUp
+    setFollowUp,
+    getPublicDoctors,
+    getDoctorById
 };

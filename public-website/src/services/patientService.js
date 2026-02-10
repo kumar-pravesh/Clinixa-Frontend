@@ -13,6 +13,11 @@ export const patientService = {
         return res.data;
     },
 
+    getAvailability: async (doctorId, date) => {
+        const res = await api.get(`/appointment/availability?doctorId=${doctorId}&date=${date}`);
+        return res.data;
+    },
+
     // Book appointment
     bookAppointment: async (data) => {
         const res = await api.post('/appointment/book', data);

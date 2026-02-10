@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useNotification } from '../../context/NotificationContext';
+import api from '../../api/axios';
 
 const DoctorManagement = () => {
     const { addNotification } = useNotification();
@@ -34,16 +35,15 @@ const DoctorManagement = () => {
         const fetchDoctors = async () => {
             try {
                 // Determine API URL based on environment or hardcode for dev
-                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-                const response = await fetch(`${API_URL}/doctors`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setDoctors(data);
-                } else {
-                    console.error('Failed to fetch doctors');
-                }
+                const response = await api.get('/admin/doctors');
+                setDoctors(response.data);
             } catch (error) {
                 console.error('Error loading doctors:', error);
+                addNotification({
+                    type: 'error',
+                    title: 'Sync Error',
+                    message: 'Could not fetch doctors list from server.'
+                });
             } finally {
                 setLoading(false);
             }
@@ -94,35 +94,30 @@ const DoctorManagement = () => {
 
     const handleDelete = async (id, name) => {
         if (window.confirm(`Are you sure you want to remove ${name}?`)) {
-            // TODO: call delete API
-            setDoctors(prev => prev.filter(d => d.id !== id));
-            addNotification({
-                type: 'info',
-                title: 'Personnel Removed',
-                message: `${name} has been removed from the directory.`
-            });
+            try {
+                await api.delete(`/admin/doctors/${id}`);
+                setDoctors(prev => prev.filter(d => d.id !== id));
+                addNotification({
+                    type: 'info',
+                    title: 'Personnel Removed',
+                    message: `${name} has been removed from the directory.`
+                });
+            } catch (error) {
+                addNotification({
+                    type: 'error',
+                    title: 'Removal Failed',
+                    message: error.response?.data?.message || 'Failed to remove doctor'
+                });
+            }
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
             if (editingDoctor) {
                 // Update existing doctor
-                const response = await fetch(`${API_URL}/admin/doctors/${editingDoctor.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.message || 'Failed to update');
-                }
-
-                const result = await response.json();
+                await api.put(`/admin/doctors/${editingDoctor.id}`, formData);
 
                 // Update the doctor in the list
                 setDoctors(prev => prev.map(d =>
@@ -136,23 +131,12 @@ const DoctorManagement = () => {
                 });
             } else {
                 // Create New Doctor
-                const response = await fetch(`${API_URL}/admin/doctors`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.message || 'Failed to register');
-                }
-
-                const result = await response.json();
+                const response = await api.post('/admin/doctors', formData);
 
                 // Add to list optimistically or refetch
                 const newDoc = {
                     ...formData,
-                    id: result.data.id
+                    id: response.data.data.id
                 };
                 setDoctors(prev => [...prev, newDoc]);
 
@@ -167,7 +151,7 @@ const DoctorManagement = () => {
             addNotification({
                 type: 'error',
                 title: 'Registration Failed',
-                message: error.message
+                message: error.response?.data?.message || error.message
             });
         }
     };

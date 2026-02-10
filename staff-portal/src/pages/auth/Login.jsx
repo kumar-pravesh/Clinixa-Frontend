@@ -40,8 +40,8 @@ const Login = () => {
                 navigate('/reception', { replace: true });
             }
         } catch (err) {
-            console.error('Login implementation error:', err);
-            setError('System error during login. Please check console.');
+            console.error('Login implementation error:', err.message);
+            setError(err.message || 'System error during login. Please contact administrator.');
         } finally {
             setLoading(false);
         }

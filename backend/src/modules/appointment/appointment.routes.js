@@ -6,5 +6,6 @@ const { authenticateToken } = require('../../middlewares/auth.middleware');
 router.get('/doctors', appointmentController.getDoctors); // Public or Protected? User said "View doctors (read-only)". Usually public.
 router.post('/book', authenticateToken, appointmentController.bookAppointment);
 router.get('/my-appointments', authenticateToken, appointmentController.getMyAppointments);
+router.get('/availability', authenticateToken, appointmentController.getAvailability);
 
 module.exports = router;

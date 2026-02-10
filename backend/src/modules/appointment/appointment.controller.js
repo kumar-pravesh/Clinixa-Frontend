@@ -1,8 +1,9 @@
 const appointmentService = require('./appointment.service');
+const doctorService = require('../doctor/doctor.service');
 
 const getDoctors = async (req, res) => {
     try {
-        const doctors = await appointmentService.getDoctors();
+        const doctors = await doctorService.getPublicDoctors();
         res.json(doctors);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -32,8 +33,22 @@ const getMyAppointments = async (req, res) => {
     }
 };
 
+const getAvailability = async (req, res) => {
+    try {
+        const { doctorId, date } = req.query;
+        if (!doctorId || !date) throw new Error('Doctor ID and date are required');
+
+        const parsedDoctorId = doctorId.toString().replace('DOC-', '');
+        const availability = await appointmentService.getAvailability(parsedDoctorId, date);
+        res.json(availability);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getDoctors,
     bookAppointment,
-    getMyAppointments
+    getMyAppointments,
+    getAvailability
 };

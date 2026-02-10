@@ -48,15 +48,15 @@ const HomePage = () => {
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4">
               <Link
                 to="/patient/book-appointment"
-                className="bg-primary text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-teal-500/50 hover:bg-teal-700 transition flex items-center justify-center gap-2 group"
+                className="bg-accent text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-orange-500/50 hover:bg-orange-600 transition flex items-center justify-center gap-3 group"
               >
-                Book Appointment <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                Book Appointment <Activity className="group-hover:animate-pulse" />
               </Link>
               <Link
-                to="/departments"
+                to="/doctors"
                 className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white/20 transition flex items-center justify-center"
               >
-                Explore Departments
+                Find a Doctor
               </Link>
             </motion.div>
           </motion.div>

@@ -1,22 +1,5 @@
 const { pool } = require('../../config/db');
 
-const getDoctors = async () => {
-    const [rows] = await pool.query(`
-        SELECT 
-            d.id,
-            u.name,
-            u.email,
-            u.phone,
-            dep.name as specialization,
-            d.consultation_fee,
-            u.status
-        FROM doctors d
-        JOIN users u ON d.user_id = u.id
-        LEFT JOIN departments dep ON d.department_id = dep.id
-    `);
-    return rows;
-};
-
 const createAppointment = async (userId, doctorId, date, timeSlot) => {
     const connection = await pool.getConnection();
     try {
@@ -84,8 +67,31 @@ const getAppointments = async (userId) => {
     return rows;
 };
 
+const getAvailability = async (doctorId, date) => {
+    // 1. Define standard slots (9 AM to 5 PM, every 30 mins)
+    const slots = [
+        "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+        "12:00 PM", "12:30 PM", "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM",
+        "04:00 PM", "04:30 PM"
+    ];
+
+    // 2. Fetch booked slots from DB
+    const [booked] = await pool.query(
+        'SELECT time FROM appointments WHERE doctor_id = ? AND date = ? AND status != ?',
+        [doctorId, date, 'Cancelled']
+    );
+
+    const bookedTimes = booked.map(b => b.time);
+
+    // 3. Filter available slots
+    return slots.map(slot => ({
+        time: slot,
+        available: !bookedTimes.includes(slot)
+    }));
+};
+
 module.exports = {
-    getDoctors,
     createAppointment,
-    getAppointments
+    getAppointments,
+    getAvailability
 };

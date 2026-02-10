@@ -12,6 +12,7 @@ import RegisterPage from "./pages/RegisterPage.jsx";
 
 import PatientDashboard from "./pages/patient/Dashboard.jsx";
 import BookAppointment from "./pages/patient/BookAppointment.jsx";
+import AppointmentReview from "./pages/patient/AppointmentReview.jsx";
 import MyAppointments from "./pages/patient/MyAppointments.jsx";
 import Prescriptions from "./pages/patient/Prescriptions.jsx";
 import Profile from "./pages/patient/Profile.jsx";
@@ -35,6 +36,7 @@ function App() {
           <Route index element={<Navigate to="/patient/dashboard" replace />} />
           <Route path="dashboard" element={<PatientDashboard />} />
           <Route path="book-appointment" element={<BookAppointment />} />
+          <Route path="appointment-review" element={<AppointmentReview />} />
           <Route path="appointments" element={<MyAppointments />} />
           <Route path="prescriptions" element={<Prescriptions />} />
           <Route path="profile" element={<Profile />} />

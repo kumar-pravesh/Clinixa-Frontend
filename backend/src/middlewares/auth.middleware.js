@@ -7,6 +7,8 @@ const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
+    console.log(`[Auth Debug] ${req.method} ${req.url} - Auth Header: ${authHeader ? 'Present' : 'Missing'}`);
+
     if (!token) {
         return res.status(401).json({ message: 'Authentication required' });
     }

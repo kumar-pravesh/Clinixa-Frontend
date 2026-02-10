@@ -11,8 +11,17 @@ export const AuthProvider = ({ children }) => {
         const checkAuth = async () => {
             try {
                 const data = await authService.refresh();
-                setUser(data.user);
+                if (data.accessToken) {
+                    console.log('Persistence: Saving refreshed accessToken to localStorage');
+                    localStorage.setItem('accessToken', data.accessToken);
+                }
+                if (data.user) {
+                    setUser(data.user);
+                }
             } catch (error) {
+                console.warn('Auth Persistence: Refresh failed or session expired');
+                // Don't clear user immediately if we already have one (from login)
+                // but usually checkAuth runs on mount
                 setUser(null);
             } finally {
                 setLoading(false);
@@ -25,6 +34,9 @@ export const AuthProvider = ({ children }) => {
         try {
             // Attempt actual login
             const data = await authService.login(credentials);
+            if (data.accessToken) {
+                localStorage.setItem('accessToken', data.accessToken);
+            }
             if (data.user && !data.user.role) {
                 if (credentials.email.includes('admin')) data.user.role = 'admin';
                 else if (credentials.email.includes('lab')) data.user.role = 'lab_tech';
@@ -34,18 +46,8 @@ export const AuthProvider = ({ children }) => {
             setUser(data.user);
             return data;
         } catch (error) {
-            console.error('Login service failed, using mock fallback for demo:', error);
-            // MOCK FALLBACK: Allow access for demo purposes if backend is down
-            const mockUser = {
-                id: 'MOCK-001',
-                email: credentials.email,
-                name: credentials.email.split('@')[0].toUpperCase(),
-                role: credentials.email.includes('admin') ? 'admin' :
-                    credentials.email.includes('lab') ? 'lab_tech' :
-                        credentials.email.includes('doc') ? 'doctor' : 'receptionist'
-            };
-            setUser(mockUser);
-            return { user: mockUser };
+            console.error('Login implementation error:', error.response?.data?.message || error.message);
+            throw new Error(error.response?.data?.message || 'Authentication system failure');
         }
     };
 
@@ -55,6 +57,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error('Server-side logout failed:', error);
         } finally {
+            localStorage.removeItem('accessToken');
             setUser(null);
         }
     };
