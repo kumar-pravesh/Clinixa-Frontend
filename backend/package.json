@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "db:setup": "node src/scripts/setupDatabase.js",
+    "db:setup": "node src/scripts/setupMySQL.js",
     "db:setup:seed": "node src/scripts/setupDatabase.js --seed"
   },
   "dependencies": {

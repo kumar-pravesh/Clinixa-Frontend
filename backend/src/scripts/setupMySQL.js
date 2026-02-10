@@ -4,6 +4,7 @@ require('dotenv').config();
 const createTables = async () => {
     let connection;
     try {
+        console.log('Connecting to MySQL...');
         // Connect without database selected first
         connection = await mysql.createConnection({
             host: process.env.DB_HOST,
@@ -13,7 +14,7 @@ const createTables = async () => {
             multipleStatements: true
         });
 
-        console.log('Connected to MySQL server...');
+        console.log('Connected to MySQL server.');
 
         // Create database if not exists
         await connection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
@@ -21,19 +22,17 @@ const createTables = async () => {
         console.log(`Using database: ${process.env.DB_NAME}`);
 
         const schema = `
-        -- 1. Users & Auth
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             email VARCHAR(255) UNIQUE NOT NULL,
             phone VARCHAR(20),
             password_hash VARCHAR(255) NOT NULL,
-            role VARCHAR(50) NOT NULL, -- admin, doctor, patient, receptionist, lab_staff
+            role VARCHAR(50) NOT NULL,
             status VARCHAR(20) DEFAULT 'Active',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        -- 2. Organization
         CREATE TABLE IF NOT EXISTS departments (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
@@ -48,11 +47,10 @@ const createTables = async () => {
             FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL
         );
 
-        -- 3. Patient Management
         CREATE TABLE IF NOT EXISTS patients (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT UNIQUE,
-            registered_by INT, -- Receptionist ID
+            registered_by INT,
             dob DATE,
             gender VARCHAR(20),
             phone VARCHAR(20),
@@ -62,7 +60,6 @@ const createTables = async () => {
             FOREIGN KEY (registered_by) REFERENCES users(id) ON DELETE SET NULL
         );
 
-        -- 4. Clinical Workflow
         CREATE TABLE IF NOT EXISTS appointments (
             id INT AUTO_INCREMENT PRIMARY KEY,
             patient_id INT,
@@ -99,7 +96,7 @@ const createTables = async () => {
             id INT AUTO_INCREMENT PRIMARY KEY,
             patient_id INT,
             doctor_id INT,
-            uploaded_by INT, -- Lab Staff ID
+            uploaded_by INT,
             test_name VARCHAR(255),
             file_url TEXT,
             report_date DATE,
@@ -108,7 +105,6 @@ const createTables = async () => {
             FOREIGN KEY (uploaded_by) REFERENCES users(id)
         );
 
-        -- 5. Billing & Queue
         CREATE TABLE IF NOT EXISTS invoices (
             id INT AUTO_INCREMENT PRIMARY KEY,
             appointment_id INT UNIQUE,
@@ -143,14 +139,32 @@ const createTables = async () => {
         );
         `;
 
-        await connection.query(schema);
-        console.log('Tables created successfully via MySQL!');
+        // Split by semicolon and remove empty statements
+        const statements = schema.split(';')
+            .map(stmt => stmt.trim())
+            .filter(stmt => stmt.length > 0);
+
+        console.log(`Found ${statements.length} SQL statements to execute.`);
+
+        for (const [index, sql] of statements.entries()) {
+            try {
+                // console.log(`Executing statement ${index + 1}...`);
+                await connection.query(sql);
+            } catch (stmtErr) {
+                console.error(`❌ Error executing statement ${index + 1}:`);
+                console.error(sql);
+                throw stmtErr;
+            }
+        }
+
+        console.log('✅ Tables created successfully via MySQL!');
 
     } catch (err) {
-        console.error('Error creating tables:', err);
+        console.error('❌ Error creating tables:', err.message);
+        process.exit(1);
     } finally {
         if (connection) await connection.end();
-        process.exit();
+        process.exit(0);
     }
 };
 
