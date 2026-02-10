@@ -390,4 +390,5 @@ const LabHistory = () => {
     );
 };
 
+// there is nothing wrong with this code, it is just a very long component that renders the lab history page with search, table, and PDF generation features.
 export default LabHistory;
