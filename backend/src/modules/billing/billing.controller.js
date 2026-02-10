@@ -1,11 +1,9 @@
 const billingService = require("./billing.services");
 
-// Create Invoice
 exports.createInvoice = async (req, res) => {
   try {
     const { appointment_id, patient_id } = req.body;
 
-    // Basic validation
     if (!appointment_id || !patient_id) {
       return res.status(400).json({
         success: false,
@@ -34,7 +32,6 @@ exports.createInvoice = async (req, res) => {
 };
 
 
-// Get Invoice By ID
 exports.getInvoiceById = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -70,7 +67,6 @@ exports.getInvoiceById = async (req, res) => {
 };
 
 
-// Search Invoice
 exports.searchInvoice = async (req, res) => {
   try {
     const { term } = req.query;

@@ -1,10 +1,8 @@
 const db = require("../../config/db");
 
 
-// ✅ Create Invoice
 exports.createInvoice = async ({ appointment_id, patient_id }) => {
   try {
-    // Optional: Check if invoice already exists for this appointment
     const [existing] = await db.query(
       "SELECT id FROM invoices WHERE appointment_id = ?",
       [appointment_id]
@@ -34,7 +32,6 @@ exports.createInvoice = async ({ appointment_id, patient_id }) => {
 
 
 
-// ✅ Get Invoice By ID
 exports.getInvoiceById = async (id) => {
   try {
     const query = `
@@ -60,8 +57,6 @@ exports.getInvoiceById = async (id) => {
 };
 
 
-
-// ✅ Search Invoice (by ID or patient name)
 exports.searchInvoice = async (term) => {
   try {
     const query = `
