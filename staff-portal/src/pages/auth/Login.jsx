@@ -62,12 +62,8 @@ const Login = () => {
 
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-12">
-                        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-primary/30 transform hover:rotate-6 transition-transform">
-                            C
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-black tracking-tighter">Clinixa</h2>
-                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] leading-none">Smart Healthcare</p>
+                        <div className="h-16 w-auto overflow-hidden rounded-2xl bg-white p-2 shadow-xl shadow-primary/20 transform hover:rotate-3 transition-transform">
+                            <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain" />
                         </div>
                     </div>
 
@@ -122,9 +118,10 @@ const Login = () => {
 
                 <div className="w-full max-w-md relative z-10">
                     <div className="text-center mb-10">
-                        <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-                            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">C</div>
-                            <span className="text-xl font-black tracking-tighter text-slate-900 uppercase">Clinixa</span>
+                        <div className="lg:hidden flex items-center justify-center mb-8">
+                            <div className="h-12 w-auto overflow-hidden rounded-xl bg-white p-1 shadow-md">
+                                <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain" />
+                            </div>
                         </div>
                         <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Welcome Home</h2>
                         <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">Authentication Required for Portal Access</p>

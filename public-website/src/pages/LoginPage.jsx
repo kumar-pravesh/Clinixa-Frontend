@@ -10,21 +10,21 @@ const LoginPage = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-        const data = await authService.login(email, password);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const data = await authService.login(email, password);
 
-        // 🔑 STORE AUTH DATA
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('accessToken', data.accessToken);
+            // 🔑 STORE AUTH DATA
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('accessToken', data.accessToken);
 
-        // 🔁 REDIRECT
-        navigate('/patient/dashboard');
-    } catch (err) {
-        setError(err.response?.data?.message || 'Login failed');
-    }
-};
+            // 🔁 REDIRECT
+            navigate('/patient/dashboard');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Login failed');
+        }
+    };
 
 
 
@@ -39,8 +39,8 @@ const LoginPage = () => {
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-secondary to-accent"></div>
 
                 <div className="text-center">
-                    <div className="mx-auto h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
-                        <Activity size={28} />
+                    <div className="mx-auto h-20 w-auto overflow-hidden rounded-2xl bg-white p-2 border border-slate-100 shadow-sm mb-4">
+                        <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain mx-auto" />
                     </div>
                     <h2 className="text-3xl font-extrabold text-gray-900">Welcome Back</h2>
                     <p className="mt-2 text-sm text-gray-600">

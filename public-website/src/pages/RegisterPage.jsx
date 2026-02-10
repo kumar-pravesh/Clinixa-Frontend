@@ -45,7 +45,7 @@ const RegisterPage = () => {
                     </Link>
                     <h2 className="text-3xl font-extrabold text-gray-900 text-center">Create Account</h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Join Medicare Patient Portal
+                        Join Clinixa Patient Portal
                     </p>
                 </div>
 

@@ -83,8 +83,8 @@ const AdminLayout = () => {
             )}>
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-slate-900/30">
-                            C
+                        <div className="h-10 w-auto overflow-hidden rounded-lg bg-slate-50 p-1 border border-slate-100 shadow-sm">
+                            <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain" />
                         </div>
                         <div>
                             <h1 className="font-bold text-xl text-slate-800 leading-tight">Clinixa</h1>

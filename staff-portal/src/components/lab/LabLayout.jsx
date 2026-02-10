@@ -67,8 +67,8 @@ const LabLayout = () => {
             )}>
                 <div className="p-8 pb-10 flex items-center justify-between lg:justify-start gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-primary rounded-[1.25rem] flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-primary/40 rotate-12 transition-transform">
-                            C
+                        <div className="h-12 w-auto overflow-hidden rounded-[1.25rem] bg-white p-1.5 shadow-xl shadow-primary/20 rotate-3 transition-transform">
+                            <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain" />
                         </div>
                         <div>
                             <h1 className="font-black text-2xl text-white tracking-tight">Clinixa</h1>
