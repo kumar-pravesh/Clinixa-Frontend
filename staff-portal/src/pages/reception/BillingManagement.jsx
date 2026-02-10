@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     CreditCard,
     Search,
@@ -46,6 +46,19 @@ const BillingManagement = () => {
         { id: 'PID-5567', name: 'Tejas Kumar', details: 'MALE • 29Y', initials: 'TK' },
     ];
 
+    // Load Razorpay script dynamically
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        return () => {
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
+        };
+    }, []);
+
     // HEX Color Constants for PDF Compatibility
     const colors = {
         primary: '#0D9488',
@@ -65,9 +78,7 @@ const BillingManagement = () => {
     };
 
     const removeItem = (id) => {
-        if (billItems.length > 1) {
-            setBillItems(billItems.filter(item => item.id !== id));
-        }
+        setBillItems(billItems.filter(item => item.id !== id));
     };
 
     const updateItem = (index, field, value) => {
@@ -91,6 +102,49 @@ const BillingManagement = () => {
             p.name.toLowerCase().includes(query.toLowerCase())
         );
         if (found) setSelectedPatient(found);
+    };
+
+    const handleRazorpayPayment = () => {
+        if (!selectedPatient) {
+            alert('Please select a patient first');
+            return;
+        }
+        if (total <= 0) {
+            alert('Total amount must be greater than zero');
+            return;
+        }
+
+        const options = {
+            key: 'rzp_test_SCnCF2g19KJO3m',
+            amount: Math.round(total * 100),
+            currency: 'INR',
+            name: 'Clinixa Healthcare',
+            description: `Bill Payment - ${selectedPatient.id}`,
+            handler: function (response) {
+                addNotification({
+                    type: 'payment',
+                    title: 'Payment Successful',
+                    message: `Payment of ₹${total.toLocaleString()} received from ${selectedPatient.name}`
+                });
+                alert(`Payment Successful!\nPayment ID: ${response.razorpay_payment_id}`);
+                handleCreateBill();
+            },
+            prefill: {
+                name: selectedPatient.name,
+                contact: '9999999999'
+            },
+            theme: {
+                color: '#0D9488'
+            },
+            modal: {
+                ondismiss: function () {
+                    console.log('Payment cancelled by user');
+                }
+            }
+        };
+
+        const razorpay = new window.Razorpay(options);
+        razorpay.open();
     };
 
     const handleCreateBill = async () => {
@@ -484,7 +538,12 @@ const BillingManagement = () => {
                                 ].map(mode => (
                                     <button
                                         key={mode.id}
-                                        onClick={() => setPaymentMode(mode.id)}
+                                        onClick={() => {
+                                            setPaymentMode(mode.id);
+                                            if (mode.id === 'UPI' || mode.id === 'Card') {
+                                                handleRazorpayPayment();
+                                            }
+                                        }}
                                         className={cn(
                                             "flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all gap-3 group",
                                             paymentMode === mode.id
