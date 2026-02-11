@@ -5,9 +5,9 @@ const AboutPage = () => {
   return (
     <div className="overflow-x-hidden">
       {/* PAGE HEADER */}
-      <section className="bg-primary text-white py-20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-12 opacity-10">
-          <Heart size={400} />
+      <section className="bg-slate-950 text-white pt-40 pb-24 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
+          <Heart size={400} className="text-primary" />
         </div>
         <div className="container mx-auto px-6 relative z-10 text-center">
           <motion.h1

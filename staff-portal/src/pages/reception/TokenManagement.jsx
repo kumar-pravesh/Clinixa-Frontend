@@ -198,10 +198,10 @@ const TokenManagement = () => {
             {/* Mobile Token Cards (Visible only on mobile) */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
                 {filteredTokens.length > 0 ? filteredTokens.map((token) => (
-                    <div key={token.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm active:scale-[0.99] transition-all">
+                    <div key={token.id} className="bg-white/60 backdrop-blur-md p-5 rounded-3xl border border-white/50 shadow-sm active:scale-[0.99] transition-all">
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100">
+                                <div className="w-12 h-12 bg-white/50 rounded-2xl flex items-center justify-center border border-white/50 shadow-sm">
                                     <span className="text-lg font-black text-slate-800 tracking-tighter">{token.id}</span>
                                 </div>
                                 <div>
@@ -210,7 +210,7 @@ const TokenManagement = () => {
                                 </div>
                             </div>
                             <span className={cn(
-                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border",
+                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border shadow-sm",
                                 getStatusStyle(token.status)
                             )}>
                                 {getStatusIcon(token.status)}
@@ -218,7 +218,7 @@ const TokenManagement = () => {
                             </span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-50 mb-4">
+                        <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-100/50 mb-4">
                             <div>
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Department</p>
                                 <p className="text-xs font-black text-slate-700">{token.dept}</p>
@@ -234,7 +234,7 @@ const TokenManagement = () => {
                                 {token.status === 'Waiting' && (
                                     <button
                                         onClick={() => updateTokenStatus(token.id, 'In Progress')}
-                                        className="h-10 px-4 bg-blue-50 text-blue-600 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-wide border border-blue-100 active:scale-95 transition-all"
+                                        className="h-10 px-4 bg-blue-50 text-blue-600 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-wide border border-blue-100 active:scale-95 transition-all shadow-sm"
                                     >
                                         <PlayCircle className="w-4 h-4" /> Start
                                     </button>
@@ -242,7 +242,7 @@ const TokenManagement = () => {
                                 {token.status === 'In Progress' && (
                                     <button
                                         onClick={() => updateTokenStatus(token.id, 'Completed')}
-                                        className="h-10 px-4 bg-green-50 text-green-600 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-wide border border-green-100 active:scale-95 transition-all"
+                                        className="h-10 px-4 bg-green-50 text-green-600 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-wide border border-green-100 active:scale-95 transition-all shadow-sm"
                                     >
                                         <CheckCircle2 className="w-4 h-4" /> Done
                                     </button>
@@ -250,7 +250,7 @@ const TokenManagement = () => {
                                 {(token.status === 'Waiting' || token.status === 'In Progress') && (
                                     <button
                                         onClick={() => updateTokenStatus(token.id, 'Cancelled')}
-                                        className="h-10 w-10 bg-red-50 text-red-100 rounded-xl flex items-center justify-center border border-red-100 active:scale-95 transition-all"
+                                        className="h-10 w-10 bg-red-50 text-red-400 rounded-xl flex items-center justify-center border border-red-100 active:scale-95 transition-all shadow-sm"
                                     >
                                         <XCircle className="w-5 h-5" />
                                     </button>
@@ -258,21 +258,21 @@ const TokenManagement = () => {
                             </div>
                             <button
                                 onClick={() => deleteToken(token.id)}
-                                className="h-10 w-10 bg-slate-50 text-slate-300 rounded-xl flex items-center justify-center border border-slate-100"
+                                className="h-10 w-10 bg-white text-slate-300 rounded-xl flex items-center justify-center border border-slate-200 shadow-sm hover:text-red-400 hover:border-red-100 hover:bg-red-50 transition-all"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
                 )) : (
-                    <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-200">
+                    <div className="text-center py-12 bg-white/60 backdrop-blur-md rounded-3xl border border-dashed border-slate-300">
                         <p className="text-slate-400 font-bold italic text-sm">No active tokens in this queue.</p>
                     </div>
                 )}
             </div>
 
             {/* Desktop Token Table (Hidden on mobile) */}
-            <div className="hidden md:block bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="hidden md:block bg-white/60 backdrop-blur-md rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-white/60 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>

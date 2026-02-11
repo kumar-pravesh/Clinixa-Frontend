@@ -39,7 +39,7 @@ const Logo = ({ className = "", showText = true, forceLight = false }) => {
 
             {/* ✒️ Typography */}
             {showText && (
-                <div className="flex flex-col -space-y-1 text-left">
+                <div className="flex flex-col -space-y-1">
                     <div className="flex items-baseline gap-0.5">
                         <span className={`text-2xl font-black tracking-tight ${forceLight ? "text-white" : "text-slate-900"}`}>Clinix</span>
                         <span className="text-2xl font-black tracking-tight text-primary">a</span>

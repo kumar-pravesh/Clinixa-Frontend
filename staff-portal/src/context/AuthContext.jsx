@@ -31,6 +31,23 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (credentials) => {
+        // --- DEMO MODE BYPASS ---
+        const demoUsers = {
+            'admin@clinixa.life': { id: 'demo-admin', name: 'Demo Administrator', role: 'admin', email: 'admin@clinixa.life' },
+            'doctor@clinixa.life': { id: 'demo-doctor', name: 'Dr. Demo Specialist', role: 'doctor', email: 'doctor@clinixa.life' },
+            'receptionist@clinixa.life': { id: 'demo-reception', name: 'Demo Reception', role: 'receptionist', email: 'receptionist@clinixa.life' },
+            'lab@clinixa.life': { id: 'demo-lab', name: 'Demo Lab Technician', role: 'lab_tech', email: 'lab@clinixa.life' }
+        };
+
+        if (demoUsers[credentials.email]) {
+            console.log('Demo Mode: Authenticated as', credentials.email);
+            const mockData = { user: demoUsers[credentials.email], accessToken: 'demo-token-' + Date.now() };
+            localStorage.setItem('accessToken', mockData.accessToken);
+            setUser(mockData.user);
+            return mockData;
+        }
+        // ------------------------
+
         try {
             // Attempt actual login
             const data = await authService.login(credentials);

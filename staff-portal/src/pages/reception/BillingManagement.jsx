@@ -18,6 +18,7 @@ import {
 import { Link } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import html2pdf from 'html2pdf.js';
+import { PaymentModal } from '../../components/common/PaymentModal';
 import { useNotification } from '../../context/NotificationContext';
 
 const BillingManagement = () => {
@@ -92,7 +93,9 @@ const BillingManagement = () => {
         if (found) setSelectedPatient(found);
     };
 
-    const handleCreateBill = async () => {
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
+    const handleCreateBill = () => {
         if (!selectedPatient) {
             alert("Please select a patient first");
             return;
@@ -101,7 +104,10 @@ const BillingManagement = () => {
             alert("Please fill in all service details");
             return;
         }
+        setIsPaymentModalOpen(true);
+    };
 
+    const handlePaymentSuccess = async () => {
         setIsGenerating(true);
         console.log('Generating PDF Bill...');
 
@@ -128,10 +134,13 @@ const BillingManagement = () => {
                 title: 'Payment Received',
                 message: `Invoice created successfully for ${selectedPatient.name}. Total: ₹${total.toLocaleString()}`
             });
-            alert(`Bill created and downloaded successfully for ${selectedPatient.name}!`);
         } catch (error) {
             console.error('Bill generation error:', error);
-            alert('Failed to generate PDF Bill.');
+            addNotification({
+                type: 'emergency',
+                title: 'Bill Generation Failed',
+                message: 'Could not generate PDF invoice.'
+            });
         } finally {
             setIsGenerating(false);
         }
@@ -264,7 +273,7 @@ const BillingManagement = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left: Bill Creator */}
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="dashboard-card">
+                        <div className="bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/50 shadow-xl shadow-slate-200/50">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                     <CreditCard className="w-5 h-5 text-primary" /> Invoice Items
@@ -395,7 +404,7 @@ const BillingManagement = () => {
 
                     {/* Right: Patient & Payment */}
                     <div className="space-y-6">
-                        <div className="dashboard-card !p-6 shadow-xl shadow-slate-200/50">
+                        <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/50 shadow-xl shadow-slate-200/50">
                             <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-3">
                                 <Search className="w-5 h-5 text-primary" /> Select Patient
                             </h3>
@@ -463,47 +472,56 @@ const BillingManagement = () => {
                             )}
                         </div>
 
-                        <div className="dashboard-card !p-8 shadow-xl shadow-slate-200/50">
-                            <h3 className="text-lg font-black text-slate-800 mb-8 text-center uppercase tracking-[0.1em]">Payment Mode</h3>
-                            <div className="grid grid-cols-3 gap-4">
-                                {[
-                                    { id: 'UPI', icon: Smartphone, label: 'UPI' },
-                                    { id: 'Cash', icon: Banknote, label: 'Cash' },
-                                    { id: 'Card', icon: CreditCard, label: 'Card' }
-                                ].map(mode => (
-                                    <button
-                                        key={mode.id}
-                                        onClick={() => setPaymentMode(mode.id)}
-                                        className={cn(
-                                            "flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all gap-3 group",
-                                            paymentMode === mode.id
-                                                ? "bg-primary/5 border-primary text-primary shadow-lg shadow-primary/10"
-                                                : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
-                                        )}
-                                    >
-                                        <mode.icon className={cn("w-6 h-6 transition-transform group-active:scale-95", paymentMode === mode.id ? "text-primary" : "text-slate-300")} />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">{mode.label}</span>
-                                    </button>
-                                ))}
-                            </div>
+                        <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl shadow-slate-900/20 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-slate-800/50 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+                            <div className="relative z-10">
+                                <h3 className="text-lg font-black text-white mb-8 text-center uppercase tracking-[0.1em]">Payment Mode</h3>
+                                <div className="grid grid-cols-3 gap-4">
+                                    {[
+                                        { id: 'UPI', icon: Smartphone, label: 'UPI' },
+                                        { id: 'Cash', icon: Banknote, label: 'Cash' },
+                                        { id: 'Card', icon: CreditCard, label: 'Card' }
+                                    ].map(mode => (
+                                        <button
+                                            key={mode.id}
+                                            onClick={() => setPaymentMode(mode.id)}
+                                            className={cn(
+                                                "flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all gap-3 group",
+                                                paymentMode === mode.id
+                                                    ? "bg-primary/5 border-primary text-primary shadow-lg shadow-primary/10"
+                                                    : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
+                                            )}
+                                        >
+                                            <mode.icon className={cn("w-6 h-6 transition-transform group-active:scale-95", paymentMode === mode.id ? "text-primary" : "text-slate-300")} />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{mode.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
 
-                            <div className="mt-10 space-y-4">
-                                <button
-                                    onClick={handleCreateBill}
-                                    disabled={isGenerating}
-                                    className="w-full btn-primary h-16 text-lg font-black shadow-2xl shadow-primary/30 flex items-center justify-center gap-3 disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                                >
-                                    {isGenerating ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
-                                    {isGenerating ? "Processing..." : "Create & Print Bill"}
-                                </button>
-                                <button className="w-full text-slate-400 text-[10px] font-black hover:text-slate-600 transition-colors uppercase tracking-[0.3em] py-4">
-                                    Save & Finish Later
-                                </button>
+                                <div className="mt-10 space-y-4">
+                                    <button
+                                        onClick={handleCreateBill}
+                                        disabled={isGenerating}
+                                        className="w-full btn-primary h-16 text-lg font-black shadow-2xl shadow-primary/30 flex items-center justify-center gap-3 disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                    >
+                                        {isGenerating ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
+                                        {isGenerating ? "Processing..." : "Create & Print Bill"}
+                                    </button>
+                                    <button className="w-full text-slate-400 text-[10px] font-black hover:text-slate-600 transition-colors uppercase tracking-[0.3em] py-4">
+                                        Save & Finish Later
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <PaymentModal
+                isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
+                amount={total}
+                onSuccess={handlePaymentSuccess}
+            />
         </div>
     );
 };

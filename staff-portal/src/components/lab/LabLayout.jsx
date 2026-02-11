@@ -67,12 +67,12 @@ const LabLayout = () => {
             )}>
                 <div className="p-8 pb-10 flex items-center justify-between lg:justify-start gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="h-12 w-auto overflow-hidden rounded-[1.25rem] bg-white p-1.5 shadow-xl shadow-primary/20 rotate-3 transition-transform">
+                        <div className="h-10 w-auto overflow-hidden rounded-lg bg-slate-50 p-1 border border-slate-100 shadow-sm">
                             <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain" />
                         </div>
                         <div>
-                            <h1 className="font-black text-2xl text-white tracking-tight">Clinixa</h1>
-                            <p className="text-[10px] text-primary font-black tracking-[0.3em] uppercase opacity-80">Lab Portal</p>
+                            <h1 className="font-bold text-xl text-white leading-tight">Clinixa</h1>
+                            <p className="text-[10px] text-primary font-black uppercase tracking-widest mt-0.5">Lab Portal</p>
                         </div>
                     </div>
                     <button

@@ -28,9 +28,13 @@ const DoctorsPage = () => {
     return (
         <div className="bg-gray-50 min-h-screen pb-20">
             {/* Header */}
-            <section className="bg-primary text-white py-16 text-center">
-                <h1 className="text-4xl font-bold mb-4">Meet Our Specialists</h1>
-                <p className="text-teal-100 max-w-2xl mx-auto px-4">
+            <section className="bg-slate-950 text-white pt-36 pb-20 text-center relative overflow-hidden">
+                {/* Decorative background element */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+
+                <h1 className="text-4xl font-bold mb-4 relative z-10">Meet Our Specialists</h1>
+                <p className="text-teal-100 max-w-2xl mx-auto px-4 relative z-10">
                     Our team of experienced doctors is dedicated to your well-being.
                 </p>
             </section>

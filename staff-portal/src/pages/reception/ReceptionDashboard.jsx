@@ -14,21 +14,37 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
-const StatCard = ({ title, value, icon: Icon, color, trend }) => (
-    <div className="dashboard-card group hover:border-primary/30 transition-all cursor-default">
-        <div className="flex justify-between items-start mb-4">
-            <div className={`p-3 rounded-xl ${color} text-white shadow-lg`}>
-                <Icon className="w-6 h-6" />
+import { SimpleChart } from '../../components/common/SimpleChart';
+
+const StatCard = ({ title, value, icon: Icon, color, trend, chartData }) => (
+    <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white/50 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all group overflow-hidden relative cursor-default">
+        <div className={cn("absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full opacity-[0.03] group-hover:scale-150 transition-transform duration-700", color)}></div>
+
+        <div className="flex justify-between items-start mb-6 relative z-10">
+            <div className={cn("p-3.5 rounded-2xl text-white shadow-lg shadow-primary/20", color)}>
+                <Icon className="w-5 h-5" />
             </div>
             {trend && (
-                <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
                     <TrendingUp className="w-3 h-3" />
                     {trend}
                 </span>
             )}
         </div>
-        <p className="text-slate-500 text-sm font-medium">{title}</p>
-        <h3 className="text-2xl font-bold text-slate-800 mt-1">{value}</h3>
+
+        <div className="relative z-10">
+            <div className="flex justify-between items-end">
+                <div>
+                    <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mb-1">{title}</p>
+                    <h3 className="text-3xl font-black text-slate-800 tracking-tighter">{value}</h3>
+                </div>
+                {chartData && (
+                    <div className="w-24 h-12 -mb-2">
+                        <SimpleChart data={chartData} color={color.replace('bg-', 'text-').replace('text-slate-800', 'text-slate-600')} height={40} />
+                    </div>
+                )}
+            </div>
+        </div>
     </div>
 );
 
@@ -69,18 +85,21 @@ const ReceptionDashboard = () => {
                     icon={Users}
                     color="bg-primary"
                     trend="+12%"
+                    chartData={[10, 15, 12, 18, 20, 24]}
                 />
                 <StatCard
                     title="Active Queue"
                     value="18"
                     icon={Ticket}
                     color="bg-secondary text-slate-800"
+                    chartData={[5, 8, 12, 15, 18, 18]}
                 />
                 <StatCard
                     title="Avg. Waiting Time"
                     value="15 min"
                     icon={Clock}
                     color="bg-accent"
+                    chartData={[20, 18, 16, 15, 14, 15]}
                 />
                 <StatCard
                     title="Revenue (Today)"
@@ -88,6 +107,7 @@ const ReceptionDashboard = () => {
                     icon={TrendingUp}
                     color="bg-slate-800"
                     trend="+5%"
+                    chartData={[5000, 7000, 8500, 10000, 11000, 12450]}
                 />
             </div>
 
@@ -101,7 +121,7 @@ const ReceptionDashboard = () => {
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/50 shadow-sm overflow-hidden">
                         {/* Desktop Table */}
                         <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left border-collapse">
@@ -209,9 +229,10 @@ const ReceptionDashboard = () => {
                         </button>
                     </div>
 
-                    <div className="dashboard-card bg-primary/5 border-primary/20">
-                        <h3 className="font-bold text-primary mb-2">Notice Board</h3>
-                        <p className="text-sm text-slate-600 leading-relaxed">
+                    <div className="bg-primary/5 border border-primary/10 rounded-[2rem] p-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                        <h3 className="font-bold text-primary mb-2 relative z-10">Notice Board</h3>
+                        <p className="text-sm text-slate-600 leading-relaxed relative z-10">
                             Dr. Miller will be unavailable from 2:00 PM today. Please reschedule all remaining appointments.
                         </p>
                     </div>

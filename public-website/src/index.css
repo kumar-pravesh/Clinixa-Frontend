@@ -1,11 +1,93 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0D9488;
-  --color-secondary: #67E8F9;
-  --color-accent: #F97316;
+  --color-primary: hsl(172, 80%, 35%);
+  /* Deep Teal */
+  --color-secondary: hsl(188, 86%, 85%);
+  /* Soft Cyan */
+  --color-accent: hsl(24, 94%, 53%);
+  /* Vibrant Coral/Orange */
+  --color-background: hsl(210, 40%, 98%);
+  /* Off-white Blue */
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
 }
 
+@layer base {
+  body {
+    @apply bg-[var(--color-background)] text-slate-900 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-3xl border border-white/40 shadow-2xl;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  }
+
+  .glass-panel {
+    @apply bg-white/40 backdrop-blur-md border border-white/30 shadow-lg;
+  }
+
+  .glass-nav {
+    @apply bg-white/60 backdrop-blur-xl border-b border-white/20;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-teal-500 to-accent;
+  }
+
+  .bg-health-flow {
+    @apply bg-gradient-to-br from-primary/10 via-secondary/20 to-accent/5;
+  }
+
+  .bg-admin-flow {
+    @apply bg-gradient-to-br from-slate-900/5 via-indigo-900/5 to-slate-900/10;
+  }
+
+  .bg-doctor-flow {
+    @apply bg-gradient-to-br from-primary/5 via-teal-500/5 to-emerald-500/5;
+  }
+
+  .btn-premium {
+    @apply relative overflow-hidden transition-all duration-300 active:scale-95 hover:shadow-lg hover:shadow-primary/25 rounded-xl font-bold tracking-wide;
+    background: linear-gradient(135deg, var(--color-primary), hsl(172, 80%, 30%));
+    color: white;
+  }
+
+  .btn-premium::before {
+    content: '';
+    @apply absolute inset-0 bg-white/20 translate-y-full transition-transform duration-300;
+  }
+
+  .btn-premium:hover::before {
+    @apply translate-y-0;
+  }
+}
+
+/* Custom Scrollbar for Premium Feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(172, 80%, 35%, 0.2);
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(172, 80%, 35%, 0.4);
+}
 
 /* Pulsate animation for online status dot */
 .status-pulsate {
@@ -14,11 +96,13 @@
 
 @keyframes pulsate {
   0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 -x 0 0 rgba(34, 197, 94, 0.4);
   }
+
   70% {
     box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
   }

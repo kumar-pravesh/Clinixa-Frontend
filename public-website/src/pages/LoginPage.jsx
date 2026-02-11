@@ -2,142 +2,254 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { motion } from "framer-motion";
-import { ArrowRight, Activity, Mail, Lock } from "lucide-react";
+import { ArrowLeft, Activity, Mail, Lock, KeyRound, ShieldCheck } from "lucide-react";
+import Logo from "../components/shared/Logo";
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [mode, setMode] = useState('login'); // 'login', 'forgot', 'reset'
+    const [otp, setOtp] = useState('');
+    const [newPassword, setNewPassword] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setSuccess('');
+        setIsLoading(true);
+
         try {
-            const data = await authService.login(email, password);
-
-            // 🔑 STORE AUTH DATA
-            localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('accessToken', data.accessToken);
-
-            // 🔁 REDIRECT
-            navigate('/patient/dashboard');
+            if (mode === 'login') {
+                const data = await authService.login(email, password);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('accessToken', data.accessToken);
+                navigate('/patient/dashboard');
+            } else if (mode === 'forgot') {
+                const result = await authService.forgotPassword(email);
+                setSuccess(result.message);
+                setMode('reset');
+            } else if (mode === 'reset') {
+                const result = await authService.resetPassword(email, otp, newPassword);
+                setSuccess(result.message);
+                setMode('login');
+            }
         } catch (err) {
-            setError(err.response?.data?.message || 'Login failed');
+            setError(err.response?.data?.message || 'Action failed');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-
+    const handleGoogleLogin = () => {
+        setIsLoading(true);
+        setTimeout(async () => {
+            try {
+                const mockToken = btoa(JSON.stringify({
+                    email: 'google-user@gmail.com',
+                    name: 'Google User',
+                    sub: 'google-123'
+                }));
+                const data = await authService.googleAuth(mockToken);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('accessToken', data.accessToken);
+                navigate('/patient/dashboard');
+            } catch (err) {
+                setError('Google Authentication failed');
+            } finally {
+                setIsLoading(false);
+            }
+        }, 1000);
+    };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-2xl relative overflow-hidden"
-            >
-                {/* Decorative Top Bar */}
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-secondary to-accent"></div>
+        <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+            {/* Background Decorations */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2" />
 
-                <div className="text-center">
-                    <div className="mx-auto h-20 w-auto overflow-hidden rounded-2xl bg-white p-2 border border-slate-100 shadow-sm mb-4">
-                        <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain mx-auto" />
-                    </div>
-                    <h2 className="text-3xl font-extrabold text-gray-900">Welcome Back</h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                        Sign in to access your dashboard
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="max-w-md w-full glass-card p-10 rounded-[40px] relative z-10"
+            >
+                <div className="text-center mb-10">
+                    <Link to="/" className="inline-block mb-8 hover:scale-105 transition-transform">
+                        <Logo className="h-10 mx-auto" />
+                    </Link>
+                    <h2 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-4">
+                        {mode === 'login' ? 'Welcome Back' : mode === 'forgot' ? 'Secure Reset' : 'Configure Access'}
+                    </h2>
+                    <p className="text-sm font-medium text-slate-500 max-w-[280px] mx-auto">
+                        {mode === 'login' ? 'Authenticate to access your bespoke health portal' :
+                            mode === 'forgot' ? 'Enter your registered identity to receive an OTP' :
+                                'Finalize your credentials to regain clinical access'}
                     </p>
                 </div>
 
                 {error && (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        className="bg-red-50 text-red-600 p-4 rounded-lg text-sm border-l-4 border-red-500"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="bg-red-50 text-red-600 p-4 rounded-2xl text-[13px] border border-red-100 mb-6 font-bold flex items-center gap-3"
                     >
+                        <ShieldCheck size={18} className="shrink-0" />
                         {error}
                     </motion.div>
                 )}
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="space-y-4">
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                    <Mail size={18} />
-                                </div>
+                {success && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="bg-emerald-50 text-emerald-600 p-4 rounded-2xl text-[13px] border border-emerald-100 mb-6 font-bold flex items-center gap-3"
+                    >
+                        <ShieldCheck size={18} className="shrink-0" />
+                        {success}
+                    </motion.div>
+                )}
+
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                    <div className="space-y-5">
+                        <div className="group">
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1 group-focus-within:text-primary transition-colors">Digital Identity</label>
+                            <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
                                 <input
-                                    id="email"
-                                    name="email"
                                     type="email"
-                                    autoComplete="email"
                                     required
+                                    disabled={mode === 'reset' || isLoading}
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border"
-                                    placeholder="you@example.com"
+                                    className="input-field pl-12"
+                                    placeholder="you@clinixa.life"
                                 />
                             </div>
                         </div>
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                    <Lock size={18} />
+
+                        {mode === 'login' && (
+                            <div className="group">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1 group-focus-within:text-primary transition-colors">Access Key</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
+                                    <input
+                                        type="password"
+                                        required
+                                        disabled={isLoading}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="input-field pl-12"
+                                        placeholder="••••••••"
+                                    />
                                 </div>
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    autoComplete="current-password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border"
-                                    placeholder="••••••••"
-                                />
                             </div>
-                        </div>
+                        )}
+
+                        {mode === 'reset' && (
+                            <div className="space-y-5">
+                                <div className="group">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1 group-focus-within:text-primary transition-colors">Verification Token</label>
+                                    <div className="relative">
+                                        <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <input
+                                            type="text"
+                                            required
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value)}
+                                            className="input-field pl-12"
+                                            placeholder="6-Digit OTP"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="group">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1 group-focus-within:text-primary transition-colors">New Access Key</label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <input
+                                            type="password"
+                                            required
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            className="input-field pl-12"
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            <input
-                                id="remember-me"
-                                name="remember-me"
-                                type="checkbox"
-                                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                            />
-                            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                                Remember me
+                    {mode === 'login' && (
+                        <div className="flex items-center justify-between px-1">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input type="checkbox" className="w-4 h-4 rounded-lg border-2 border-slate-200 text-primary focus:ring-primary/20 accent-primary" />
+                                <span className="text-xs font-bold text-slate-500 group-hover:text-slate-800 transition-colors">Stay linked</span>
                             </label>
+                            <button
+                                type="button"
+                                onClick={() => setMode('forgot')}
+                                className="text-xs font-black uppercase tracking-wider text-primary hover:text-teal-700 transition-colors"
+                            >
+                                Recover Key
+                            </button>
                         </div>
+                    )}
 
-                        <div className="text-sm">
-                            <a href="#" className="font-medium text-primary hover:text-teal-700">
-                                Forgot password?
-                            </a>
-                        </div>
-                    </div>
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="btn-primary w-full py-4 relative group"
+                    >
+                        {isLoading ? (
+                            <Activity className="animate-spin mx-auto" size={20} />
+                        ) : (
+                            <span className="uppercase tracking-[0.2em]">{mode === 'login' ? 'Authorize' : mode === 'forgot' ? 'Send OTP' : 'Update Access'}</span>
+                        )}
+                    </button>
 
-                    <div>
+                    {mode !== 'login' && (
                         <button
-                            type="submit"
-                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-primary hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary shadow-lg hover:shadow-xl transition-all"
+                            type="button"
+                            onClick={() => { setMode('login'); setError(''); setSuccess(''); }}
+                            className="w-full flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors py-2"
                         >
-                            Sign in
+                            <ArrowLeft size={14} /> Back to Authority Check
                         </button>
-                    </div>
+                    )}
                 </form>
 
-                <div className="text-center mt-4">
-                    <p className="text-sm text-gray-600">
-                        Don't have an account?{' '}
-                        <Link to="/register" className="font-medium text-accent hover:text-orange-700 flex items-center justify-center gap-1 mt-2">
-                            Create an account <ArrowRight size={14} />
-                        </Link>
-                    </p>
-                </div>
+                {mode === 'login' && (
+                    <div className="mt-10 space-y-8">
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div>
+                            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest text-slate-400"><span className="bg-white px-4">Social Gateway</span></div>
+                        </div>
+
+                        <button
+                            onClick={handleGoogleLogin}
+                            disabled={isLoading}
+                            className="w-full h-14 glass-card rounded-2xl flex items-center justify-center gap-4 hover:bg-slate-50 transition-all font-bold text-slate-700 group border-slate-100"
+                        >
+                            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                            </svg>
+                            Continue with Google
+                        </button>
+
+                        <div className="text-center pt-4">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">New to our Ecosystem?</p>
+                            <Link to="/register" className="btn-secondary w-full py-4 text-xs tracking-widest flex items-center justify-center gap-3">
+                                Initialize New Identity <ArrowRight size={14} />
+                            </Link>
+                        </div>
+                    </div>
+                )}
             </motion.div>
         </div>
     );

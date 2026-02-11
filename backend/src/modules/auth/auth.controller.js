@@ -1,4 +1,5 @@
 const authService = require('./auth.service');
+const jwt = require('jsonwebtoken');
 
 const register = async (req, res) => {
     try {
@@ -54,14 +55,82 @@ const refresh = async (req, res) => {
     }
 };
 
-const logout = (req, res) => {
-    res.clearCookie('refreshToken');
-    res.json({ message: 'Logged out successfully' });
+const logout = async (req, res) => {
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    });
+    res.status(200).json({ message: 'Logged out successfully' });
+};
+
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const result = await authService.forgotPassword(email);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        const result = await authService.resetPassword(email, otp, newPassword);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const googleAuth = async (req, res) => {
+    try {
+        const { token } = req.body;
+        // In a real app, we'd verify the token with Google here
+        // For now, we'll assume the client sends the payload (simulated)
+        // or we'd use a library like google-auth-library
+
+        let decoded;
+        try {
+            decoded = jwt.decode(token);
+        } catch (e) {
+            // Ignore jwt error, try generic base64
+        }
+
+        if (!decoded) {
+            try {
+                // Handle the mock btoa(JSON) token from frontend
+                decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+            } catch (e) {
+                throw new Error('Invalid token format');
+            }
+        }
+
+        const data = await authService.googleAuth({
+            email: decoded.email,
+            name: decoded.name,
+            googleId: decoded.sub
+        });
+
+        res.cookie('refreshToken', data.refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.json({ user: data.user, accessToken: data.accessToken });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 };
 
 module.exports = {
     register,
     login,
     refresh,
-    logout
+    logout,
+    forgotPassword,
+    resetPassword,
+    googleAuth
 };

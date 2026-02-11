@@ -79,7 +79,7 @@ const ReceptionLayout = () => {
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed lg:sticky top-0 left-0 h-screen bg-white border-r border-slate-200 flex flex-col z-50 transition-all duration-300 ease-in-out",
+                "fixed lg:sticky top-0 left-0 h-screen bg-[var(--color-background)]/80 backdrop-blur-xl border-r border-white/40 flex flex-col z-50 transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none",
                 isMobileMenuOpen ? "w-72 translate-x-0" : "w-72 -translate-x-full lg:translate-x-0 lg:w-64"
             )}>
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between">

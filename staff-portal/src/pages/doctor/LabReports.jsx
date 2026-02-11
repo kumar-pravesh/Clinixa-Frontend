@@ -97,11 +97,11 @@ const LabReports = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
+            <div className="bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/50 shadow-sm overflow-hidden">
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200">
+                            <tr className="bg-slate-50/50 border-b border-slate-200/60">
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Report ID</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Patient</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Test Name</th>
@@ -112,7 +112,7 @@ const LabReports = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {labReports.filter(r => r.patient.toLowerCase().includes(searchTerm.toLowerCase())).map((report) => (
-                                <tr key={report.id} className="group hover:bg-slate-50/50 transition-all">
+                                <tr key={report.id} className="group hover:bg-white transition-all">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
@@ -175,6 +175,66 @@ const LabReports = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-4 p-4">
+                    {labReports.filter(r => r.patient.toLowerCase().includes(searchTerm.toLowerCase())).map((report) => (
+                        <div key={report.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
+                            <div className="flex justify-between items-start">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                                        <FileText className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-800">{report.patient}</h3>
+                                        <span className="text-xs font-medium text-slate-400">{report.id}</span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => toggleStatus(report)}
+                                    className={cn(
+                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all hover:opacity-80",
+                                        report.status === 'Available' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                            report.status === 'Pending' ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                                "bg-blue-50 text-blue-600 border-blue-100"
+                                    )}
+                                >
+                                    <span className={cn("w-1.5 h-1.5 rounded-full",
+                                        report.status === 'Available' ? "bg-emerald-500" :
+                                            report.status === 'Pending' ? "bg-amber-500" : "bg-blue-500"
+                                    )}></span>
+                                    {report.status}
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="bg-slate-50 p-3 rounded-xl">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Test</p>
+                                    <p className="font-medium text-slate-700">{report.test}</p>
+                                </div>
+                                <div className="bg-slate-50 p-3 rounded-xl">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date</p>
+                                    <p className="font-medium text-slate-700">{report.date}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2 pt-2 border-t border-slate-50">
+                                <button
+                                    onClick={() => setSelectedReport(report)}
+                                    className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Eye className="w-3 h-3" /> View
+                                </button>
+                                <button
+                                    onClick={() => handlePrint(report)}
+                                    className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-primary/5 text-primary hover:bg-primary/10 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Printer className="w-3 h-3" /> Print
+                                </button>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

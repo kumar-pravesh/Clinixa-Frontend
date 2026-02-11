@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Mail, Lock, CheckCircle2, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, CheckCircle2, ArrowRight, AlertCircle, Loader2, ShieldCheck, Activity, Smartphone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import Logo from '../../components/common/Logo';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -48,162 +50,181 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex bg-white font-inter">
-            {/* Left Side - Hero/Branding */}
-            <div className="hidden lg:flex w-[55%] bg-slate-900 text-white p-16 flex-col justify-between relative overflow-hidden">
-                {/* Modern Mesh Gradient Background */}
-                <div className="absolute inset-0 opacity-40">
-                    <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-primary rounded-full blur-[120px] animate-pulse"></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-600 rounded-full blur-[100px] animate-pulse delay-700"></div>
+        <div className="min-h-screen flex bg-white font-sans overflow-hidden">
+            {/* Left Side - Hero/Branding (Premium Dark) */}
+            <div className="hidden lg:flex w-[55%] bg-slate-950 text-white p-20 flex-col justify-between relative overflow-hidden">
+                {/* 🌊 Advanced Mesh Gradient */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <motion.div
+                        animate={{
+                            scale: [1, 1.2, 1],
+                            rotate: [0, 45, 0],
+                            x: [0, 100, 0]
+                        }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute -top-[20%] -left-[20%] w-[80%] h-[80%] bg-primary/20 rounded-full blur-[140px]"
+                    />
+                    <motion.div
+                        animate={{
+                            scale: [1.2, 1, 1.2],
+                            rotate: [45, 0, 45],
+                            x: [0, -50, 0]
+                        }}
+                        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                        className="absolute -bottom-[20%] -right-[20%] w-[70%] h-[70%] bg-accent/10 rounded-full blur-[120px]"
+                    />
                 </div>
 
-                {/* Dot Grid Pattern Overlay */}
-                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
+                {/* 📐 Decorative Grid Pattern */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-                <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-12">
-                        <div className="h-16 w-auto overflow-hidden rounded-2xl bg-white p-2 shadow-xl shadow-primary/20 transform hover:rotate-3 transition-transform">
-                            <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain" />
-                        </div>
+                <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="relative z-10"
+                >
+                    <Logo forceLight={true} className="mb-24 scale-110 origin-left" />
+
+                    <div className="space-y-2 mb-8">
+                        <p className="text-primary font-bold text-xs uppercase tracking-[0.4em]">Enterprise Access</p>
+                        <h1 className="text-6xl font-black leading-[1.1] tracking-tighter">
+                            Advanced<br />
+                            <span className="text-primary">Clinical</span> Workflow
+                        </h1>
                     </div>
 
-                    <h1 className="text-6xl font-black mb-8 leading-[1.1] tracking-tighter">
-                        Experience <br />
-                        <span className="text-primary italic">Better</span> Care
-                    </h1>
-                    <p className="text-lg text-slate-400 max-w-md leading-relaxed font-medium">
-                        Advanced technology meets compassionate expertise. Empowering hospitals with a modern, feature-ready management system.
+                    <p className="text-lg text-slate-400 max-w-lg leading-relaxed font-medium mb-12">
+                        Precision-engineered tools for modern healthcare professionals. Securely manage patient flows, diagnostics, and administrative intelligence with the Clinixa Staff Ecosystem.
                     </p>
+                </motion.div>
+
+                <div className="relative z-10 grid grid-cols-2 gap-6 max-w-xl">
+                    {[
+                        { title: "24/7 Operations", desc: "Real-time sync", icon: Activity },
+                        { title: "Military Grade", desc: "End-to-end encryption", icon: ShieldCheck },
+                    ].map((feature, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 + (i * 0.1) }}
+                            className="bg-white/5 backdrop-blur-2xl p-6 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors"
+                        >
+                            <feature.icon className="text-primary mb-4" size={24} />
+                            <p className="font-black text-sm uppercase tracking-wider mb-1">{feature.title}</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{feature.desc}</p>
+                        </motion.div>
+                    ))}
                 </div>
 
-                <div className="relative z-10 space-y-6">
-                    <div className="flex items-center gap-5 p-6 bg-white/[0.03] backdrop-blur-xl rounded-[2rem] border border-white/[0.05] max-w-sm hover:bg-white/[0.06] transition-all duration-500 group">
-                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                            <CheckCircle2 className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className="font-black text-sm uppercase tracking-wider">24/7 Digital Hub</p>
-                            <p className="text-xs text-slate-500 font-bold mt-1">Real-time patient & queue data</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-5 p-6 bg-white/[0.03] backdrop-blur-xl rounded-[2rem] border border-white/[0.05] max-w-sm hover:bg-white/[0.06] transition-all duration-500 group ml-12">
-                        <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
-                            <CheckCircle2 className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className="font-black text-sm uppercase tracking-wider">Smart Analytics</p>
-                            <p className="text-xs text-slate-500 font-bold mt-1">Insightful reports & billing</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="relative z-10 flex items-center justify-between">
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">
-                        © 2026 CLINIXA SYSTEMS
+                <div className="relative z-10 border-t border-white/5 pt-10 flex items-center justify-between">
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">
+                        Clinixa internal portal v4.0
                     </p>
-                    <div className="flex gap-4 opacity-30">
-                        <div className="w-1 h-1 bg-white rounded-full"></div>
-                        <div className="w-1 h-1 bg-white rounded-full"></div>
-                        <div className="w-1 h-1 bg-white rounded-full"></div>
+                    <div className="flex gap-2">
+                        <div className="w-8 h-1 bg-primary rounded-full" />
+                        <div className="w-4 h-1 bg-white/10 rounded-full" />
                     </div>
                 </div>
             </div>
 
-            {/* Right Side - Login Form */}
-            <div className="w-full lg:w-[45%] flex items-center justify-center p-12 bg-white relative">
-                {/* Background Blobs for Mobile */}
-                <div className="lg:hidden absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-                    <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-primary rounded-full blur-3xl"></div>
-                </div>
-
-                <div className="w-full max-w-md relative z-10">
-                    <div className="text-center mb-10">
-                        <div className="lg:hidden flex items-center justify-center mb-8">
-                            <div className="h-12 w-auto overflow-hidden rounded-xl bg-white p-1 shadow-md">
-                                <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain" />
-                            </div>
-                        </div>
-                        <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Welcome Home</h2>
-                        <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">Authentication Required for Portal Access</p>
+            {/* Right Side - Login Form (Minimal Premium) */}
+            <div className="w-full lg:w-[45%] flex items-center justify-center p-8 lg:p-24 bg-white relative">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-full max-w-md"
+                >
+                    <div className="lg:hidden mb-12">
+                        <Logo />
                     </div>
 
-                    {error && (
-                        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                            <div className="w-8 h-8 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500 shrink-0">
-                                <AlertCircle className="w-5 h-5" />
-                            </div>
-                            <p className="text-xs font-bold text-red-600">{error}</p>
-                        </div>
-                    )}
+                    <div className="mb-12">
+                        <h2 className="text-5xl font-black text-slate-900 tracking-tighter leading-none mb-4">Welcome Back.</h2>
+                        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em] flex items-center gap-2">
+                            <Lock size={12} className="text-primary" /> Multi-Factor Secured Access
+                        </p>
+                    </div>
 
-                    <div className="bg-white p-2 rounded-[2.5rem]">
-                        <form onSubmit={handleLogin} className="space-y-6">
-                            <div className="space-y-5">
-                                <div>
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Work Email</label>
+                    <AnimatePresence mode="wait">
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="mb-8 p-5 bg-red-50 border border-red-100 rounded-3xl flex items-center gap-4 overflow-hidden"
+                            >
+                                <div className="w-10 h-10 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 shrink-0">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <p className="text-xs font-bold text-red-600 leading-tight">{error}</p>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <form onSubmit={handleLogin} className="space-y-8">
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-1">Staff Credentials</label>
+                                <div className="space-y-4">
                                     <div className="group relative">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                                        <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
                                         <input
                                             type="email"
                                             name="email"
-                                            placeholder="sarah.j@clinixa.life"
-                                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                                            placeholder="Staff Email Address"
+                                            className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
                                             required
                                         />
                                     </div>
-                                </div>
 
-                                <div>
-                                    <div className="flex justify-between items-center mb-3">
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
-                                        <a href="#" className="text-[9px] font-black text-primary hover:text-primary/80 uppercase tracking-widest">Forgot Account?</a>
-                                    </div>
                                     <div className="group relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
                                         <input
                                             type="password"
                                             name="password"
-                                            placeholder="••••••••"
-                                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                                            placeholder="System Password"
+                                            className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
                                             required
                                         />
                                     </div>
                                 </div>
-
-                                <div className="flex items-center gap-2 px-2">
-                                    <input type="checkbox" id="remember" className="w-5 h-5 rounded-lg border-2 border-slate-200 text-primary focus:ring-primary transition-all cursor-pointer" />
-                                    <label htmlFor="remember" className="text-xs font-bold text-slate-500 cursor-pointer select-none">Stay logged in for 30 days</label>
-                                </div>
                             </div>
+                        </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-5 rounded-[1.5rem] shadow-2xl shadow-slate-900/20 transition-all flex items-center justify-center gap-3 group disabled:opacity-50 overflow-hidden relative"
-                            >
-                                {loading ? (
-                                    <span className="relative z-10 flex items-center gap-3">
-                                        <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span>
-                                        SECURE INITIALIZING...
-                                    </span>
-                                ) : (
-                                    <>
-                                        <span className="relative z-10 flex items-center gap-3 tracking-widest text-xs uppercase">
-                                            Access Dashboard <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                        </span>
-                                        <div className="absolute inset-0 bg-primary opacity-0 group-hover:opacity-10 transition-opacity"></div>
-                                    </>
-                                )}
-                            </button>
-                        </form>
-                    </div>
+                        <div className="flex items-center justify-between px-2">
+                            <div className="flex items-center gap-3">
+                                <input type="checkbox" id="remember" className="w-5 h-5 rounded-lg border-2 border-slate-200 text-primary focus:ring-primary/20 transition-all cursor-pointer accent-primary" />
+                                <label htmlFor="remember" className="text-xs font-bold text-slate-500 cursor-pointer">Remember Station</label>
+                            </div>
+                            <a href="#" className="text-[10px] font-black text-primary hover:opacity-70 uppercase tracking-widest">Forgot?</a>
+                        </div>
 
-                    <div className="mt-12 text-center">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-slate-900 py-6 rounded-[2rem] text-white font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-slate-900/40 hover:bg-primary hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 group"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="animate-spin w-5 h-5" />
+                                    Initialing Secure Tunnel...
+                                </>
+                            ) : (
+                                <>
+                                    Initialize Session <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                                </>
+                            )}
+                        </button>
+                    </form>
+
+                    <div className="mt-16 pt-10 border-t border-slate-100 text-center">
                         <p className="text-slate-400 font-bold text-xs">
-                            Internal Staff Portal. <Link to="/register" className="text-slate-900 hover:text-primary transition-colors">Join Organization</Link>
+                            Not registered on this node? <Link to="/register" className="text-slate-900 hover:text-primary transition-colors underline underline-offset-4">Register Staff</Link>
                         </p>
                     </div>
-                </div>
+                </motion.div>
             </div>
         </div>
     );

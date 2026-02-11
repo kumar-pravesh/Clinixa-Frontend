@@ -15,13 +15,15 @@ import {
 import { cn } from '../../utils/cn';
 import { useNotification } from '../../context/NotificationContext';
 
-const DashboardStat = ({ title, value, icon: Icon, color, trend, detail }) => (
-    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:border-primary/20 transition-all group overflow-hidden relative">
-        <div className={cn("absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-[0.03] group-hover:scale-150 transition-transform duration-700", color)}></div>
+import { SimpleChart } from '../../components/common/SimpleChart';
 
-        <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className={cn("p-4 rounded-2xl text-white shadow-lg", color)}>
-                <Icon className="w-6 h-6" />
+const DashboardStat = ({ title, value, icon: Icon, color, trend, detail, chartData }) => (
+    <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white/50 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all group overflow-hidden relative">
+        <div className={cn("absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full opacity-[0.03] group-hover:scale-150 transition-transform duration-700", color)}></div>
+
+        <div className="flex justify-between items-start mb-6 relative z-10">
+            <div className={cn("p-3.5 rounded-2xl text-white shadow-lg shadow-primary/20", color)}>
+                <Icon className="w-5 h-5" />
             </div>
             {trend && (
                 <div className={cn(
@@ -35,10 +37,19 @@ const DashboardStat = ({ title, value, icon: Icon, color, trend, detail }) => (
         </div>
 
         <div className="relative z-10">
-            <h3 className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mb-1">{title}</h3>
-            <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-slate-900 tracking-tighter">{value}</span>
-                <span className="text-xs font-bold text-slate-400">{detail}</span>
+            <div className="flex justify-between items-end">
+                <div>
+                    <h3 className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mb-1">{title}</h3>
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-black text-slate-900 tracking-tighter">{value}</span>
+                    </div>
+                    <span className="text-xs font-bold text-slate-400 mt-1 block">{detail}</span>
+                </div>
+                {chartData && (
+                    <div className="w-24 h-12 -mb-2">
+                        <SimpleChart data={chartData} color={color.replace('bg-', 'text-')} height={40} />
+                    </div>
+                )}
             </div>
         </div>
     </div>
@@ -87,6 +98,7 @@ const AdminDashboard = () => {
                     color="bg-sky-500"
                     trend={12}
                     detail="Scheduled Today"
+                    chartData={[10, 25, 18, 30, 22, 42]}
                 />
                 <DashboardStat
                     title="Active Patients"
@@ -95,6 +107,7 @@ const AdminDashboard = () => {
                     color="bg-violet-500"
                     trend={8}
                     detail="This Month"
+                    chartData={[800, 900, 950, 1100, 1150, 1200]}
                 />
                 <DashboardStat
                     title="Daily Revenue"
@@ -103,6 +116,7 @@ const AdminDashboard = () => {
                     color="bg-emerald-500"
                     trend={15}
                     detail="Target: ₹2L"
+                    chartData={[1.2, 1.3, 1.5, 1.4, 1.6, 1.8]}
                 />
                 <DashboardStat
                     title="Pending Dues"
@@ -111,6 +125,7 @@ const AdminDashboard = () => {
                     color="bg-orange-500"
                     trend={-5}
                     detail="12 Invoices"
+                    chartData={[50, 48, 46, 47, 46, 45]}
                 />
             </div>
 

@@ -46,11 +46,12 @@ const AssignedPatients = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
+            <div className="bg-white/50 backdrop-blur-md rounded-[2rem] border border-white/60 shadow-sm overflow-hidden">
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200">
+                            <tr className="bg-slate-50/50 border-b border-slate-200/60">
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest leading-normal">Patient ID</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest leading-normal">Name</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest leading-normal">Age / Gender</th>
@@ -62,7 +63,7 @@ const AssignedPatients = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {filteredPatients.map((patient) => (
-                                <tr key={patient.id} className="group hover:bg-slate-50/50 transition-all">
+                                <tr key={patient.id} className="group hover:bg-white transition-all">
                                     <td className="px-8 py-6">
                                         <span className="text-sm font-black text-slate-900 tracking-tight">{patient.id}</span>
                                     </td>
@@ -116,6 +117,60 @@ const AssignedPatients = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-4 p-4">
+                    {filteredPatients.map((patient) => (
+                        <div key={patient.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
+                            <div className="flex justify-between items-start">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500">
+                                        <User className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-800">{patient.name}</h3>
+                                        <span className="text-xs font-medium text-slate-400">{patient.id}</span>
+                                    </div>
+                                </div>
+                                <span className={cn(
+                                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                                    patient.status === 'Admitted'
+                                        ? "bg-purple-50 text-purple-600 border-purple-100"
+                                        : "bg-green-50 text-green-600 border-green-100"
+                                )}>
+                                    <span className={cn("w-1 h-1 rounded-full", patient.status === 'Admitted' ? "bg-purple-500" : "bg-green-500")}></span>
+                                    {patient.status}
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="bg-slate-50 p-3 rounded-xl">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Diagnosis</p>
+                                    <p className="font-medium text-slate-700">{patient.diagnosis}</p>
+                                </div>
+                                <div className="bg-slate-50 p-3 rounded-xl">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Last Visit</p>
+                                    <p className="font-medium text-slate-700">{patient.lastVisit}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2 pt-2 border-t border-slate-50">
+                                <button
+                                    onClick={() => handleViewPatient(patient)}
+                                    className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <FileText className="w-3 h-3" /> View Details
+                                </button>
+                                <button
+                                    onClick={() => handleSchedule(patient)}
+                                    className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-primary/5 text-primary hover:bg-primary/10 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Calendar className="w-3 h-3" /> Schedule
+                                </button>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
 
