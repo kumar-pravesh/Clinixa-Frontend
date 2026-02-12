@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, CheckCircle2, ShieldCheck, Lock } from 'lucide-react';
-import { cn } from '../../utils/cn';
 
 export const PaymentModal = ({ isOpen, onClose, amount, onSuccess }) => {
     const [step, setStep] = useState('processing'); // processing, verifying, success
 
     useEffect(() => {
         if (isOpen) {
-            setStep('processing');
-            // Simulate Razorpay steps
+            const t0 = setTimeout(() => setStep('processing'), 0);
             const t1 = setTimeout(() => setStep('verifying'), 2000);
             const t2 = setTimeout(() => setStep('success'), 4000);
             const t3 = setTimeout(() => {
@@ -17,6 +15,7 @@ export const PaymentModal = ({ isOpen, onClose, amount, onSuccess }) => {
             }, 5500);
 
             return () => {
+                clearTimeout(t0);
                 clearTimeout(t1);
                 clearTimeout(t2);
                 clearTimeout(t3);

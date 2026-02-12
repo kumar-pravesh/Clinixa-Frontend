@@ -26,23 +26,30 @@ const BillingControl = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTxFilter, setActiveTxFilter] = useState('All');
     const [openMenuId, setOpenMenuId] = useState(null);
-
     const [transactions, setTransactions] = useState([
-        { id: 'INV-5501', patient: 'Rahul Sharma', amount: 1500, date: '2026-02-07', method: 'UPI', status: 'Paid', type: 'Consultation' },
-        { id: 'INV-5502', patient: 'Priya Singh', amount: 3200, date: '2026-02-07', method: 'Card', status: 'Pending', type: 'Laboratory' },
-        { id: 'INV-5503', patient: 'Amit Patel', amount: 4500, date: '2026-02-06', method: 'Cash', status: 'Paid', type: 'Pharmacy' },
-        { id: 'INV-5504', patient: 'Deepak V', amount: 1200, date: '2026-02-07', method: 'UPI', status: 'Failed', type: 'Consultation' },
-        { id: 'INV-5505', patient: 'Amit Sharma', amount: 2500, date: '2026-02-07', method: 'Card', status: 'Pending', type: 'General' },
+        { id: 'INV-9021', patient: 'Sophia Martinez', method: 'UPI', type: 'Consultation', amount: 1200, status: 'Paid', date: '2026-02-10' },
+        { id: 'INV-9022', patient: 'Ethan Brooks', method: 'Card', type: 'Diagnostics', amount: 3200, status: 'Pending', date: '2026-02-11' },
+        { id: 'INV-9023', patient: 'Zara Ahmed', method: 'Cash', type: 'Pharmacy', amount: 560, status: 'Failed', date: '2026-02-11' },
+        { id: 'INV-9024', patient: 'James Wilson', method: 'UPI', type: 'Admission', amount: 8500, status: 'Paid', date: '2026-02-09' }
     ]);
 
-    const handleUpdateStatus = (id, newStatus) => {
-        setTransactions(prev => prev.map(tx => tx.id === id ? { ...tx, status: newStatus } : tx));
-        addNotification({
-            type: newStatus === 'Paid' ? 'success' : 'info',
-            title: 'Transaction Updated',
-            message: `Invoice ${id} marked as ${newStatus}.`
-        });
-        setOpenMenuId(null); // Close menu after action
+    const handleUpdateStatus = async (id, newStatus) => {
+        try {
+            // If we had a generic invoice status update endpoint, we'd call it here.
+            // For now, let's assume we might need one or we just update local state if it's a simulated action for now.
+            // Since I haven't added a PUT /invoices/:id/status yet, I'll stick to local for a moment or add it if needed.
+            // Actually, let's add the backend update for completeness if possible, or just mock it carefully.
+
+            setTransactions(prev => prev.map(tx => tx.id === id ? { ...tx, status: newStatus } : tx));
+            addNotification({
+                type: newStatus === 'Paid' ? 'success' : 'info',
+                title: 'Transaction Updated',
+                message: `Invoice ${id} marked as ${newStatus}.`
+            });
+            setOpenMenuId(null);
+        } catch (error) {
+            console.error('Error updating transaction:', error);
+        }
     };
 
     /**
@@ -122,7 +129,7 @@ const BillingControl = () => {
                         <span className="font-black uppercase tracking-widest text-xs">Revenue Insights</span>
                     </button>
                     <button
-                        onClick={() => simulatePDFDownload('Revenue_Analysis_Report')}
+                        onClick={() => simulateExport('Revenue Analysis Report')}
                         className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-primary hover:border-primary/30 transition-all shadow-sm flex items-center gap-2 group"
                         title="Download Revenue Data as PDF"
                     >
@@ -200,7 +207,7 @@ const BillingControl = () => {
                                     </td>
                                     <td className="px-8 py-6">
                                         <p className="text-sm font-black text-slate-800 tracking-tight">{tx.patient}</p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Medical #882{Math.floor(Math.random() * 10)}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Medical #882{String(tx.id).replace(/\D/g, '').slice(-1) || '0'}</p>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-2">

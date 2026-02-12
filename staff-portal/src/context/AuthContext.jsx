@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
                 if (data.user) {
                     setUser(data.user);
                 }
-            } catch (error) {
+            } catch {
                 console.warn('Auth Persistence: Refresh failed or session expired');
                 // Don't clear user immediately if we already have one (from login)
                 // but usually checkAuth runs on mount
@@ -31,7 +31,9 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (credentials) => {
-        // --- DEMO MODE BYPASS ---
+        // --- DEMO MODE DISABLED - Using Real Authentication ---
+        // Demo mode was causing 403 errors because fake tokens aren't valid JWTs
+        /*
         const demoUsers = {
             'admin@clinixa.life': { id: 'demo-admin', name: 'Demo Administrator', role: 'admin', email: 'admin@clinixa.life' },
             'doctor@clinixa.life': { id: 'demo-doctor', name: 'Dr. Demo Specialist', role: 'doctor', email: 'doctor@clinixa.life' },
@@ -46,11 +48,15 @@ export const AuthProvider = ({ children }) => {
             setUser(mockData.user);
             return mockData;
         }
+        */
         // ------------------------
 
         try {
             // Attempt actual login
+            console.log('[AuthContext] Attempting real authentication...');
             const data = await authService.login(credentials);
+            console.log('[AuthContext] Login successful:', { user: data.user, hasToken: !!data.accessToken });
+
             if (data.accessToken) {
                 localStorage.setItem('accessToken', data.accessToken);
             }

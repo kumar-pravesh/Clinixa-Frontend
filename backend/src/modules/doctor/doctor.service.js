@@ -101,6 +101,18 @@ const getPrescriptions = async (doctorId, appointmentId) => {
     return rows;
 };
 
+const getLabReports = async (doctorId) => {
+    const [rows] = await pool.query(`
+        SELECT lr.id, u.name as patient_name, lr.test_name, lr.date, lr.status, lr.file_path
+        FROM lab_reports lr
+        JOIN patients p ON lr.patient_id = p.id
+        JOIN users u ON p.user_id = u.id
+        WHERE lr.doctor_id = ?
+        ORDER BY lr.date DESC
+    `, [doctorId]);
+    return rows;
+};
+
 const createPrescription = async (doctorId, data) => {
     const { patientId, medications } = data; // medications: [{name, dosage, frequency, duration}]
 
@@ -174,6 +186,15 @@ const setFollowUp = async (doctorId, data) => {
     return { id: result.insertId, message: 'Follow-up appointment set' };
 };
 
+const updateAppointmentStatus = async (doctorId, appointmentId, status) => {
+    // Verify ownership
+    const [appt] = await pool.query('SELECT id FROM appointments WHERE id = ? AND doctor_id = ?', [appointmentId, doctorId]);
+    if (appt.length === 0) throw new Error('Appointment not found or unauthorized');
+
+    await pool.query('UPDATE appointments SET status = ? WHERE id = ?', [status, appointmentId]);
+    return { message: 'Appointment status updated' };
+};
+
 const getPublicDoctors = async () => {
     const [rows] = await pool.query(`
         SELECT 
@@ -224,10 +245,13 @@ module.exports = {
     getAppointments,
     getPatients,
     getPrescriptions,
+    getLabReports,
     createPrescription,
     addMedicines,
     uploadLabReport,
+    uploadLabReport,
     setFollowUp,
+    updateAppointmentStatus,
     getPublicDoctors,
     getDoctorById
 };

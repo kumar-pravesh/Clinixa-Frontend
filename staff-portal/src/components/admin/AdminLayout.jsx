@@ -21,23 +21,28 @@ import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import NotificationDropdown from '../reception/NotificationDropdown';
+import Logo from '../common/Logo';
 
-const SidebarLink = ({ to, icon: Icon, children, end, onClick }) => (
-    <NavLink
-        to={to}
-        end={end}
-        onClick={onClick}
-        className={({ isActive }) => cn(
-            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
-            isActive
-                ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
-                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-        )}
-    >
-        <Icon className="w-5 h-5 transition-transform group-hover:scale-110" />
-        <span className="font-bold tracking-tight">{children}</span>
-    </NavLink>
-);
+const SidebarLink = ({ to, icon: Icon, children, end, onClick }) => {
+    const IconComponent = Icon;
+
+    return (
+        <NavLink
+            to={to}
+            end={end}
+            onClick={onClick}
+            className={({ isActive }) => cn(
+                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
+                isActive
+                    ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            )}
+        >
+            <IconComponent className="w-5 h-5 transition-transform group-hover:scale-110" />
+            <span className="font-bold tracking-tight">{children}</span>
+        </NavLink>
+    );
+};
 
 const AdminLayout = () => {
     const { logout } = useAuth();
@@ -83,9 +88,7 @@ const AdminLayout = () => {
             )}>
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-auto overflow-hidden rounded-lg bg-slate-50 p-1 border border-slate-100 shadow-sm">
-                            <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain" />
-                        </div>
+                        <Logo className="scale-90" showText={false} />
                         <div>
                             <h1 className="font-bold text-xl text-slate-800 leading-tight">Clinixa</h1>
                             <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5 flex items-center gap-1">
@@ -112,7 +115,6 @@ const AdminLayout = () => {
                 </nav>
 
                 <div className="p-4 border-t border-slate-100 space-y-2">
-                    <SidebarLink to="/admin/settings" icon={Settings} onClick={() => setIsMobileMenuOpen(false)}>Config</SidebarLink>
                     <button
                         onClick={handleLogout}
                         className="flex items-center gap-3 px-4 py-3 w-full text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all group"
@@ -177,13 +179,13 @@ const AdminLayout = () => {
                             </div>
                         </div>
                     </div>
-                </header>
+                </header >
 
                 <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
                     <Outlet />
                 </main>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

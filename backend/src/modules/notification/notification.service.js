@@ -32,29 +32,48 @@ class NotificationService {
         await smsProvider.send(phone, message);
     }
 
+    async sendWelcomeNotification(email, name, phone) {
+        const subject = 'Welcome to Clinixa Health';
+        const message = `Hello ${name},\n\nWelcome to Clinixa! Your account has been successfully created.\n\nYou can now book appointments and view your medical history.`;
+
+        console.log(`[Notification] Queuing Welcome Email to ${email}`);
+        await emailProvider.send(email, message, subject);
+
+        if (phone) {
+            const smsMessage = `Welcome to Clinixa, ${name}! Your account is ready.`;
+            console.log(`[Notification] Queuing Welcome SMS to ${phone}`);
+            await smsProvider.send(phone, smsMessage);
+        }
+    }
+
+    async sendOTP(email, otp) {
+        const subject = 'Clinixa - Password Reset OTP';
+        const message = `Your OTP for password reset is: ${otp}. It expires in 10 minutes.`;
+
+        console.log(`[Notification] Queuing OTP Email to ${email}`);
+        await emailProvider.send(email, message, subject);
+    }
+
     // Mock Scheduler Logic
     async checkReminders() {
         console.log('[Scheduler] Checking for upcoming appointments...');
         try {
             // Find CONFIRMED appointments in the next 2 hours
-            // Using Postgres interval logic
-            const upcoming = await pool.query(`
-                SELECT a.id, a.time_slot, p.phone, u.name 
+            const [upcoming] = await pool.query(`
+                SELECT a.id, a.time, p.phone, u.name 
                 FROM appointments a
                 JOIN patients p ON a.patient_id = p.id
                 JOIN users u ON p.user_id = u.id
-                WHERE a.status = 'CONFIRMED' 
+                WHERE a.status = 'Confirmed' 
                 AND a.date = CURRENT_DATE
-                -- Mock Logic: In reality, compare time_slot to current time
-                -- For demo, we just pick all 'CONFIRMED' today to show it works
             `);
 
-            for (const appt of upcoming.rows) {
+            for (const appt of upcoming) {
                 if (this.sentReminders.has(appt.id)) continue;
 
                 console.log(`[Scheduler] Found appointment ${appt.id} for ${appt.name} - Sending SMS`);
 
-                await this.sendAppointmentReminder(appt.phone, appt.name, appt.time_slot);
+                await this.sendAppointmentReminder(appt.phone, appt.name, appt.time);
                 this.sentReminders.add(appt.id);
             }
         } catch (err) {

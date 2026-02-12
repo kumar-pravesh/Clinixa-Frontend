@@ -21,7 +21,7 @@ class RazorpayProvider extends PaymentProvider {
                 transactionId: order.id,
                 payload: {
                     provider: 'razorpay',
-                    orderId: order.id,
+                    order_id: order.id,
                     amount: order.amount,
                     currency: order.currency,
                     key: process.env.RAZORPAY_KEY_ID
@@ -35,6 +35,12 @@ class RazorpayProvider extends PaymentProvider {
 
     async verify(transactionId, verificationData) {
         const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = verificationData;
+
+        // Security Check: Verify that the order ID in the verification data matches our records
+        if (transactionId !== razorpay_order_id) {
+            console.error('Razorpay verification error: Order ID mismatch');
+            return false;
+        }
 
         const body = razorpay_order_id + '|' + razorpay_payment_id;
         const expectedSignature = crypto

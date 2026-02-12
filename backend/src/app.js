@@ -12,6 +12,7 @@ const paymentRoutes = require('./modules/payment/payment.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const doctorRoutes = require('./modules/doctor/doctor.routes');
 const publicDoctorRoutes = require('./modules/doctor/public.routes');
+const publicRoutes = require('./modules/public/public.routes');
 const receptionistRoutes = require('./modules/receptionist/receptionist.routes');
 const labRoutes = require('./modules/lab/lab.routes');
 
@@ -34,16 +35,47 @@ app.use((req, res, next) => {
     next();
 });
 
-// Routes
-app.use('/auth', authRoutes);
-app.use('/patient', patientRoutes);
-app.use('/appointment', appointmentRoutes);
-app.use('/payments', paymentRoutes);
-app.use('/admin', adminRoutes);
-app.use('/doctor', doctorRoutes);
-app.use('/doctors', publicDoctorRoutes);       // Public doctors list
-app.use('/receptionist', receptionistRoutes);  // Receptionist module
-app.use('/lab', labRoutes);                    // Lab technician module
+// ============================================
+// PUBLIC API ROUTES (Public Website)
+// ============================================
+app.use('/api/public', publicRoutes);           // Public departments, doctors
+
+// ============================================
+// STAFF PORTAL API ROUTES
+// ============================================
+app.use('/api/staff/admin', adminRoutes);       // Admin module
+app.use('/api/staff/receptionist', receptionistRoutes);  // Receptionist module
+app.use('/api/staff/doctor', doctorRoutes);     // Doctor module
+app.use('/api/staff/lab', labRoutes);           // Lab module
+
+// ============================================
+// SHARED ROUTES (Both Portals)
+// ============================================
+app.use('/auth', authRoutes);                   // Authentication
+app.use('/patient', patientRoutes);             // Patient operations
+app.use('/appointment', appointmentRoutes);     // Appointments
+app.use('/payments', paymentRoutes);            // Payments
+
+// ============================================
+// LEGACY ROUTES (Backward Compatibility)
+// TODO: Remove these after frontend migration
+// ============================================
+app.use('/admin', adminRoutes);                 // Legacy admin routes
+app.use('/doctor', doctorRoutes);               // Legacy doctor routes
+app.use('/doctors', publicDoctorRoutes);        // Legacy public doctors
+app.use('/receptionist', receptionistRoutes);   // Legacy receptionist routes
+app.use('/lab', labRoutes);                     // Legacy lab routes
+
+// Public Departments (Legacy - will be removed)
+const adminService = require('./modules/admin/admin.service');
+app.get('/departments', async (req, res) => {
+    try {
+        const rows = await adminService.getDepartments();
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch departments' });
+    }
+});
 
 // Health check
 app.get('/', (req, res) => {

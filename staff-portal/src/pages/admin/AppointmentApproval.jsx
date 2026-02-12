@@ -15,34 +15,50 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useNotification } from '../../context/NotificationContext';
+import api from '../../api/axios';
 
 const AppointmentApproval = () => {
     const { addNotification } = useNotification();
     const [activeTab, setActiveTab] = useState('Pending');
-
     const [appointments, setAppointments] = useState([
-        { id: 'APP001', patient: 'Rahul Sharma', doctor: 'Dr. Arun Kumar', dept: 'Cardiology', date: '2026-02-08', time: '10:30 AM', status: 'Pending', type: 'Consultation' },
-        { id: 'APP002', patient: 'Priya Singh', doctor: 'Dr. Sarah Paul', dept: 'Pediatrics', date: '2026-02-08', time: '11:15 AM', status: 'Approved', type: 'Follow-up' },
-        { id: 'APP003', patient: 'Amit Patel', doctor: 'Dr. John Doe', dept: 'Neurology', date: '2026-02-09', time: '02:00 PM', status: 'Pending', type: 'Emergency' },
-        { id: 'APP004', patient: 'Sneha Gupta', doctor: 'Dr. Emily Watson', dept: 'Dermatology', date: '2026-02-08', time: '04:30 PM', status: 'Rescheduled', type: 'Consultation' },
-        { id: 'APP005', patient: 'Deepak V', doctor: 'Dr. Sarah Paul', dept: 'Pediatrics', date: '2026-02-08', time: '05:00 PM', status: 'Pending', type: 'Follow-up' },
+        { id: 'APT-1001', patient: 'John Doe', status: 'Pending', doctor: 'Dr. Smith', dept: 'General Medicine', date: '2026-02-11', time: '10:30 AM', type: 'Routine' },
+        { id: 'APT-1002', patient: 'Emma Wilson', status: 'Approved', doctor: 'Dr. Brown', dept: 'Pediatrics', date: '2026-02-11', time: '11:15 AM', type: 'Routine' },
+        { id: 'APT-1003', patient: 'Robert Brown', status: 'Rescheduled', doctor: 'Dr. Lee', dept: 'Cardiology', date: '2026-02-12', time: '09:45 AM', type: 'Emergency' },
+        { id: 'APT-1004', patient: 'Tejas Kumar', status: 'Cancelled', doctor: 'Dr. Wilson', dept: 'Dentistry', date: '2026-02-12', time: '02:00 PM', type: 'Routine' }
     ]);
 
-    const handleStatusUpdate = (id, newStatus, patientName) => {
-        setAppointments(prev => prev.map(app => app.id === id ? { ...app, status: newStatus } : app));
+    const handleStatusUpdate = async (id, newStatus, patientName) => {
+        try {
+            if (newStatus === 'Approved') {
+                await api.put(`/admin/appointments/${id}/approve`);
+            } else if (newStatus === 'Cancelled') {
+                await api.put(`/admin/appointments/${id}/reject`);
+            } else {
+                await api.put(`/admin/appointments/${id}/status`, { status: newStatus });
+            }
 
-        const type = newStatus === 'Approved' ? 'success' : newStatus === 'Cancelled' ? 'info' : 'appointment';
-        addNotification({
-            type,
-            title: `Appointment ${newStatus}`,
-            message: `Consultation for ${patientName} has been ${newStatus.toLowerCase()}.`
-        });
+            addNotification({
+                type: newStatus === 'Approved' ? 'success' : 'info',
+                title: `Appointment ${newStatus}`,
+                message: `Consultation for ${patientName} has been ${newStatus.toLowerCase()}.`
+            });
+
+            setAppointments(prev => prev.map(app => app.id === id ? { ...app, status: newStatus } : app));
+        } catch (error) {
+            console.error('Error updating appointment:', error);
+            addNotification({
+                type: 'error',
+                title: 'Update Failed',
+                message: `Failed to ${newStatus.toLowerCase()} appointment.`
+            });
+        }
     };
 
     const getStatusStyle = (status) => {
         switch (status) {
             case 'Pending': return "bg-amber-50 text-amber-600 border-amber-100 shadow-amber-100/10";
-            case 'Approved': return "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-100/10";
+            case 'Approved':
+            case 'Confirmed': return "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-100/10";
             case 'Rescheduled': return "bg-blue-50 text-blue-600 border-blue-100 shadow-blue-100/10";
             case 'Cancelled': return "bg-rose-50 text-rose-600 border-rose-100 shadow-rose-100/10";
             default: return "bg-slate-50 text-slate-500 border-slate-100";
@@ -51,6 +67,7 @@ const AppointmentApproval = () => {
 
     const filteredAppointments = appointments.filter(app => {
         if (activeTab === 'Schedules') return true;
+        if (activeTab === 'Approved') return app.status === 'Approved' || app.status === 'Confirmed';
         return app.status === activeTab;
     });
 
@@ -137,7 +154,7 @@ const AppointmentApproval = () => {
                                         </div>
                                     </>
                                 )}
-                                {app.status === 'Approved' && (
+                                {(app.status === 'Approved' || app.status === 'Confirmed') && (
                                     <button
                                         onClick={() => handleStatusUpdate(app.id, 'Cancelled', app.patient)}
                                         className="h-14 px-8 bg-slate-50 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-slate-100 hover:text-rose-500 transition-all"
@@ -146,12 +163,21 @@ const AppointmentApproval = () => {
                                     </button>
                                 )}
                                 {(app.status === 'Cancelled' || app.status === 'Rescheduled') && (
-                                    <button
-                                        onClick={() => handleStatusUpdate(app.id, 'Pending', app.patient)}
-                                        className="h-14 px-8 bg-primary/5 text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest border border-primary/10 hover:bg-primary hover:text-white transition-all"
-                                    >
-                                        Restore to Pending
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleStatusUpdate(app.id, 'Pending', app.patient)}
+                                            className="h-14 px-8 bg-primary/5 text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest border border-primary/10 hover:bg-primary hover:text-white transition-all whitespace-nowrap"
+                                        >
+                                            Restore to Pending
+                                        </button>
+                                        <button
+                                            onClick={() => handleStatusUpdate(app.id, 'Approved', app.patient)}
+                                            className="h-14 px-8 bg-emerald-500 text-white rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-emerald-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                        >
+                                            <CheckCircle2 className="w-6 h-6" />
+                                            <span className="font-black uppercase tracking-widest text-xs">Approve</span>
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>

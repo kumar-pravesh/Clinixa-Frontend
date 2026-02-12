@@ -9,7 +9,7 @@ const Profile = () => {
     useEffect(() => {
         patientService.getProfile()
             .then(data => setProfile(data))
-            .catch(err => setError('Failed to load profile'))
+            .catch(err => setError(err.response?.data?.message || 'Failed to load profile'))
             .finally(() => setLoading(false));
     }, []);
 

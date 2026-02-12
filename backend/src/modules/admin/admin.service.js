@@ -64,6 +64,24 @@ const adminService = {
     },
 
     /**
+     * Get all doctors
+     */
+    async getAllDoctors() {
+        const [rows] = await pool.query(`
+            SELECT 
+                CONCAT('DOC-', LPAD(d.id, 4, '0')) as id,
+                u.name, u.email, u.phone, u.status,
+                dep.name as dept,
+                d.specialization, d.experience_years, d.consultation_fee, d.qualification
+            FROM doctors d
+            JOIN users u ON d.user_id = u.id
+            LEFT JOIN departments dep ON d.department_id = dep.id
+            ORDER BY u.name ASC
+        `);
+        return rows;
+    },
+
+    /**
      * Update doctor information
      */
     async updateDoctor(doctorId, updateData) {
@@ -136,7 +154,17 @@ const adminService = {
     async getDepartments() {
         const [rows] = await pool.query(`
             SELECT 
-                d.id, d.name, d.description,
+                d.id,
+                d.name,
+                d.head,
+                d.beds,
+                d.status,
+                d.color,
+                d.description,
+                d.image_url,
+                d.tech,
+                d.success_rate,
+                d.procedures,
                 COUNT(doc.id) as doctor_count
             FROM departments d
             LEFT JOIN doctors doc ON doc.department_id = d.id
@@ -150,31 +178,33 @@ const adminService = {
      * Create department
      */
     async createDepartment(data) {
-        const { name, description } = data;
+        const { name, head, beds, status, color, description } = data;
         const [result] = await pool.query(
-            'INSERT INTO departments (name, description) VALUES (?, ?)',
-            [name, description]
+            'INSERT INTO departments (name, head, beds, status, color, description) VALUES (?, ?, ?, ?, ?, ?)',
+            [name, head, beds || 0, status || 'Active', color || 'bg-primary', description || '']
         );
-        return { id: result.insertId, name, description };
+        return { id: result.insertId, name, head, beds, status, color, description };
     },
 
     /**
      * Update department
      */
     async updateDepartment(id, data) {
-        const { name, description } = data;
+        const numericId = id.toString().replace('DEPT-', '');
+        const { name, head, beds, status, color, description } = data;
         await pool.query(
-            'UPDATE departments SET name = ?, description = ? WHERE id = ?',
-            [name, description, id]
+            'UPDATE departments SET name = ?, head = ?, beds = ?, status = ?, color = ?, description = ? WHERE id = ?',
+            [name, head, beds || 0, status || 'Active', color || 'bg-primary', description || '', numericId]
         );
-        return { id, name, description };
+        return { id, name, head, beds, status, color, description };
     },
 
     /**
      * Delete department
      */
     async deleteDepartment(id) {
-        await pool.query('DELETE FROM departments WHERE id = ?', [id]);
+        const numericId = id.toString().replace('DEPT-', '');
+        await pool.query('DELETE FROM departments WHERE id = ?', [numericId]);
         return { success: true };
     },
 
@@ -220,11 +250,11 @@ const adminService = {
                 a.type,
                 a.status,
                 a.reason,
-                p.name as patient_name,
+                p.name as patient,
                 CONCAT('PID-', LPAD(p.id, 4, '0')) as patient_id,
-                u.name as doctor_name,
+                u.name as doctor,
                 CONCAT('DOC-', LPAD(d.id, 4, '0')) as doctor_id,
-                dep.name as department
+                dep.name as dept
             FROM appointments a
             JOIN patients p ON a.patient_id = p.id
             JOIN doctors d ON a.doctor_id = d.id
@@ -252,6 +282,31 @@ const adminService = {
         params.push(limit);
 
         const [rows] = await pool.query(query, params);
+        return rows;
+    },
+
+    /**
+     * Update appointment status
+     */
+    async updateAppointmentStatus(id, status) {
+        await pool.query('UPDATE appointments SET status = ? WHERE id = ?', [status, id]);
+        return { success: true, status };
+    },
+
+    /**
+     * Get invoices
+     */
+    async getInvoices(limit = 100) {
+        const [rows] = await pool.query(`
+            SELECT 
+                i.id, i.amount, i.total, i.payment_status,
+                DATE_FORMAT(i.issued_date, '%Y-%m-%d') as issued_date,
+                p.name as patient_name
+            FROM invoices i
+            JOIN patients p ON i.patient_id = p.id
+            ORDER BY i.issued_date DESC
+            LIMIT ?
+        `, [limit]);
         return rows;
     },
 

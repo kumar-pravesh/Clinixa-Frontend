@@ -17,14 +17,14 @@ import { cn } from '../../utils/cn';
 import { useQueue } from '../../context/QueueContext';
 
 export const GenerateTokenModal = ({ isOpen, onClose, onGenerate }) => {
-    if (!isOpen) return null;
-
     const [formData, setFormData] = useState({
         patient: '',
         dept: 'General Medicine',
         doctor: 'Dr. Smith',
         mobile: ''
     });
+
+    if (!isOpen) return null;
 
     const handleSubmit = (e) => {
         e.preventDefault();

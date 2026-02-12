@@ -39,6 +39,10 @@ const createTables = async () => {
         CREATE TABLE IF NOT EXISTS departments (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
+            head VARCHAR(255),
+            beds INT DEFAULT 0,
+            status VARCHAR(50) DEFAULT 'Active',
+            color VARCHAR(50) DEFAULT 'bg-primary',
             description TEXT
         );
 
@@ -46,6 +50,10 @@ const createTables = async () => {
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT UNIQUE,
             department_id INT,
+            specialization VARCHAR(255),
+            experience_years INT DEFAULT 0,
+            consultation_fee DECIMAL(10,2) DEFAULT 500.00,
+            qualification TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL
         );
@@ -64,6 +72,7 @@ const createTables = async () => {
             emergency_contact VARCHAR(20),
             address TEXT,
             history TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (registered_by) REFERENCES users(id) ON DELETE SET NULL
         );
@@ -76,6 +85,8 @@ const createTables = async () => {
             date DATE NOT NULL,
             time VARCHAR(20) NOT NULL, 
             status VARCHAR(50) DEFAULT 'Scheduled',
+            type VARCHAR(50) DEFAULT 'Consultation',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (patient_id) REFERENCES patients(id),
             FOREIGN KEY (doctor_id) REFERENCES doctors(id)
         );
@@ -109,6 +120,7 @@ const createTables = async () => {
             test_name VARCHAR(255),
             file_url TEXT,
             report_date DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (patient_id) REFERENCES patients(id),
             FOREIGN KEY (doctor_id) REFERENCES doctors(id),
             FOREIGN KEY (uploaded_by) REFERENCES users(id)
@@ -120,7 +132,10 @@ const createTables = async () => {
             appointment_id INT UNIQUE,
             patient_id INT,
             amount DECIMAL(10,2),
+            total DECIMAL(10,2),
+            payment_status VARCHAR(50) DEFAULT 'Pending',
             issued_date DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (appointment_id) REFERENCES appointments(id),
             FOREIGN KEY (patient_id) REFERENCES patients(id)
         );
@@ -142,6 +157,7 @@ const createTables = async () => {
             doctor_id INT,
             generated_by INT,
             token_number VARCHAR(50),
+            status VARCHAR(50) DEFAULT 'Waiting',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (patient_id) REFERENCES patients(id),
             FOREIGN KEY (doctor_id) REFERENCES doctors(id),

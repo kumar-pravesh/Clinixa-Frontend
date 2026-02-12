@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import labService from '../services/labService';
 
 const LabContext = createContext();
 
@@ -11,108 +12,95 @@ export const useLab = () => {
 };
 
 export const LabProvider = ({ children }) => {
-    const [labQueue, setLabQueue] = useState([
-        {
-            id: 'LAB-1024',
-            patient: 'John Doe',
-            patientId: 'PID-8824',
-            test: 'Complete Blood Count (CBC)',
-            priority: 'Urgent',
-            status: 'Pending',
-            time: '10 min ago',
-            department: 'Hematology',
-            category: 'Blood Work'
-        },
-        {
-            id: 'LAB-1025',
-            patient: 'Emma Wilson',
-            patientId: 'PID-7721',
-            test: 'Liver Function Test',
-            priority: 'Routine',
-            status: 'In Progress',
-            time: '25 min ago',
-            department: 'Biochemistry',
-            category: 'Organ Function'
-        },
-        {
-            id: 'LAB-1026',
-            patient: 'Robert Brown',
-            patientId: 'PID-3301',
-            test: 'Thyroid Profile',
-            priority: 'Routine',
-            status: 'Pending',
-            time: '45 min ago',
-            department: 'Endocrinology',
-            category: 'Hormonal'
-        },
-        {
-            id: 'LAB-1027',
-            patient: 'Sarah Jenkins',
-            patientId: 'PID-4492',
-            test: 'Blood Glucose',
-            priority: 'Urgent',
-            status: 'Pending',
-            time: '1 hour ago',
-            department: 'Biochemistry',
-            category: 'Metabolic'
-        },
-    ]);
+    const [labQueue, setLabQueue] = useState([]);
+    const [labHistory, setLabHistory] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const [labHistory, setLabHistory] = useState([
-        {
-            id: 'LAB-1020',
-            patient: 'James Wilson',
-            patientId: 'PID-5501',
-            test: 'COVID-19 RT-PCR',
-            date: '2026-02-06',
-            status: 'Delivered',
-            technician: 'LT-01',
-            results: [
-                { parameter: 'SARS-CoV-2 RNA', result: 'Negative', range: 'Negative', unit: 'N/A', status: 'Normal' }
-            ],
-            notes: 'Patient shows no active viral load. Recommendation: Standard precautions.'
-        },
-        {
-            id: 'LAB-1021',
-            patient: 'Mary Garcia',
-            patientId: 'PID-9920',
-            test: 'Blood Glucose (Fasting)',
-            date: '2026-02-06',
-            status: 'Delivered',
-            technician: 'LT-02',
-            results: [
-                { parameter: 'Fasting Plasma Glucose', result: '142', range: '70-99', unit: 'mg/dL', status: 'High' }
-            ],
-            notes: 'Elevated glucose levels noted. Clinical correlation with HbA1c recommended.'
-        },
-    ]);
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [queueData, historyData] = await Promise.all([
+                labService.getQueue(),
+                labService.getHistory()
+            ]);
+            setLabQueue(queueData);
+            setLabHistory(historyData);
+            setError(null);
+        } catch (err) {
+            console.error("Error fetching lab data:", err);
+            setError("Failed to load lab dashboard data.");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-    const updateLabStatus = (testId, status) => {
-        setLabQueue(prev => prev.map(test =>
-            test.id === testId ? { ...test, status } : test
-        ));
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const updateLabStatus = async (testId, status) => {
+        try {
+            await labService.updateStatus(testId, status);
+            // Optimistic update or refetch
+            setLabQueue(prev => prev.map(test =>
+                test.test_id === testId ? { ...test, status } : test // Backend uses test_id (LAB-XXXX) or id? Service sends id.
+                // Backend getQueue returns id and test_id.
+                // Let's assume frontend uses the formatted ID for display but we might need numeric ID for API if we adjusted service.
+                // My labService.js uses /lab/queue/${id}/status.
+                // If I pass "LAB-1024", backend service strips it.
+            ));
+            fetchData(); // Safer to refetch to ensure consistency
+        } catch (err) {
+            console.error("Error updating lab status:", err);
+        }
     };
 
-    const completeLabTest = (testId, reportData) => {
-        const testToComplete = labQueue.find(t => t.id === testId);
-        if (!testToComplete) return;
+    const completeLabTest = async (testId, reportData) => {
+        try {
+            // reportData should match what uploadReport expects
+            // { lab_test_id, patient_id, doctor_id, test_name, results, notes, file (if any) }
 
-        // Remove from queue
-        setLabQueue(prev => prev.filter(t => t.id !== testId));
+            // If the UI passes "testId" separately, we should merge or ensure it's in reportData
+            const payload = { ...reportData, lab_test_id: testId };
 
-        // Add to history
-        const newHistoryRecord = {
-            ...testToComplete,
-            ...reportData,
-            date: new Date().toISOString().split('T')[0],
-            status: 'Delivered',
-            technician: 'LT-01' // Mocked technician
-        };
-        setLabHistory(prev => [newHistoryRecord, ...prev]);
+            // Convert to FormData if there's a file, or if the service expects it?
+            // labService.uploadReport expects FormData if there's a file.
+            // If the UI sends a JSON object, we might need to adjust or ensure UI sends FormData.
+            // For now, assuming UI adaptation or handling here.
+
+            // Actually, for simplicity in this context, let's assume reportData IS the FormData object or we construct it.
+            // But if it's JSON from a form...
+            // Let's assume reportData contains raw values.
+
+            /* 
+               If reportData is a FormData object, use it directly. 
+               But we need to append lab_test_id if missing.
+            */
+
+            let dataToSend = reportData;
+            if (!(reportData instanceof FormData)) {
+                // If simple object, we might need to handle file separately or assume no file for simple completion?
+                // But uploadReport usually requires a file or at least results.
+                // Let's assume strictly FormData for upload.
+                // The UI "Complete" modal likely has file input.
+            } else {
+                dataToSend.append('lab_test_id', testId);
+            }
+
+            await labService.uploadReport(dataToSend);
+
+            // remove from queue, add to history
+            fetchData();
+            return { success: true };
+        } catch (err) {
+            console.error("Error completing lab test:", err);
+            return { success: false, message: err.message };
+        }
     };
 
     return (
-        <LabContext.Provider value={{ labQueue, labHistory, updateLabStatus, completeLabTest }}>
+        <LabContext.Provider value={{ labQueue, labHistory, loading, error, fetchData, updateLabStatus, completeLabTest }}>
             {children}
         </LabContext.Provider>
     );

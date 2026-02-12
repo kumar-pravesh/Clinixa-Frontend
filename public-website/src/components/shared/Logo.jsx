@@ -1,11 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+const MotionDiv = motion.div;
+const MotionCircle = motion.circle;
+
 const Logo = ({ className = "", showText = true, forceLight = false }) => {
     return (
         <div className={`flex items-center gap-3 group ${className}`}>
             {/* 🧬 Bespoke Clinixa Icon (SVG) */}
-            <motion.div
+            <MotionDiv
                 whileHover={{ rotate: 5, scale: 1.05 }}
                 className="relative flex items-center justify-center"
             >
@@ -28,14 +31,14 @@ const Logo = ({ className = "", showText = true, forceLight = false }) => {
                     />
 
                     {/* Pulsing Core Dot */}
-                    <motion.circle
+                    <MotionCircle
                         cx="50" cy="50" r="6"
                         className="fill-accent shadow-lg"
                         animate={{ scale: [1, 1.3, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
                     />
                 </svg>
-            </motion.div>
+            </MotionDiv>
 
             {/* ✒️ Typography */}
             {showText && (

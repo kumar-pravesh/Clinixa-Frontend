@@ -11,11 +11,13 @@ const receptionistController = {
    */
   async searchPatient(req, res) {
     try {
-      const { phone } = req.query;
-      if (!phone) {
-        return res.status(400).json({ message: 'Phone number is required' });
+      const { query, phone } = req.query; // Support both query (generic) and phone (legacy/specific)
+      const searchTerm = query || phone;
+
+      if (!searchTerm) {
+        return res.status(400).json({ message: 'Search query is required' });
       }
-      const patients = await receptionistService.searchPatientByPhone(phone);
+      const patients = await receptionistService.searchPatients(searchTerm);
       res.json(patients);
     } catch (error) {
       console.error('Error searching patient:', error);

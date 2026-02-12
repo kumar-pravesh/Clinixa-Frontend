@@ -27,30 +27,11 @@ const DoctorManagement = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState(null);
     const [activeFilter, setActiveFilter] = useState('All');
-    const [doctors, setDoctors] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    // Fetch Doctors from Backend
-    React.useEffect(() => {
-        const fetchDoctors = async () => {
-            try {
-                // Determine API URL based on environment or hardcode for dev
-                const response = await api.get('/admin/doctors');
-                setDoctors(response.data);
-            } catch (error) {
-                console.error('Error loading doctors:', error);
-                addNotification({
-                    type: 'error',
-                    title: 'Sync Error',
-                    message: 'Could not fetch doctors list from server.'
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchDoctors();
-    }, []);
+    const [doctors, setDoctors] = useState([
+        { id: 'DOC-1001', name: 'Dr. Aisha Khan', dept: 'General Medicine', email: 'aisha.khan@clinixa.com', phone: '+1 (555) 203-1122', consultation_fee: 120, status: 'Active' },
+        { id: 'DOC-1002', name: 'Dr. Marcus Lee', dept: 'Cardiology', email: 'marcus.lee@clinixa.com', phone: '+1 (555) 103-7744', consultation_fee: 180, status: 'On Leave' },
+        { id: 'DOC-1003', name: 'Dr. Priya Shah', dept: 'Pediatrics', email: 'priya.shah@clinixa.com', phone: '+1 (555) 718-9911', consultation_fee: 150, status: 'Inactive' }
+    ]);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -220,14 +201,14 @@ const DoctorManagement = () => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <div className="flex gap-2">
-                        {['All', 'Active', 'On Leave'].map(filter => (
+                    <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                        {['All', 'Active', 'On Leave', 'Inactive'].map(filter => (
                             <button
                                 key={filter}
                                 onClick={() => setActiveFilter(filter)}
                                 className={cn(
-                                    "px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all underline-offset-8 decoration-2 hover:underline",
-                                    activeFilter === filter ? "text-primary underline" : "text-slate-400"
+                                    "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                    activeFilter === filter ? "bg-white text-primary shadow-sm" : "text-slate-400 hover:text-slate-600"
                                 )}
                             >
                                 {filter}
@@ -301,17 +282,22 @@ const DoctorManagement = () => {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
-                    <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden relative">
-                        <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-600 transition-colors">
+                    <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col">
+                        <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-600 transition-colors z-10">
                             <X className="w-6 h-6" />
                         </button>
-                        <div className="p-12">
-                            <div className="mb-10">
+
+                        {/* Fixed Header */}
+                        <div className="p-12 pb-6">
+                            <div className="mb-6">
                                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">{editingDoctor ? 'Modify Credentials' : 'Onboard New Personnel'}</h2>
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-1">Initialize medical profile and credentials</p>
                             </div>
+                        </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Scrollable Form Content */}
+                        <div className="px-12 overflow-y-auto flex-1">
+                            <form onSubmit={handleSubmit} className="space-y-6 pb-6" id="doctor-form">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Full Legal Name</label>

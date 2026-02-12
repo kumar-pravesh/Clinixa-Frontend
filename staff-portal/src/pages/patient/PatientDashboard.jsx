@@ -10,12 +10,16 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const SidebarLink = ({ icon: Icon, label, active }) => (
-    <button className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${active ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}>
-        <Icon className={`w-5 h-5 ${active ? 'text-teal-600' : 'text-slate-400'}`} />
-        <span>{label}</span>
-    </button>
-);
+const SidebarLink = ({ icon: Icon, label, active }) => {
+    const IconComponent = Icon;
+
+    return (
+        <button className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${active ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}>
+            <IconComponent className={`w-5 h-5 ${active ? 'text-teal-600' : 'text-slate-400'}`} />
+            <span>{label}</span>
+        </button>
+    );
+};
 
 const PatientDashboard = () => {
     return (

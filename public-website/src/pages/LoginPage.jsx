@@ -1,51 +1,45 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Mail, Lock, ArrowRight, AlertCircle, Loader2, ShieldCheck, Activity } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
-import { motion } from "framer-motion";
-import { ArrowLeft, Activity, Mail, Lock, KeyRound, ShieldCheck } from "lucide-react";
-import Logo from "../components/shared/Logo";
+import { motion, AnimatePresence } from 'framer-motion';
+import Logo from '../components/shared/Logo';
+
+const MotionDiv = motion.div;
 
 const LoginPage = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [mode, setMode] = useState('login'); // 'login', 'forgot', 'reset'
-    const [otp, setOtp] = useState('');
-    const [newPassword, setNewPassword] = useState('');
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleSubmit = async (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
-        setSuccess('');
-        setIsLoading(true);
+
+        const formData = new FormData(e.currentTarget);
+        const email = formData.get('email');
+        const password = formData.get('password');
+
+        setLoading(true);
 
         try {
-            if (mode === 'login') {
-                const data = await authService.login(email, password);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                localStorage.setItem('accessToken', data.accessToken);
-                navigate('/patient/dashboard');
-            } else if (mode === 'forgot') {
-                const result = await authService.forgotPassword(email);
-                setSuccess(result.message);
-                setMode('reset');
-            } else if (mode === 'reset') {
-                const result = await authService.resetPassword(email, otp, newPassword);
-                setSuccess(result.message);
-                setMode('login');
-            }
+            const data = await authService.login(email, password);
+
+            // Save to localStorage (as expected by Public Website)
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('accessToken', data.accessToken);
+
+            navigate('/patient/dashboard');
         } catch (err) {
-            setError(err.response?.data?.message || 'Action failed');
+            console.error('Login error:', err);
+            setError(err.response?.data?.message || 'Authentication failed. Please check your credentials.');
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     const handleGoogleLogin = () => {
-        setIsLoading(true);
+        setLoading(true);
         setTimeout(async () => {
             try {
                 const mockToken = btoa(JSON.stringify({
@@ -58,180 +52,195 @@ const LoginPage = () => {
                 localStorage.setItem('accessToken', data.accessToken);
                 navigate('/patient/dashboard');
             } catch (err) {
-                setError('Google Authentication failed');
+                setError(err.response?.data?.message || 'Google Authentication failed');
             } finally {
-                setIsLoading(false);
+                setLoading(false);
             }
         }, 1000);
     };
 
     return (
-        <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-            {/* Background Decorations */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2" />
-
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="max-w-md w-full glass-card p-10 rounded-[40px] relative z-10"
-            >
-                <div className="text-center mb-10">
-                    <Link to="/" className="inline-block mb-8 hover:scale-105 transition-transform">
-                        <Logo className="h-10 mx-auto" />
-                    </Link>
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-4">
-                        {mode === 'login' ? 'Welcome Back' : mode === 'forgot' ? 'Secure Reset' : 'Configure Access'}
-                    </h2>
-                    <p className="text-sm font-medium text-slate-500 max-w-[280px] mx-auto">
-                        {mode === 'login' ? 'Authenticate to access your bespoke health portal' :
-                            mode === 'forgot' ? 'Enter your registered identity to receive an OTP' :
-                                'Finalize your credentials to regain clinical access'}
-                    </p>
+        <div className="min-h-screen flex bg-white font-sans overflow-hidden">
+            {/* Left Side - Hero/Branding (Premium Dark) */}
+            <div className="hidden lg:flex w-[55%] bg-slate-950 text-white p-20 flex-col justify-between relative overflow-hidden">
+                {/* 🌊 Advanced Mesh Gradient */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <MotionDiv
+                        animate={{
+                            scale: [1, 1.2, 1],
+                            rotate: [0, 45, 0],
+                            x: [0, 100, 0]
+                        }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute -top-[20%] -left-[20%] w-[80%] h-[80%] bg-primary/20 rounded-full blur-[140px]"
+                    />
+                    <MotionDiv
+                        animate={{
+                            scale: [1.2, 1, 1.2],
+                            rotate: [45, 0, 45],
+                            x: [0, -50, 0]
+                        }}
+                        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                        className="absolute -bottom-[20%] -right-[20%] w-[70%] h-[70%] bg-accent/10 rounded-full blur-[120px]"
+                    />
                 </div>
 
-                {error && (
-                    <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="bg-red-50 text-red-600 p-4 rounded-2xl text-[13px] border border-red-100 mb-6 font-bold flex items-center gap-3"
-                    >
-                        <ShieldCheck size={18} className="shrink-0" />
-                        {error}
-                    </motion.div>
-                )}
+                {/* 📐 Decorative Grid Pattern */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-                {success && (
-                    <motion.div
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="bg-emerald-50 text-emerald-600 p-4 rounded-2xl text-[13px] border border-emerald-100 mb-6 font-bold flex items-center gap-3"
-                    >
-                        <ShieldCheck size={18} className="shrink-0" />
-                        {success}
-                    </motion.div>
-                )}
+                <MotionDiv
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="relative z-10"
+                >
+                    <Link to="/">
+                        <Logo forceLight={true} className="mb-24 scale-110 origin-left hover:scale-115 transition-transform" />
+                    </Link>
 
-                <form className="space-y-6" onSubmit={handleSubmit}>
-                    <div className="space-y-5">
-                        <div className="group">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1 group-focus-within:text-primary transition-colors">Digital Identity</label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-                                <input
-                                    type="email"
-                                    required
-                                    disabled={mode === 'reset' || isLoading}
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="input-field pl-12"
-                                    placeholder="you@clinixa.life"
-                                />
-                            </div>
-                        </div>
-
-                        {mode === 'login' && (
-                            <div className="group">
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1 group-focus-within:text-primary transition-colors">Access Key</label>
-                                <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-                                    <input
-                                        type="password"
-                                        required
-                                        disabled={isLoading}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="input-field pl-12"
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {mode === 'reset' && (
-                            <div className="space-y-5">
-                                <div className="group">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1 group-focus-within:text-primary transition-colors">Verification Token</label>
-                                    <div className="relative">
-                                        <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                        <input
-                                            type="text"
-                                            required
-                                            value={otp}
-                                            onChange={(e) => setOtp(e.target.value)}
-                                            className="input-field pl-12"
-                                            placeholder="6-Digit OTP"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="group">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1 group-focus-within:text-primary transition-colors">New Access Key</label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                        <input
-                                            type="password"
-                                            required
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            className="input-field pl-12"
-                                            placeholder="••••••••"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                    <div className="space-y-2 mb-8">
+                        <p className="text-primary font-bold text-xs uppercase tracking-[0.4em]">Patient Portal Access</p>
+                        <h1 className="text-6xl font-black leading-[1.1] tracking-tighter">
+                            Your Personal<br />
+                            <span className="text-primary">Clinical</span> Dashboard
+                        </h1>
                     </div>
 
-                    {mode === 'login' && (
-                        <div className="flex items-center justify-between px-1">
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <input type="checkbox" className="w-4 h-4 rounded-lg border-2 border-slate-200 text-primary focus:ring-primary/20 accent-primary" />
-                                <span className="text-xs font-bold text-slate-500 group-hover:text-slate-800 transition-colors">Stay linked</span>
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => setMode('forgot')}
-                                className="text-xs font-black uppercase tracking-wider text-primary hover:text-teal-700 transition-colors"
-                            >
-                                Recover Key
-                            </button>
-                        </div>
-                    )}
+                    <p className="text-lg text-slate-400 max-w-lg leading-relaxed font-medium mb-12">
+                        Seamlessly manage appointments, access records, and consult with top specialists through our encrypted health ecosystem.
+                    </p>
+                </MotionDiv>
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="btn-primary w-full py-4 relative group"
-                    >
-                        {isLoading ? (
-                            <Activity className="animate-spin mx-auto" size={20} />
-                        ) : (
-                            <span className="uppercase tracking-[0.2em]">{mode === 'login' ? 'Authorize' : mode === 'forgot' ? 'Send OTP' : 'Update Access'}</span>
-                        )}
-                    </button>
-
-                    {mode !== 'login' && (
-                        <button
-                            type="button"
-                            onClick={() => { setMode('login'); setError(''); setSuccess(''); }}
-                            className="w-full flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors py-2"
+                <div className="relative z-10 grid grid-cols-2 gap-6 max-w-xl">
+                    {[
+                        { title: "Personal Records", desc: "Encrypted & Secure", icon: ShieldCheck },
+                        { title: "Smart Booking", desc: "Instant Confirmation", icon: Activity },
+                    ].map((feature, i) => (
+                        <MotionDiv
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 + (i * 0.1) }}
+                            className="bg-white/5 backdrop-blur-2xl p-6 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors"
                         >
-                            <ArrowLeft size={14} /> Back to Authority Check
-                        </button>
-                    )}
-                </form>
+                            <feature.icon className="text-primary mb-4" size={24} />
+                            <p className="font-black text-sm uppercase tracking-wider mb-1">{feature.title}</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{feature.desc}</p>
+                        </MotionDiv>
+                    ))}
+                </div>
 
-                {mode === 'login' && (
-                    <div className="mt-10 space-y-8">
+                <div className="relative z-10 border-t border-white/5 pt-10 flex items-center justify-between">
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">
+                        Clinixa patient portal v1.2
+                    </p>
+                    <div className="flex gap-2">
+                        <div className="w-8 h-1 bg-primary rounded-full" />
+                        <div className="w-4 h-1 bg-white/10 rounded-full" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Side - Login Form (Minimal Premium) */}
+            <div className="w-full lg:w-[45%] flex items-center justify-center p-8 lg:p-24 bg-white relative">
+                <MotionDiv
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-full max-w-md"
+                >
+                    <div className="lg:hidden mb-12">
+                        <Logo />
+                    </div>
+
+                    <div className="mb-12">
+                        <h2 className="text-5xl font-black text-slate-900 tracking-tighter leading-none mb-4">Welcome Back.</h2>
+                        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em] flex items-center gap-2">
+                            <ShieldCheck size={12} className="text-primary" /> Secure Patient Authentication
+                        </p>
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                        {error && (
+                            <MotionDiv
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="mb-8 p-5 bg-red-50 border border-red-100 rounded-3xl flex items-center gap-4 overflow-hidden"
+                            >
+                                <div className="w-10 h-10 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 shrink-0">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <p className="text-xs font-bold text-red-600 leading-tight">{error}</p>
+                            </MotionDiv>
+                        )}
+                    </AnimatePresence>
+
+                    <form onSubmit={handleLogin} className="space-y-8">
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-1">Patient Credentials</label>
+                                <div className="space-y-4">
+                                    <div className="group relative">
+                                        <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            placeholder="Registered Email Identity"
+                                            className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="group relative">
+                                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                        <input
+                                            type="password"
+                                            name="password"
+                                            placeholder="Secure Access Key"
+                                            className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between px-2">
+                            <div className="flex items-center gap-3">
+                                <input type="checkbox" id="remember" className="w-4 h-4 rounded-lg border-2 border-slate-200 text-primary focus:ring-primary/20 accent-primary" />
+                                <label htmlFor="remember" className="text-xs font-bold text-slate-500">Stay linked</label>
+                            </div>
+                            <Link to="/forgot-password" title="Coming soon!" className="text-[10px] font-black text-primary hover:opacity-70 uppercase tracking-widest">Forgot Access?</Link>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-slate-900 py-6 rounded-[2rem] text-white font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-slate-900/40 hover:bg-primary hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 group"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="animate-spin w-5 h-5" />
+                                    Authenticating...
+                                </>
+                            ) : (
+                                <>
+                                    Log In <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                                </>
+                            )}
+                        </button>
+                    </form>
+
+                    <div className="mt-10 space-y-6">
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div>
-                            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest text-slate-400"><span className="bg-white px-4">Social Gateway</span></div>
+                            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest text-slate-400"><span className="bg-white px-4">Federated Gateway</span></div>
                         </div>
 
                         <button
                             onClick={handleGoogleLogin}
-                            disabled={isLoading}
-                            className="w-full h-14 glass-card rounded-2xl flex items-center justify-center gap-4 hover:bg-slate-50 transition-all font-bold text-slate-700 group border-slate-100"
+                            disabled={loading}
+                            className="w-full py-5 border-2 border-slate-100 rounded-[2rem] flex items-center justify-center gap-4 hover:bg-slate-50 transition-all font-bold text-slate-700 group"
                         >
                             <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -241,16 +250,15 @@ const LoginPage = () => {
                             </svg>
                             Continue with Google
                         </button>
-
-                        <div className="text-center pt-4">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">New to our Ecosystem?</p>
-                            <Link to="/register" className="btn-secondary w-full py-4 text-xs tracking-widest flex items-center justify-center gap-3">
-                                Initialize New Identity <ArrowRight size={14} />
-                            </Link>
-                        </div>
                     </div>
-                )}
-            </motion.div>
+
+                    <div className="mt-16 pt-10 border-t border-slate-100 text-center">
+                        <p className="text-slate-400 font-bold text-xs">
+                            New to Clinixa? <Link to="/register" className="text-slate-900 hover:text-primary transition-colors underline underline-offset-4 font-black">Join Ecosystem</Link>
+                        </p>
+                    </div>
+                </MotionDiv>
+            </div>
         </div>
     );
 };

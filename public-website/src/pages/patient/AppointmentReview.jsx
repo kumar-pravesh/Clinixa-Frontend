@@ -4,6 +4,8 @@ import { patientService } from '../../services/patientService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, User, CreditCard, ChevronRight, ChevronLeft, CheckCircle, ShieldCheck, Activity } from 'lucide-react';
 
+const MotionDiv = motion.div;
+
 const AppointmentReview = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -84,7 +86,7 @@ const AppointmentReview = () => {
                     {/* Main Review Section */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Doctor & Schedule Summary */}
-                        <motion.div
+                        <MotionDiv
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100"
@@ -124,7 +126,7 @@ const AppointmentReview = () => {
                             >
                                 <ChevronLeft size={16} /> Edit Details
                             </button>
-                        </motion.div>
+                        </MotionDiv>
 
                         {/* Terms & Conditions */}
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
@@ -152,7 +154,7 @@ const AppointmentReview = () => {
 
                     {/* Summary & Payment Card */}
                     <div className="space-y-6">
-                        <motion.div
+                        <MotionDiv
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 sticky top-8"
@@ -199,7 +201,7 @@ const AppointmentReview = () => {
                                 <ShieldCheck size={20} className="text-green-500" />
                                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Secure 256-bit SSL encrypted payment</span>
                             </div>
-                        </motion.div>
+                        </MotionDiv>
                     </div>
                 </div>
             </div>

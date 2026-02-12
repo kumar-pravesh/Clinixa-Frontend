@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     CreditCard,
     Search,
@@ -20,6 +20,7 @@ import { cn } from '../../utils/cn';
 import html2pdf from 'html2pdf.js';
 import { PaymentModal } from '../../components/common/PaymentModal';
 import { useNotification } from '../../context/NotificationContext';
+import receptionService from '../../services/receptionService';
 
 const BillingManagement = () => {
     const { addNotification } = useNotification();
@@ -32,19 +33,30 @@ const BillingManagement = () => {
     const [paymentMode, setPaymentMode] = useState('UPI');
     const [searchQuery, setSearchQuery] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
-    const [selectedPatient, setSelectedPatient] = useState({
-        id: 'PID-8824',
-        name: 'John Doe',
-        details: 'MALE • 45Y',
-        initials: 'JD'
-    });
+    const [selectedPatient, setSelectedPatient] = useState(null);
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
 
-    const mockPatients = [
-        { id: 'PID-8824', name: 'John Doe', details: 'MALE • 45Y', initials: 'JD' },
-        { id: 'PID-9012', name: 'Emma Wilson', details: 'FEMALE • 28Y', initials: 'EW' },
-        { id: 'PID-7734', name: 'Robert Brown', details: 'MALE • 34Y', initials: 'RB' },
-        { id: 'PID-5567', name: 'Tejas Kumar', details: 'MALE • 29Y', initials: 'TK' },
-    ];
+    // Debounce search
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(async () => {
+            if (searchQuery.length >= 2) {
+                setIsSearching(true);
+                try {
+                    const results = await receptionService.searchPatient(searchQuery);
+                    setSearchResults(results);
+                } catch (error) {
+                    console.error("Search failed:", error);
+                } finally {
+                    setIsSearching(false);
+                }
+            } else {
+                setSearchResults([]);
+            }
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
 
     // HEX Color Constants for PDF Compatibility
     const colors = {
@@ -84,15 +96,6 @@ const BillingManagement = () => {
     const taxAmount = taxableAmount * taxRate;
     const total = taxableAmount + taxAmount;
 
-    const handlePatientSearch = (query) => {
-        setSearchQuery(query);
-        const found = mockPatients.find(p =>
-            p.id.toLowerCase().includes(query.toLowerCase()) ||
-            p.name.toLowerCase().includes(query.toLowerCase())
-        );
-        if (found) setSelectedPatient(found);
-    };
-
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     const handleCreateBill = () => {
@@ -101,6 +104,7 @@ const BillingManagement = () => {
             return;
         }
         if (billItems.some(item => !item.service || !item.charge)) {
+            // Allow empty bill items? Maybe not.
             alert("Please fill in all service details");
             return;
         }
@@ -109,40 +113,70 @@ const BillingManagement = () => {
 
     const handlePaymentSuccess = async () => {
         setIsGenerating(true);
-        console.log('Generating PDF Bill...');
-
-        if (!invoiceTemplateRef.current) return;
-
-        const element = invoiceTemplateRef.current;
-        const opt = {
-            margin: [10, 5, 10, 5],
-            filename: `Clinixa_Bill_${selectedPatient?.id || 'New'}_${new Date().toISOString().split('T')[0]}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                letterRendering: true,
-                width: 790
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
+        console.log('Generating PDF and Saving Invoice...');
 
         try {
-            await html2pdf().set(opt).from(element).save();
+            // 1. Create Invoice in Backend
+            const invoiceData = {
+                patient_id: selectedPatient.id.replace('PID-', ''), // Send numeric ID if backend expects it, or let service handle? Service usually handles raw, but backend expects numeric. Service wrapper doesn't strip PID-.
+                // Wait, service search returns formatted ID? backend search returns CONCAT PID-.
+                // Backend createInvoice expects patient_id.
+                // Let's strip PID- here to be safe or ensure backend handles it.
+                // My `receptionist.service.js` createInvoice doesn't strip PID-. It expects ID.
+                // I should strip it.
+                patient_id: selectedPatient.id.replace('PID-', ''),
+                consultation_fee: consultationFee,
+                lab_charges: labCharges,
+                medicine_charges: medicineCharges,
+                items: billItems,
+                discount_percent: discount,
+                payment_mode: paymentMode
+            };
+
+            await receptionService.createInvoice(invoiceData);
+
+            // 2. Generate PDF
+            if (invoiceTemplateRef.current) {
+                const element = invoiceTemplateRef.current;
+                const opt = {
+                    margin: [10, 5, 10, 5],
+                    filename: `Clinixa_Bill_${selectedPatient?.id || 'New'}_${new Date().toISOString().split('T')[0]}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        letterRendering: true,
+                        width: 790
+                    },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                await html2pdf().set(opt).from(element).save();
+            }
+
             addNotification({
                 type: 'payment',
                 title: 'Payment Received',
                 message: `Invoice created successfully for ${selectedPatient.name}. Total: ₹${total.toLocaleString()}`
             });
+
+            // Reset form
+            setSelectedPatient(null);
+            setBillItems([]);
+            setConsultationFee(500);
+            setLabCharges(0);
+            setMedicineCharges(0);
+            setDiscount(0);
+
         } catch (error) {
-            console.error('Bill generation error:', error);
+            console.error('Invoice generation error:', error);
             addNotification({
                 type: 'emergency',
-                title: 'Bill Generation Failed',
-                message: 'Could not generate PDF invoice.'
+                title: 'Invoice Failed',
+                message: 'Could not create invoice. Please try again.'
             });
         } finally {
             setIsGenerating(false);
+            setIsPaymentModalOpen(false);
         }
     };
 
@@ -180,7 +214,7 @@ const BillingManagement = () => {
                         <div>
                             <span style={{ fontSize: '10px', fontWeight: '900', color: colors.slate400, textTransform: 'uppercase', letterSpacing: '0.2em', display: 'block', marginBottom: '12px' }}>Bill To</span>
                             <h4 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: colors.slate800 }}>{selectedPatient?.name || 'N/A'}</h4>
-                            <p style={{ margin: '4px 0', fontSize: '14px', fontWeight: '700', color: colors.primary }}>{selectedPatient?.id || 'N/A'} • {selectedPatient?.details || ''}</p>
+                            <p style={{ margin: '4px 0', fontSize: '14px', fontWeight: '700', color: colors.primary }}>{selectedPatient?.id || 'N/A'} • {selectedPatient?.phone || ''} • {selectedPatient?.gender || ''}</p>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                             <span style={{ fontSize: '10px', fontWeight: '900', color: colors.slate400, textTransform: 'uppercase', letterSpacing: '0.2em', display: 'block', marginBottom: '12px' }}>Payment Info</span>
@@ -420,22 +454,26 @@ const BillingManagement = () => {
                                         if (selectedPatient) setSelectedPatient(null);
                                     }}
                                 />
-                                {searchQuery && (
-                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-10 overflow-hidden divide-y divide-slate-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                                        {mockPatients.filter(p =>
-                                            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                            p.id.toLowerCase().includes(searchQuery.toLowerCase())
-                                        ).map(p => (
+                                {isSearching && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-primary" />}
+                                {searchQuery && searchResults.length > 0 && (
+                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-10 overflow-hidden divide-y divide-slate-50 animate-in fade-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto">
+                                        {searchResults.map(p => (
                                             <button
                                                 key={p.id}
                                                 onClick={() => {
-                                                    setSelectedPatient(p);
+                                                    setSelectedPatient({
+                                                        id: p.id,
+                                                        name: p.name,
+                                                        phone: p.phone,
+                                                        gender: p.gender
+                                                    });
                                                     setSearchQuery('');
+                                                    setSearchResults([]);
                                                 }}
                                                 className="w-full p-4 text-left hover:bg-primary/5 transition-colors flex items-center gap-3 group"
                                             >
                                                 <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black text-slate-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                                    {p.initials}
+                                                    {p.name.charAt(0)}
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-black text-slate-700 group-hover:text-primary transition-colors">{p.name}</p>
@@ -451,11 +489,11 @@ const BillingManagement = () => {
                                 <div className="p-5 bg-primary/5 border border-primary/10 rounded-2xl flex items-center justify-between group">
                                     <div className="flex items-center gap-4">
                                         <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-xl font-black text-primary border-2 border-primary/20 shadow-sm">
-                                            {selectedPatient.initials}
+                                            {selectedPatient.name.charAt(0)}
                                         </div>
                                         <div>
                                             <p className="text-lg font-black text-primary tracking-tight leading-none mb-1">{selectedPatient.name}</p>
-                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{selectedPatient.id} • {selectedPatient.details}</p>
+                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{selectedPatient.id} • {selectedPatient.phone}</p>
                                         </div>
                                     </div>
                                     <button
@@ -527,3 +565,4 @@ const BillingManagement = () => {
 };
 
 export default BillingManagement;
+

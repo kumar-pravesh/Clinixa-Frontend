@@ -1,6 +1,13 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Clock, Star, Shield, Activity, Users, Award, Heart, MousePointer2, Plus } from "lucide-react";
+import { ArrowRight, Clock, Star, Shield, Activity, Users, Award, Heart, MousePointer2, Plus, Stethoscope, Microscope, HeartPulse, Brain, Baby, Bone, Eye } from "lucide-react";
+import { patientService } from "../services/patientService";
+
+const MotionDiv = motion.div;
+const MotionH1 = motion.h1;
+const MotionH2 = motion.h2;
+const MotionP = motion.p;
 
 // 🌀 Unique Motion Signatures
 const floatSide = {
@@ -20,19 +27,63 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
 };
 
+const iconMap = {
+  "Cardiology": HeartPulse,
+  "Neurology": Brain,
+  "Pediatrics": Baby,
+  "Orthopedics": Bone,
+  "Ophthalmology": Eye,
+  "Emergency": Activity,
+  "General": Stethoscope,
+  "Lab": Microscope
+};
+
+const getIcon = (name) => {
+  for (const key in iconMap) {
+    if (name.includes(key)) return iconMap[key];
+  }
+  return Activity;
+};
+
+const themeMap = [
+  "from-emerald-600/20",
+  "from-red-600/20",
+  "from-indigo-600/20",
+  "from-cyan-600/20",
+  "from-blue-600/20",
+  "from-purple-600/20"
+];
+
 const HomePage = () => {
+  const [departments, setDepartments] = useState([]);
+
+  useEffect(() => {
+    const fetchDepts = async () => {
+      try {
+        console.log('🔍 Fetching departments from API...');
+        const data = await patientService.getPublicDepartments();
+        console.log('✅ Departments fetched:', data);
+        setDepartments(data.slice(0, 6)); // Limit to top 6 for home
+        console.log('📊 Departments set to state:', data.slice(0, 6));
+      } catch (err) {
+        console.error("❌ Failed to fetch departments:", err);
+      }
+    };
+    fetchDepts();
+  }, []);
+
   return (
     <div className="overflow-x-hidden selection:bg-primary/30">
       {/* 🚀 ULTIMATE HERO SECTION */}
       <section className="relative min-h-[95vh] flex items-center bg-slate-950 px-6 pt-32">
         {/* Animated Background Mesh */}
         <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-          <motion.div
+          <MotionDiv
             animate={{ scale: [1, 1.2, 1], rotate: [0, 5, 0] }}
             transition={{ duration: 20, repeat: Infinity }}
             className="absolute -top-1/4 -right-1/4 w-[800px] h-[800px] bg-primary/40 rounded-full blur-[150px]"
           />
-          <motion.div
+          <MotionDiv
             animate={{ scale: [1, 1.1, 1], rotate: [0, -5, 0] }}
             transition={{ duration: 15, repeat: Infinity, delay: 2 }}
             className="absolute -bottom-1/4 -left-1/4 w-[600px] h-[600px] bg-accent/30 rounded-full blur-[120px]"
@@ -40,27 +91,27 @@ const HomePage = () => {
         </div>
 
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-20 items-center relative z-10">
-          <motion.div
+          <MotionDiv
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
             className="max-w-3xl"
           >
-            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 mb-8 bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-2 rounded-full">
+            <MotionDiv variants={fadeInUp} className="inline-flex items-center gap-2 mb-8 bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-2 rounded-full">
               <span className="w-2 h-2 rounded-full bg-accent status-pulsate" />
               <span className="text-[11px] font-black uppercase tracking-[0.3em] text-accent">Clinical Excellence Redefined</span>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl font-black text-white leading-[0.95] mb-10 tracking-tighter">
+            <MotionH1 variants={fadeInUp} className="text-5xl md:text-7xl font-black text-white leading-[0.95] mb-10 tracking-tighter">
               Your Health, <br />
               <span className="text-gradient drop-shadow-2xl">Our Priority.</span>
-            </motion.h1>
+            </MotionH1>
 
-            <motion.p variants={fadeInUp} className="text-xl text-slate-400 mb-12 leading-relaxed max-w-xl font-medium">
+            <MotionP variants={fadeInUp} className="text-xl text-slate-400 mb-12 leading-relaxed max-w-xl font-medium">
               Clinixa integrates cutting-edge medical technologies with human-centric empathy to deliver healthcare that isn't just treatment—it's transformation.
-            </motion.p>
+            </MotionP>
 
-            <motion.div variants={fadeInUp} className="flex flex-wrap gap-6 items-center">
+            <MotionDiv variants={fadeInUp} className="flex flex-wrap gap-6 items-center">
               <Link
                 to="/patient/book-appointment"
                 className="btn-premium group relative bg-primary text-white p-1 rounded-3xl"
@@ -83,13 +134,13 @@ const HomePage = () => {
                   <p className="font-bold text-sm">Meet the Elite Team</p>
                 </div>
               </Link>
-            </motion.div>
-          </motion.div>
+            </MotionDiv>
+          </MotionDiv>
 
           {/* 🧩 Unique 3D Composition */}
           <div className="relative h-[600px] hidden lg:flex items-center justify-center">
             {/* Main Visual */}
-            <motion.div
+            <MotionDiv
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 1, ease: "easeOut" }}
@@ -101,10 +152,10 @@ const HomePage = () => {
                 className="w-full h-full object-cover rounded-[80px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/5 transition-all duration-1000"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent rounded-[60px]" />
-            </motion.div>
+            </MotionDiv>
 
             {/* Feature List Card - Centered and Transparent */}
-            <motion.div
+            <MotionDiv
               variants={floatSide}
               animate="animate"
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 glass-card p-8 rounded-[2.5rem] border-white/10 shadow-2xl backdrop-blur-2xl w-full max-w-[320px] bg-white/5"
@@ -138,7 +189,7 @@ const HomePage = () => {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
 
 
           </div>
@@ -155,7 +206,7 @@ const HomePage = () => {
               { num: "500+", label: "Elite Specialists", icon: Award },
               { num: "12k+", label: "Transformations", icon: Users }
             ].map((stat, i) => (
-              <motion.div
+              <MotionDiv
                 key={stat.label}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -166,7 +217,7 @@ const HomePage = () => {
                 <stat.icon className="text-primary/20 group-hover:text-primary transition-colors mb-6" size={32} />
                 <h3 className="text-5xl font-black text-slate-900 tracking-tighter mb-2 group-hover:scale-110 origin-left transition-transform">{stat.num}</h3>
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-slate-600 transition-colors">{stat.label}</p>
-              </motion.div>
+              </MotionDiv>
             ))}
           </div>
         </div>
@@ -191,154 +242,94 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {[
-              {
-                title: "General Medicine",
-                head: "Dr. Rajesh Sharma",
-                headImg: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=200&auto=format&fit=crop",
-                icon: Users,
-                img: "https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?q=80&w=800&auto=format&fit=crop",
-                stats: "97% Patient Satisfaction",
-                staff: "32",
-                beds: "60",
-                theme: "from-emerald-600/20"
-              },
-              {
-                title: "Regenerative Cardiology",
-                head: "Dr. Arun Kumar",
-                headImg: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=200&auto=format&fit=crop",
-                icon: Activity,
-                img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop",
-                stats: "98% Precision",
-                staff: "24",
-                beds: "45",
-                theme: "from-red-600/20"
-              },
-              {
-                title: "Neural Precision",
-                head: "Dr. John Doe",
-                headImg: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=200&auto=format&fit=crop",
-                icon: Award,
-                img: "https://images.unsplash.com/photo-1659353888352-5dbb14b80eca?fm=jpg&q=60&w=3000",
-                stats: "95% Accuracy",
-                staff: "15",
-                beds: "20",
-                theme: "from-indigo-600/20"
-              },
-              {
-                title: "Pediatric Wellness",
-                head: "Dr. Sarah Paul",
-                headImg: "https://images.unsplash.com/photo-1594824813573-c10fe5a09848?q=80&w=200&auto=format&fit=crop",
-                icon: Heart,
-                img: "https://images.unsplash.com/photo-1666214280557-f1b5022eb634?q=80&w=800&auto=format&fit=crop",
-                stats: "99% Care Rate",
-                staff: "18",
-                beds: "30",
-                theme: "from-cyan-600/20"
-              },
-              {
-                title: "Orthopedic Surgery",
-                head: "Dr. Michael Chen",
-                headImg: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=200&auto=format&fit=crop",
-                icon: Shield,
-                img: "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?q=80&w=800&auto=format&fit=crop",
-                stats: "96% Recovery Rate",
-                staff: "22",
-                beds: "35",
-                theme: "from-blue-600/20"
-              },
-              {
-                title: "Oncology Excellence",
-                head: "Dr. Priya Patel",
-                headImg: "https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?q=80&w=200&auto=format&fit=crop",
-                icon: Star,
-                img: "https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=800&auto=format&fit=crop",
-                stats: "94% Success Rate",
-                staff: "28",
-                beds: "40",
-                theme: "from-purple-600/20"
-              }
-            ].map((dept, i) => (
-              <motion.div
-                key={dept.title}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.2, duration: 0.8 }}
-                className="group relative h-[650px] rounded-[60px] overflow-hidden shadow-2xl bg-slate-900"
-              >
-                {/* 📸 High-Impact Background Image */}
-                <img
-                  src={dept.img}
-                  alt={dept.title}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out opacity-60 group-hover:opacity-80"
-                />
+            {departments.map((dept, i) => {
+              const Icon = getIcon(dept.name);
+              const theme = themeMap[i % themeMap.length];
 
-                {/* Deep Gradient & Theme Glow */}
-                <div className={`absolute inset-0 bg-gradient-to-t ${dept.theme} via-slate-950/60 to-transparent opacity-90 transition-opacity duration-500`} />
+              return (
+                <MotionDiv
+                  key={dept.id}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.2, duration: 0.8 }}
+                  className="group relative h-[650px] rounded-[60px] overflow-hidden shadow-2xl bg-slate-900"
+                >
+                  {/* 📸 High-Impact Background Image */}
+                  <img
+                    src={dept.image_url || "https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?q=80&w=800&auto=format&fit=crop"}
+                    alt={dept.name}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out opacity-60 group-hover:opacity-80"
+                  />
 
-                {/* 🧪 Floating Content - Professional Glass Panel */}
-                <div className="absolute inset-0 p-8 flex flex-col justify-between">
-                  {/* Top Bar: Icon & Status */}
-                  <div className="flex justify-between items-center">
-                    <div className="w-16 h-16 rounded-[2rem] bg-white/10 backdrop-blur-3xl border border-white/20 flex items-center justify-center text-white shadow-2xl group-hover:bg-primary transition-all duration-500">
-                      <dept.icon size={28} />
-                    </div>
-                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-2 rounded-full">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">Active Ecosystem</p>
-                    </div>
-                  </div>
+                  {/* Deep Gradient & Theme Glow */}
+                  <div className={`absolute inset-0 bg-gradient-to-t ${theme} via-slate-950/60 to-transparent opacity-90 transition-opacity duration-500`} />
 
-                  {/* Bottom: Glass Details Section */}
-                  <div className="relative">
-                    {/* Head Doctor Reveal Card */}
-                    <motion.div
-                      className="absolute -top-24 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 group-hover:-top-28 transition-all duration-700 delay-100"
-                    >
-                      <div className="bg-white/10 backdrop-blur-2xl border border-white/20 p-4 rounded-[2.5rem] flex items-center gap-4 shadow-3xl">
-                        <div className="relative">
-                          <img src={dept.headImg} alt={dept.head} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white/20" />
-                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900" />
-                        </div>
-                        <div className="pr-4">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-0.5">Department Head</p>
-                          <p className="text-white font-bold text-sm tracking-tight">{dept.head}</p>
-                        </div>
+                  {/* 🧪 Floating Content - Professional Glass Panel */}
+                  <div className="absolute inset-0 p-8 flex flex-col justify-between">
+                    {/* Top Bar: Icon & Status */}
+                    <div className="flex justify-between items-center">
+                      <div className="w-16 h-16 rounded-[2rem] bg-white/10 backdrop-blur-3xl border border-white/20 flex items-center justify-center text-white shadow-2xl group-hover:bg-primary transition-all duration-500">
+                        <Icon size={28} />
                       </div>
-                    </motion.div>
+                      <div className="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-2 rounded-full">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">Active Ecosystem</p>
+                      </div>
+                    </div>
 
-                    {/* Main Glass Panel */}
-                    <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 overflow-hidden relative group-hover:bg-white/10 transition-all duration-500">
-                      <div className="relative z-10">
-                        <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 tracking-tight leading-tight group-hover:text-primary transition-colors">{dept.title}</h3>
-
-                        <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8 mb-4">
-                          <div className="space-y-1">
-                            <p className="text-2xl font-black text-white group-hover:scale-110 origin-left transition-transform">{dept.staff}</p>
-                            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Total Specialists</p>
+                    {/* Bottom: Glass Details Section */}
+                    <div className="relative">
+                      {/* Head Doctor Reveal Card */}
+                      <MotionDiv
+                        className="absolute -top-24 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 group-hover:-top-28 transition-all duration-700 delay-100"
+                      >
+                        <div className="bg-white/10 backdrop-blur-2xl border border-white/20 p-4 rounded-[2.5rem] flex items-center gap-4 shadow-3xl">
+                          <div className="relative">
+                            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white font-bold">
+                              {dept.head?.charAt(0) || 'D'}
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900" />
                           </div>
-                          <div className="space-y-1 text-right">
-                            <p className="text-2xl font-black text-white group-hover:scale-110 origin-right transition-transform">{dept.beds}</p>
-                            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Available Beds</p>
+                          <div className="pr-4">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-0.5">Department Head</p>
+                            <p className="text-white font-bold text-sm tracking-tight">{dept.head || 'Elite Specialist'}</p>
+                          </div>
+                        </div>
+                      </MotionDiv>
+
+                      {/* Main Glass Panel */}
+                      <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 overflow-hidden relative group-hover:bg-white/10 transition-all duration-500">
+                        <div className="relative z-10">
+                          <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 tracking-tight leading-tight group-hover:text-primary transition-colors">{dept.name}</h3>
+
+                          <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8 mb-4">
+                            <div className="space-y-1">
+                              <p className="text-2xl font-black text-white group-hover:scale-110 origin-left transition-transform">{dept.doctor_count || dept.staff || 0}</p>
+                              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Total Specialists</p>
+                            </div>
+                            <div className="space-y-1 text-right">
+                              <p className="text-2xl font-black text-white group-hover:scale-110 origin-right transition-transform">{dept.beds || 0}</p>
+                              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Available Beds</p>
+                            </div>
+                          </div>
+
+                          {/* Professional CTA */}
+                          <div className="pt-6 border-t border-white/10 flex items-center justify-between group/link">
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 group-hover/link:text-primary transition-colors">Analytical Review</span>
+                            <Link to="/departments" className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-widest">
+                              Explore <ArrowRight size={14} className="group-hover/link:translate-x-2 transition-transform text-primary" />
+                            </Link>
                           </div>
                         </div>
 
-                        {/* Professional CTA */}
-                        <div className="pt-6 border-t border-white/10 flex items-center justify-between group/link">
-                          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 group-hover/link:text-primary transition-colors">Analytical Review</span>
-                          <Link to="/departments" className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-widest">
-                            Explore <ArrowRight size={14} className="group-hover/link:translate-x-2 transition-transform text-primary" />
-                          </Link>
-                        </div>
+                        {/* Animated Glow on Hover */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                       </div>
-
-                      {/* Animated Glow on Hover */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </MotionDiv>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -347,7 +338,7 @@ const HomePage = () => {
       <section className="py-40 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
           <div className="relative">
-            <motion.div
+            <MotionDiv
               animate={{ rotate: [0, 360] }}
               transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
               className="absolute -top-20 -left-20 w-[400px] h-[400px] border border-primary/10 rounded-full"
@@ -376,8 +367,8 @@ const HomePage = () => {
                 { title: "Bespoke Portals", desc: "Role-specific interfaces for doctors and patients ensuring clarity.", icon: MousePointer2 },
                 { title: "Encrypted Records", desc: "Military-grade security protocols for your sensitive health data.", icon: Shield },
                 { title: "Real-time Sync", desc: "Instant notifications and updates on your clinical progress.", icon: Activity }
-              ].map((item, i) => (
-                <motion.div
+              ].map((item) => (
+                <MotionDiv
                   key={item.title}
                   whileHover={{ x: 10 }}
                   className="flex gap-6 items-start"
@@ -389,7 +380,7 @@ const HomePage = () => {
                     <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">{item.title}</h3>
                     <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-xs">{item.desc}</p>
                   </div>
-                </motion.div>
+                </MotionDiv>
               ))}
             </div>
           </div>
@@ -402,22 +393,22 @@ const HomePage = () => {
           {/* Dynamic Background */}
           <div className="absolute inset-0 opacity-20"
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-          <motion.div
+          <MotionDiv
             animate={{ scale: [1, 1.2, 1], x: [0, 50, 0] }}
             transition={{ duration: 15, repeat: Infinity }}
             className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/20 rounded-full blur-[100px]"
           />
 
           <div className="relative z-10 p-8 max-w-3xl">
-            <motion.h2
+            <MotionH2
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="text-6xl md:text-8xl font-black text-white tracking-tighter mb-12 leading-none"
             >
               Experience the <br />Future Today.
-            </motion.h2>
-            <div className="flex flex-wrap items-center justify-center gap-6">
+            </MotionH2>
+            <div className="flex wrap items-center justify-center gap-6">
               <Link to="/patient/book-appointment" className="bg-white text-primary px-12 py-6 rounded-[30px] font-black uppercase tracking-widest text-lg hover:scale-105 transition-all shadow-2xl">
                 Book Instant Visit
               </Link>

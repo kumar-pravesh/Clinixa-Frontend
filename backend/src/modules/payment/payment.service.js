@@ -1,6 +1,7 @@
 const { pool } = require('../../config/db');
 const mockProvider = require('./mock.provider');
 const razorpayProvider = require('./razorpay.provider');
+const notificationService = require('../notification/notification.service');
 
 const getProvider = (providerName) => {
     if (providerName === 'razorpay') return razorpayProvider;
@@ -59,13 +60,20 @@ const initiatePayment = async (userId, appointmentId) => {
             { appointmentId, receipt: uniqueReceipt }
         );
 
-        // Create Invoice first (New Schema)
+        // Create or Update Invoice (Handle Retries)
         const [invRes] = await connection.query(
             `INSERT INTO invoices (appointment_id, patient_id, amount, issued_date)
-              VALUES (?, ?, ?, NOW())`,
+              VALUES (?, ?, ?, NOW())
+              ON DUPLICATE KEY UPDATE amount = VALUES(amount), issued_date = NOW()`,
             [appointmentId, appointment.patient_id, amount]
         );
-        const invoiceId = invRes.insertId;
+
+        // If it was an update, we need to find the invoice ID
+        let invoiceId = invRes.insertId;
+        if (invoiceId === 0) {
+            const [existingInv] = await connection.query('SELECT id FROM invoices WHERE appointment_id = ?', [appointmentId]);
+            invoiceId = existingInv[0].id;
+        }
 
         const [paymentRes] = await connection.query(
             `INSERT INTO payments (invoice_id, amount, method, transaction_id, status)
@@ -118,8 +126,24 @@ const confirmPayment = async (paymentId, verificationData) => {
             if (invRes.length > 0) {
                 await connection.query(
                     'UPDATE appointments SET status = ? WHERE id = ?',
-                    ['Confirmed', invRes[0].appointment_id]
+                    ['CONFIRMED', invRes[0].appointment_id]
                 );
+
+                // Fetch patient details for notification
+                const [patientRes] = await connection.query(
+                    `SELECT u.name, u.email 
+                     FROM patients p 
+                     JOIN users u ON p.user_id = u.id 
+                     WHERE p.id = (SELECT patient_id FROM invoices WHERE id = ?)`,
+                    [payment.invoice_id]
+                );
+
+                if (patientRes.length > 0) {
+                    const { name, email } = patientRes[0];
+                    notificationService.sendPaymentSuccess(email, name, payment.amount, payment.transaction_id).catch(err =>
+                        console.error('[Payment] Failed to send payment notification:', err.message)
+                    );
+                }
             }
         }
 

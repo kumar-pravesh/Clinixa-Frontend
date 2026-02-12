@@ -49,6 +49,15 @@ const getPrescriptions = async (req, res) => {
     }
 };
 
+const getLabReports = async (req, res) => {
+    try {
+        const reports = await doctorService.getLabReports(req.user.doctorId);
+        res.json(reports);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const createPrescription = async (req, res) => {
     try {
         const result = await doctorService.createPrescription(req.user.doctorId, req.body);
@@ -98,14 +107,26 @@ const setFollowUp = async (req, res) => {
     }
 };
 
+const updateAppointmentStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const result = await doctorService.updateAppointmentStatus(req.user.doctorId, req.params.id, status);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     login,
     getProfile,
     getAppointments,
     getPatients,
     getPrescriptions,
+    getLabReports,
     createPrescription,
     addMedicines,
     uploadLabReport,
-    setFollowUp
+    setFollowUp,
+    updateAppointmentStatus
 };

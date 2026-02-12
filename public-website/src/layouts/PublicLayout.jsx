@@ -1,8 +1,10 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Facebook, Twitter, Instagram, MapPin, Phone, Mail, Menu, X, Activity, ArrowRight, ShieldCheck, HeartPulse, Bell } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Phone, Menu, X, ArrowRight, ShieldCheck, Bell } from 'lucide-react';
 import Logo from "../components/shared/Logo";
+
+const MotionDiv = motion.div;
 
 const PublicLayout = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -16,10 +18,6 @@ const PublicLayout = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location]);
 
   const navLinks = [
     { name: "HOME", path: "/" },
@@ -113,7 +111,7 @@ const PublicLayout = () => {
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -124,20 +122,29 @@ const PublicLayout = () => {
                 <Link
                   key={link.path}
                   to={link.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className="text-xl font-black text-slate-800 flex justify-between items-center group"
                 >
                   {link.name} <ArrowRight className="opacity-0 group-hover:opacity-100 transition-all text-primary" size={20} />
                 </Link>
               ))}
               <div className="h-px bg-slate-100 my-2" />
-              <Link to="/login" className="text-xl font-black text-slate-800 flex justify-between items-center group">
+              <Link
+                to="/login"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-xl font-black text-slate-800 flex justify-between items-center group"
+              >
                 Patient Login <ArrowRight className="opacity-0 group-hover:opacity-100 transition-all text-primary" size={20} />
               </Link>
-              <Link to="/patient/book-appointment" className="bg-primary text-white py-4 rounded-2xl font-bold text-center shadow-lg shadow-primary/20">
+              <Link
+                to="/patient/book-appointment"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="bg-primary text-white py-4 rounded-2xl font-bold text-center shadow-lg shadow-primary/20"
+              >
                 Schedule Visit
               </Link>
             </nav>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
 

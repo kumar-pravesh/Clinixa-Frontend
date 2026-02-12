@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../../components/common/Logo';
 
+const MotionDiv = motion.div;
+
 const Login = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
@@ -55,7 +57,7 @@ const Login = () => {
             <div className="hidden lg:flex w-[55%] bg-slate-950 text-white p-20 flex-col justify-between relative overflow-hidden">
                 {/* 🌊 Advanced Mesh Gradient */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <motion.div
+                    <MotionDiv
                         animate={{
                             scale: [1, 1.2, 1],
                             rotate: [0, 45, 0],
@@ -64,7 +66,7 @@ const Login = () => {
                         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                         className="absolute -top-[20%] -left-[20%] w-[80%] h-[80%] bg-primary/20 rounded-full blur-[140px]"
                     />
-                    <motion.div
+                    <MotionDiv
                         animate={{
                             scale: [1.2, 1, 1.2],
                             rotate: [45, 0, 45],
@@ -79,7 +81,7 @@ const Login = () => {
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
                     style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-                <motion.div
+                <MotionDiv
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="relative z-10"
@@ -97,14 +99,14 @@ const Login = () => {
                     <p className="text-lg text-slate-400 max-w-lg leading-relaxed font-medium mb-12">
                         Precision-engineered tools for modern healthcare professionals. Securely manage patient flows, diagnostics, and administrative intelligence with the Clinixa Staff Ecosystem.
                     </p>
-                </motion.div>
+                </MotionDiv>
 
                 <div className="relative z-10 grid grid-cols-2 gap-6 max-w-xl">
                     {[
                         { title: "24/7 Operations", desc: "Real-time sync", icon: Activity },
                         { title: "Military Grade", desc: "End-to-end encryption", icon: ShieldCheck },
                     ].map((feature, i) => (
-                        <motion.div
+                        <MotionDiv
                             key={i}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -114,7 +116,7 @@ const Login = () => {
                             <feature.icon className="text-primary mb-4" size={24} />
                             <p className="font-black text-sm uppercase tracking-wider mb-1">{feature.title}</p>
                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{feature.desc}</p>
-                        </motion.div>
+                        </MotionDiv>
                     ))}
                 </div>
 
@@ -131,7 +133,7 @@ const Login = () => {
 
             {/* Right Side - Login Form (Minimal Premium) */}
             <div className="w-full lg:w-[45%] flex items-center justify-center p-8 lg:p-24 bg-white relative">
-                <motion.div
+                <MotionDiv
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="w-full max-w-md"
@@ -149,7 +151,7 @@ const Login = () => {
 
                     <AnimatePresence mode="wait">
                         {error && (
-                            <motion.div
+                            <MotionDiv
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
                                 exit={{ opacity: 0, height: 0 }}
@@ -159,7 +161,7 @@ const Login = () => {
                                     <AlertCircle className="w-6 h-6" />
                                 </div>
                                 <p className="text-xs font-bold text-red-600 leading-tight">{error}</p>
-                            </motion.div>
+                            </MotionDiv>
                         )}
                     </AnimatePresence>
 
@@ -224,7 +226,7 @@ const Login = () => {
                             Not registered on this node? <Link to="/register" className="text-slate-900 hover:text-primary transition-colors underline underline-offset-4">Register Staff</Link>
                         </p>
                     </div>
-                </motion.div>
+                </MotionDiv>
             </div>
         </div>
     );
