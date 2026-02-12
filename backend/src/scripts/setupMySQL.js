@@ -30,6 +30,8 @@ const createTables = async () => {
             password_hash VARCHAR(255) NOT NULL,
             role VARCHAR(50) NOT NULL,
             status VARCHAR(20) DEFAULT 'Active',
+            reset_token VARCHAR(255),
+            reset_token_expires TIMESTAMP NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -50,10 +52,18 @@ const createTables = async () => {
         CREATE TABLE IF NOT EXISTS patients (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT UNIQUE,
+<<<<<<< HEAD
             registered_by INT,
+=======
+            registered_by INT, -- Receptionist ID
+            name VARCHAR(255),
+            email VARCHAR(255),
+>>>>>>> d0fc20ce4496b160a4a18f91df8a0329b6a97b09
             dob DATE,
             gender VARCHAR(20),
             phone VARCHAR(20),
+            blood_group VARCHAR(20),
+            emergency_contact VARCHAR(20),
             address TEXT,
             history TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

@@ -77,13 +77,13 @@ const DoctorLayout = () => {
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed lg:sticky top-0 left-0 h-screen bg-white border-r border-slate-200 flex flex-col z-50 transition-all duration-300 ease-in-out",
+                "fixed lg:sticky top-0 left-0 h-screen bg-[var(--color-background)]/80 backdrop-blur-xl border-r border-white/40 flex flex-col z-50 transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none",
                 isMobileMenuOpen ? "w-72 translate-x-0" : "w-72 -translate-x-full lg:translate-x-0 lg:w-64"
             )}>
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary/30">
-                            C
+                        <div className="h-10 w-auto overflow-hidden rounded-lg bg-slate-50 p-1 border border-slate-100 shadow-sm">
+                            <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain" />
                         </div>
                         <div>
                             <h1 className="font-bold text-xl text-slate-800 leading-tight">Clinixa</h1>

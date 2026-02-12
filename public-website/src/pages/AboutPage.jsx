@@ -5,9 +5,9 @@ const AboutPage = () => {
   return (
     <div className="overflow-x-hidden">
       {/* PAGE HEADER */}
-      <section className="bg-primary text-white py-20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-12 opacity-10">
-          <Heart size={400} />
+      <section className="bg-slate-950 text-white pt-40 pb-24 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
+          <Heart size={400} className="text-primary" />
         </div>
         <div className="container mx-auto px-6 relative z-10 text-center">
           <motion.h1
@@ -15,7 +15,7 @@ const AboutPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-5xl font-bold mb-4"
           >
-            About Medicare
+            About Clinixa
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -46,7 +46,7 @@ const AboutPage = () => {
             <h3 className="text-secondary font-bold uppercase tracking-wider mb-2">Our Mission</h3>
             <h2 className="text-4xl font-bold text-gray-900 mb-6">Healing with Heart & Science</h2>
             <p className="text-gray-600 mb-6 leading-relaxed">
-              At Medicare, our mission is to provide exceptional, patient-centered care that improves the health and well-being of our community. We combine state-of-the-art medical technology with a compassionate human touch.
+              At Clinixa, our mission is to provide exceptional, patient-centered care that improves the health and well-being of our community. We combine state-of-the-art medical technology with a compassionate human touch.
             </p>
             <ul className="space-y-4">
               {[

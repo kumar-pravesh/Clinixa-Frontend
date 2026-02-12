@@ -1,112 +1,111 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Activity, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Facebook, Twitter, Instagram, MapPin, Phone, Mail, Menu, X, Activity, ArrowRight, ShieldCheck, HeartPulse, Bell } from 'lucide-react';
+import Logo from "../components/shared/Logo";
 
 const PublicLayout = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
-  // Handle Scroll for Navbar styling
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 80);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
 
   const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "About Us", path: "/about" },
-    { name: "Departments", path: "/departments" },
-    { name: "Doctors", path: "/doctors" },
+    { name: "HOME", path: "/" },
+    { name: "ABOUT US", path: "/about" },
+    { name: "DEPARTMENTS", path: "/departments" },
+    { name: "DOCTORS", path: "/doctors" },
   ];
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-800 flex flex-col">
-      {/* TOP BAR */}
-      <div className="bg-primary text-white py-2 px-4 text-sm hidden md:block">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex space-x-6">
-            <span className="flex items-center gap-2"><Phone size={14} /> +1 (555) 123-4567</span>
-            <span className="flex items-center gap-2"><Mail size={14} /> info@hospital.com</span>
-          </div>
-          <div className="flex space-x-4">
-            <Link to="#" className="hover:text-secondary transition-colors">Emergency: 911</Link>
-            <span className="mx-2">|</span>
-            <div className="flex space-x-3">
-              <Facebook size={14} className="cursor-pointer hover:text-secondary" />
-              <Twitter size={14} className="cursor-pointer hover:text-secondary" />
-              <Instagram size={14} className="cursor-pointer hover:text-secondary" />
-              <Linkedin size={14} className="cursor-pointer hover:text-secondary" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* NAVBAR */}
+    <div className="min-h-screen bg-[var(--color-background)] font-sans text-slate-800 flex flex-col">
+      {/* 🚀 Dynamic Header */}
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? "bg-white shadow-md py-2" : "bg-white/95 backdrop-blur-sm py-4"
+        className={`fixed top-0 z-50 w-full transition-all duration-300 ${isScrolled
+          ? "bg-white/90 backdrop-blur-xl border-b border-slate-200/50 py-3 shadow-md"
+          : "bg-transparent py-8"
           }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="bg-primary text-white p-2 rounded-lg group-hover:bg-teal-700 transition-colors">
-              <Activity size={24} />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-gray-900 tracking-tight leading-none">MEDICARE</span>
-              <span className="text-xs text-primary font-semibold tracking-widest uppercase">Specialist Hospital</span>
-            </div>
+          <Link to="/" className="flex-shrink-0">
+            <Logo forceLight={!isScrolled} />
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex space-x-8 items-center">
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`text-sm font-semibold uppercase tracking-wide transition-colors relative hover:text-primary ${location.pathname === link.path ? "text-primary" : "text-gray-600"
+                className={`text-sm font-bold tracking-wider transition-colors duration-200 ${location.pathname === link.path
+                  ? "text-primary"
+                  : isScrolled ? "text-slate-600 hover:text-primary" : "text-white/80 hover:text-white"
                   }`}
               >
                 {link.name}
-                {location.pathname === link.path && (
-                  <motion.div
-                    layoutId="underline"
-                    className="absolute left-0 top-full mt-1 w-full h-0.5 bg-primary"
-                  />
-                )}
               </Link>
             ))}
           </nav>
 
-          {/* CTA Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link to="/login" className="text-primary font-semibold hover:text-teal-700 transition">
-              Login
-            </Link>
-            <Link
-              to="/patient/book-appointment"
-              className="bg-accent text-white px-5 py-2.5 rounded-full font-semibold shadow-lg shadow-orange-200 hover:shadow-orange-300 hover:scale-105 transition-all duration-300 active:scale-95"
-            >
-              Book Appointment
+          {/* Combined Navbar Actions */}
+          <div className="hidden lg:flex items-center">
+            <div className="flex bg-teal-600 rounded-[2rem] overflow-hidden shadow-lg shadow-primary/10">
+              {/* Book Now Section */}
+              <Link
+                to="/patient/book-appointment"
+                className="group flex items-center bg-teal-600 hover:bg-teal-700 transition-colors py-2 pl-3 pr-6 border-r border-white/10"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white mr-4 shadow-inner">
+                  <Phone size={20} />
+                </div>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-lg font-black text-white tracking-tight">Book Now</span>
+                </div>
+              </Link>
+
+              {/* Emergency Section */}
+              <a
+                href="tel:7997079970"
+                className="group flex items-center bg-orange-500 hover:bg-orange-600 transition-colors py-2 pl-6 pr-8"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white mr-4 shadow-inner">
+                  <Bell size={20} />
+                </div>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Pediatric Emergency</span>
+                  <span className="text-lg font-black text-white tracking-tight">79970 79970</span>
+                </div>
+              </a>
+            </div>
+
+            {/* Menu/Auth Access */}
+            <Link to="/login" className="relative group p-1 ml-4">
+              <div className="w-12 h-12 rounded-full bg-white/10 border border-slate-200/20 flex items-center justify-center transition-all group-hover:bg-primary group-hover:border-primary group-hover:text-white">
+                <Menu size={22} className={isScrolled ? "text-slate-600 group-hover:text-white" : "text-white"} />
+              </div>
+              <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-4 border-white rounded-full" />
             </Link>
           </div>
 
           {/* Mobile Toggle */}
           <button
-            className="md:hidden text-gray-700 focus:outline-none"
+            className={`lg:hidden p-2 transition-colors ${isScrolled ? "text-slate-600 hover:text-primary" : "text-white hover:text-primary"
+              }`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
         </div>
       </header>
@@ -115,31 +114,27 @@ const PublicLayout = () => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-b shadow-lg overflow-hidden"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="lg:hidden fixed top-24 inset-x-4 z-[60] glass-card rounded-3xl p-8 border-primary/10"
           >
-            <nav className="flex flex-col p-6 space-y-4">
+            <nav className="flex flex-col gap-6">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`text-lg font-medium ${location.pathname === link.path ? "text-primary" : "text-gray-700"
-                    }`}
+                  className="text-xl font-black text-slate-800 flex justify-between items-center group"
                 >
-                  {link.name}
+                  {link.name} <ArrowRight className="opacity-0 group-hover:opacity-100 transition-all text-primary" size={20} />
                 </Link>
               ))}
-              <hr className="my-2" />
-              <Link to="/login" className="block text-center text-primary font-bold py-2">
-                Patient Login
+              <div className="h-px bg-slate-100 my-2" />
+              <Link to="/login" className="text-xl font-black text-slate-800 flex justify-between items-center group">
+                Patient Login <ArrowRight className="opacity-0 group-hover:opacity-100 transition-all text-primary" size={20} />
               </Link>
-              <Link
-                to="/patient/book-appointment"
-                className="block text-center bg-accent text-white px-4 py-3 rounded-lg font-bold shadow-md"
-              >
-                Book Appointment
+              <Link to="/patient/book-appointment" className="bg-primary text-white py-4 rounded-2xl font-bold text-center shadow-lg shadow-primary/20">
+                Schedule Visit
               </Link>
             </nav>
           </motion.div>
@@ -147,80 +142,87 @@ const PublicLayout = () => {
       </AnimatePresence>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1">
+      <main className="flex-1 pt-2">
         <Outlet />
       </main>
 
-      {/* FOOTER */}
-      <footer className="bg-gray-900 text-white pt-16 pb-8">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2 mb-6">
-              <div className="bg-primary p-2 rounded-lg">
-                <Activity size={24} />
+      {/* 💎 Premium Footer */}
+      <footer className="bg-slate-900 text-white relative overflow-hidden">
+        {/* Decorative Grid */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+
+        <div className="max-w-7xl mx-auto px-6 py-20 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">
+            {/* Brand Block */}
+            <div className="space-y-8">
+              <Logo showText={true} forceLight={true} className="hover:opacity-80 transition-opacity" />
+              <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                Pioneering the future of healthcare through bespoke digital ecosystems and unmatched clinical precision.
+              </p>
+              <div className="flex gap-4">
+                {[Facebook, Twitter, Instagram].map((Icon, i) => (
+                  <div key={i} className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary hover:text-white transition-all cursor-pointer">
+                    <Icon size={18} />
+                  </div>
+                ))}
               </div>
-              <span className="text-2xl font-bold tracking-tight">MEDICARE</span>
             </div>
-            <p className="text-gray-400 leading-relaxed mb-6">
-              Providing world-class medical care with a personal touch. Your health is our priority.
-            </p>
-            <div className="flex space-x-4 text-gray-400">
-              <Facebook className="hover:text-primary cursor-pointer transition" />
-              <Twitter className="hover:text-primary cursor-pointer transition" />
-              <Instagram className="hover:text-primary cursor-pointer transition" />
+
+            {/* Quick Experience */}
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-8">Navigation</h4>
+              <ul className="space-y-4">
+                {navLinks.map((l) => (
+                  <li key={l.path}>
+                    <Link to={l.path} className="text-slate-300 hover:text-white hover:translate-x-2 transition-all flex items-center gap-2 group">
+                      <div className="w-1 h-1 bg-primary rounded-full group-hover:scale-150 transition-all" />
+                      {l.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 text-primary">Quick Links</h3>
-            <ul className="space-y-3 text-gray-400">
-              <li><Link to="/about" className="hover:text-white transition">About Us</Link></li>
-              <li><Link to="/doctors" className="hover:text-white transition">Our Doctors</Link></li>
-              <li><Link to="/departments" className="hover:text-white transition">Departments</Link></li>
-              <li><Link to="/patient/book-appointment" className="hover:text-white transition">Book Appointment</Link></li>
-              <li><Link to="#" className="hover:text-white transition">Privacy Policy</Link></li>
-            </ul>
-          </div>
+            {/* Direct Channel */}
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-8">Contact Channel</h4>
+              <div className="space-y-6">
+                <div className="group">
+                  <p className="text-[10px] uppercase font-black text-slate-500 mb-1 group-hover:text-primary transition-colors">Headquarters</p>
+                  <p className="text-slate-300 font-medium">Clinixa smart hospital,<br />Priyansh Technologies Hyderabad</p>
+                </div>
+                <div className="group">
+                  <p className="text-[10px] uppercase font-black text-slate-500 mb-1 group-hover:text-primary transition-colors">Direct Desk</p>
+                  <p className="text-slate-300 font-medium">+91 9128521728</p>
+                </div>
+                <div className="group">
+                  <p className="text-[10px] uppercase font-black text-slate-500 mb-1 group-hover:text-primary transition-colors">Digital Mail</p>
+                  <p className="text-slate-300 font-medium tracking-tight">contact@clinixa.life</p>
+                </div>
+              </div>
+            </div>
 
-          {/* Contact */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 text-primary">Contact Us</h3>
-            <ul className="space-y-4 text-gray-400">
-              <li className="flex items-start gap-3">
-                <MapPin size={20} className="text-primary mt-1" />
-                <span>123 Medical Center Dr,<br />New York, NY 10001</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone size={20} className="text-primary" />
-                <span>+1 (555) 123-4567</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail size={20} className="text-primary" />
-                <span>contact@medicare.com</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Newsletter */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 text-primary">Newsletter</h3>
-            <p className="text-gray-400 mb-4">Subscribe for health tips and updates.</p>
-            <form className="flex flex-col gap-2">
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="bg-gray-800 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <button className="bg-primary text-white font-bold py-3 rounded-lg hover:bg-teal-700 transition">
-                Subscribe
-              </button>
-            </form>
+            {/* Trust Certification */}
+            <div className="bg-white/5 rounded-3xl p-8 border border-white/10">
+              <ShieldCheck className="text-primary mb-4" size={32} />
+              <h4 className="text-sm font-black mb-2">Patient Privacy First</h4>
+              <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                All data is encrypted with enterprise-grade protocols to ensure absolute confidentiality.
+              </p>
+              <div className="bg-primary/10 text-primary text-[10px] font-black py-2 px-4 rounded-full inline-block border border-primary/20">
+                HIPAA COMPLIANT
+              </div>
+            </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
-          © {new Date().getFullYear()} Medicare Specialist Hospital. All rights reserved.
+
+        <div className="max-w-7xl mx-auto px-6 py-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-black text-slate-500 tracking-widest uppercase">
+          <span>© {new Date().getFullYear()} Clinixa Health Ecosystem</span>
+          <div className="flex gap-8">
+            <span className="hover:text-white cursor-pointer transition-colors">Terms of Care</span>
+            <span className="hover:text-white cursor-pointer transition-colors">Privacy Shield</span>
+          </div>
         </div>
       </footer>
     </div>

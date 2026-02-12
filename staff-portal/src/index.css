@@ -1,51 +1,75 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0D9488;
-  --color-secondary: #67E8F9;
-  --color-accent: #F97316;
+  --color-primary: hsl(172, 80%, 35%);
+  /* Deep Teal */
+  --color-secondary: hsl(188, 86%, 85%);
+  /* Soft Cyan */
+  --color-accent: hsl(24, 94%, 53%);
+  /* Vibrant Coral/Orange */
+  --color-background: hsl(210, 40%, 98%);
+  /* Off-white Blue */
+
+  --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
+
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
 }
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@layer base {
+  :root {
+    @apply antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
 
-  color-scheme: light;
-  background-color: #f8fafc;
-  color: #0f172a;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+@layer components {
+  .dashboard-card {
+    @apply bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 transition-all duration-300 hover:shadow-md hover:border-primary/20;
+  }
+
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-6 rounded-xl transition-all active:scale-95 shadow-lg shadow-primary/20;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary/90 text-primary font-bold py-2.5 px-6 rounded-xl transition-all active:scale-95;
+  }
+
+  .btn-accent {
+    @apply bg-accent hover:bg-accent/90 text-white font-bold py-2.5 px-6 rounded-xl transition-all active:scale-95 shadow-lg shadow-accent/20;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-400;
+  }
+
+  .glass-sidebar {
+    @apply bg-white/80 backdrop-blur-xl border-r border-slate-200/60;
+  }
 }
 
-/* Custom classes for the Reception Dashboard */
-.dashboard-card {
-  @apply bg-white rounded-xl shadow-sm border border-slate-200 p-6;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-.btn-primary {
-  @apply bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-colors;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.btn-secondary {
-  @apply bg-secondary hover:bg-secondary/90 text-slate-800 font-medium py-2 px-4 rounded-lg transition-colors;
+::-webkit-scrollbar-thumb {
+  background: hsl(172, 80%, 35%, 0.15);
+  border-radius: 20px;
 }
 
-.btn-accent {
-  @apply bg-accent hover:bg-accent/90 text-white font-medium py-2 px-4 rounded-lg transition-colors;
-}
-
-.input-field {
-  @apply w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all;
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(172, 80%, 35%, 0.3);
 }
 
 @keyframes toast-progress {
