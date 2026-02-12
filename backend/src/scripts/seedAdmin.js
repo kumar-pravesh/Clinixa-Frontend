@@ -16,7 +16,7 @@ const seedAdmin = async () => {
         console.log('Connected to MySQL...');
 
         const email = 'admin@clinixa.life';
-        const password = 'admin'; // Simple password for development
+        const password = 'Password@123'; // Standardized password for all test accounts
 
         // Check if admin exists
         const [existing] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
