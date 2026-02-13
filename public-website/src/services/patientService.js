@@ -19,8 +19,8 @@ export const patientService = {
     },
 
     // Book appointment
-    bookAppointment: async (data) => {
-        const res = await api.post('/appointment/book', data);
+    bookAppointment: async (bookingData) => {
+        const res = await api.post('/appointment/book', bookingData);
         return res.data;
     },
 
