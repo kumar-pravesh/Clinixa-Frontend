@@ -18,7 +18,11 @@ const adminController = {
 
     async createDoctor(req, res) {
         try {
-            const result = await adminService.createDoctor(req.body);
+            const doctorData = { ...req.body };
+            if (req.file) {
+                doctorData.image_url = req.file.path.replace(/\\/g, '/'); // Normalize path for web
+            }
+            const result = await adminService.createDoctor(doctorData);
             res.status(201).json({ message: 'Doctor registered successfully', data: result });
         } catch (error) {
             res.status(400).json({ message: error.message });
@@ -27,7 +31,11 @@ const adminController = {
 
     async updateDoctor(req, res) {
         try {
-            const result = await adminService.updateDoctor(req.params.id, req.body);
+            const updateData = { ...req.body };
+            if (req.file) {
+                updateData.image_url = req.file.path.replace(/\\/g, '/');
+            }
+            const result = await adminService.updateDoctor(req.params.id, updateData);
             res.json({ message: 'Doctor updated successfully', data: result });
         } catch (error) {
             res.status(400).json({ message: error.message });

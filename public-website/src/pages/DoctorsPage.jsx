@@ -59,12 +59,20 @@ const DoctorsPage = () => {
                                     <div className="p-8 flex-grow">
                                         <div className="flex items-start justify-between mb-6">
                                             <div className="relative">
-                                                <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
-                                                    <img
-                                                        src={doctor.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${doctor.name}`}
-                                                        alt={doctor.name}
-                                                        className="w-full h-full object-cover"
-                                                    />
+                                                <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors flex items-center justify-center font-black text-2xl text-slate-400">
+                                                    {doctor.image_url ? (
+                                                        <img
+                                                            src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${doctor.image_url}`}
+                                                            alt={doctor.name}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                                e.target.parentElement.innerText = doctor.name.split(' ').map(n => n[0]).join('');
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        doctor.name.split(' ').map(n => n[0]).join('')
+                                                    )}
                                                 </div>
                                                 <div className="absolute -bottom-2 -right-2 bg-green-500 w-5 h-5 rounded-full border-4 border-white shadow-sm" title="Available Now"></div>
                                             </div>
@@ -98,7 +106,7 @@ const DoctorsPage = () => {
                                         </div>
                                         <Link
                                             to="/patient/book-appointment"
-                                            state={{ doctorId: doctor.id, doctorName: doctor.name, fee: doctor.consultation_fee }}
+                                            state={{ doctorId: doctor.id, doctorName: doctor.name, fee: doctor.consultation_fee, image_url: doctor.image_url }}
                                             className="bg-accent text-white px-8 py-3 rounded-2xl font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/20 active:scale-95 transition-all flex items-center gap-2"
                                         >
                                             Book Now

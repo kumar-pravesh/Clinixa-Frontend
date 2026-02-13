@@ -207,6 +207,7 @@ const getPublicDoctors = async () => {
             d.experience_years,
             d.consultation_fee,
             d.qualification,
+            d.image_url,
             dep.name as department_name
         FROM doctors d
         JOIN users u ON d.user_id = u.id
@@ -230,6 +231,7 @@ const getDoctorById = async (doctorId) => {
             d.experience_years,
             d.consultation_fee,
             d.qualification,
+            d.image_url,
             dep.name as department_name
         FROM doctors d
         JOIN users u ON d.user_id = u.id

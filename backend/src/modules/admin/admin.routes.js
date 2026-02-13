@@ -7,6 +7,7 @@ const router = express.Router();
 const adminController = require('./admin.controller');
 const adminNotificationController = require('./admin.notification.controller');
 const { authenticateToken, authorizeRoles } = require('../../middlewares/auth.middleware');
+const upload = require('../../config/multer.doctor.config');
 
 // Apply auth middleware to all routes
 router.use(authenticateToken);
@@ -17,8 +18,8 @@ router.get('/dashboard', adminController.getDashboardSummary);
 
 // Doctor Management
 router.get('/doctors', adminController.getAllDoctors);
-router.post('/doctors', adminController.createDoctor);
-router.put('/doctors/:id', adminController.updateDoctor);
+router.post('/doctors', upload.single('image'), adminController.createDoctor);
+router.put('/doctors/:id', upload.single('image'), adminController.updateDoctor);
 router.delete('/doctors/:id', adminController.deleteDoctor);
 
 // Department Management

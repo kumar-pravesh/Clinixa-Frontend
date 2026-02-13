@@ -104,7 +104,8 @@ const getAppointments = async (userId) => {
             a.*,
             u.name as doctor_name,
             dep.name as specialization,
-            doc.consultation_fee
+            doc.consultation_fee,
+            doc.image_url
         FROM appointments a
         JOIN patients p ON a.patient_id = p.id
         JOIN doctors doc ON a.doctor_id = doc.id
