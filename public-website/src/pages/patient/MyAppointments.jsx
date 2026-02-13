@@ -71,7 +71,19 @@ const MyAppointments = () => {
                                 <div className="space-y-4 flex-1">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-primary font-bold shadow-sm shadow-primary/10 overflow-hidden border-2 border-white">
-                                            {appt.doctor_name.charAt(0)}
+                                            {appt.image_url ? (
+                                                <img
+                                                    src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${appt.image_url}`}
+                                                    alt={appt.doctor_name}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                        e.target.parentElement.innerText = appt.doctor_name.charAt(0);
+                                                    }}
+                                                />
+                                            ) : (
+                                                appt.doctor_name.charAt(0)
+                                            )}
                                         </div>
                                         <div>
                                             <h3 className="font-bold text-gray-800 leading-tight group-hover:text-primary transition-colors">{appt.doctor_name}</h3>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
     AlertCircle,
     Calendar,
@@ -56,7 +56,7 @@ export const NotificationProvider = ({ children }) => {
         }
     }, [activeToast]);
 
-    const addNotification = (notif) => {
+    const addNotification = useCallback((notif) => {
         const icons = {
             emergency: AlertCircle,
             appointment: Calendar,
@@ -90,35 +90,37 @@ export const NotificationProvider = ({ children }) => {
 
         setNotifications(prev => [newNotif, ...prev]);
         setActiveToast(newNotif);
-    };
+    }, []);
 
-    const markAsRead = (id) => {
+    const markAsRead = useCallback((id) => {
         setNotifications(prev => prev.map(n =>
             n.id === id ? { ...n, read: true } : n
         ));
-    };
+    }, []);
 
-    const markAllAsRead = () => {
+    const markAllAsRead = useCallback(() => {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    };
+    }, []);
 
-    const clearNotification = (id) => {
+    const clearNotification = useCallback((id) => {
         setNotifications(prev => prev.filter(n => n.id !== id));
-    };
+    }, []);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
+    const value = useMemo(() => ({
+        notifications,
+        addNotification,
+        markAsRead,
+        markAllAsRead,
+        clearNotification,
+        activeToast,
+        setActiveToast,
+        unreadCount
+    }), [notifications, addNotification, markAsRead, markAllAsRead, clearNotification, activeToast, unreadCount]);
+
     return (
-        <NotificationContext.Provider value={{
-            notifications,
-            addNotification,
-            markAsRead,
-            markAllAsRead,
-            clearNotification,
-            activeToast,
-            setActiveToast,
-            unreadCount
-        }}>
+        <NotificationContext.Provider value={value}>
             {children}
         </NotificationContext.Provider>
     );

@@ -6,7 +6,7 @@ const adminService = {
      * Create a new doctor
      */
     async createDoctor(doctorData) {
-        const { name, email, phone, password, dept, experience_years, consultation_fee, status, qualification } = doctorData;
+        const { name, email, phone, password, dept, experience_years, consultation_fee, status, qualification, image_url } = doctorData;
         const finalPassword = password || 'Doctor@123';
 
         const connection = await pool.getConnection();
@@ -43,17 +43,27 @@ const adminService = {
 
             // Create Doctor Profile
             const [docRes] = await connection.query(
-                `INSERT INTO doctors (user_id, department_id, specialization, experience_years, consultation_fee, qualification) 
-                 VALUES (?, ?, ?, ?, ?, ?)`,
-                [userId, deptId, dept, experience_years || 0, consultation_fee || 500, qualification || '']
+                `INSERT INTO doctors (user_id, department_id, specialization, experience_years, consultation_fee, qualification, image_url) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [userId, deptId, dept, experience_years || 0, consultation_fee || 500, qualification || '', image_url || null]
             );
 
             await connection.commit();
+
+            // Return full doctor data for frontend sync
             return {
                 id: `DOC-${String(docRes.insertId).padStart(4, '0')}`,
                 name,
                 email,
-                role: 'doctor'
+                phone,
+                role: 'doctor',
+                status: status || 'Active',
+                dept: dept,
+                specialization: dept,
+                experience_years: experience_years || 0,
+                consultation_fee: consultation_fee || 500,
+                qualification: qualification || '',
+                image_url: image_url || null
             };
         } catch (error) {
             await connection.rollback();
@@ -72,7 +82,7 @@ const adminService = {
                 CONCAT('DOC-', LPAD(d.id, 4, '0')) as id,
                 u.name, u.email, u.phone, u.status,
                 dep.name as dept,
-                d.specialization, d.experience_years, d.consultation_fee, d.qualification
+                d.specialization, d.experience_years, d.consultation_fee, d.qualification, d.image_url
             FROM doctors d
             JOIN users u ON d.user_id = u.id
             LEFT JOIN departments dep ON d.department_id = dep.id
@@ -86,7 +96,7 @@ const adminService = {
      */
     async updateDoctor(doctorId, updateData) {
         const numericId = doctorId.toString().replace('DOC-', '');
-        const { name, email, phone, dept, consultation_fee, status, experience_years, qualification } = updateData;
+        const { name, email, phone, dept, consultation_fee, status, experience_years, qualification, image_url } = updateData;
 
         const connection = await pool.getConnection();
         try {
@@ -116,15 +126,36 @@ const adminService = {
                 }
             }
 
-            // Update doctor profile
-            await connection.query(
-                `UPDATE doctors SET department_id = ?, specialization = ?, consultation_fee = ?, 
-                 experience_years = ?, qualification = ? WHERE id = ?`,
-                [deptId, dept, consultation_fee || 500, experience_years || 0, qualification || '', numericId]
-            );
+            // Update doctor profile (conditionally update image if provided)
+            let updateDocQuery = `UPDATE doctors SET department_id = ?, specialization = ?, consultation_fee = ?, 
+                                 experience_years = ?, qualification = ?`;
+            const updateDocParams = [deptId, dept, consultation_fee || 500, experience_years || 0, qualification || ''];
+
+            if (image_url) {
+                updateDocQuery += `, image_url = ?`;
+                updateDocParams.push(image_url);
+            }
+
+            updateDocQuery += ` WHERE id = ?`;
+            updateDocParams.push(numericId);
+
+            await connection.query(updateDocQuery, updateDocParams);
 
             await connection.commit();
-            return { id: doctorId, name, email };
+
+            return {
+                id: doctorId,
+                name,
+                email,
+                phone,
+                status,
+                dept,
+                specialization: dept,
+                consultation_fee,
+                experience_years,
+                qualification,
+                image_url: image_url || null
+            };
         } catch (error) {
             await connection.rollback();
             throw error;
@@ -330,25 +361,45 @@ const adminService = {
      * Get dashboard summary
      */
     async getDashboardSummary() {
-        const [doctorCount] = await pool.query('SELECT COUNT(*) as count FROM doctors');
-        const [patientCount] = await pool.query('SELECT COUNT(*) as count FROM patients');
-        const [todayAppointments] = await pool.query(
-            'SELECT COUNT(*) as count FROM appointments WHERE date = CURDATE()'
-        );
-        const [pendingTokens] = await pool.query(
-            `SELECT COUNT(*) as count FROM tokens WHERE status IN ('Waiting', 'In Progress') AND DATE(created_at) = CURDATE()`
-        );
-        const [todayRevenue] = await pool.query(
-            `SELECT COALESCE(SUM(total), 0) as total FROM invoices WHERE DATE(issued_date) = CURDATE() AND payment_status = 'Paid'`
-        );
+        try {
+            const [doctorCount] = await pool.query('SELECT COUNT(*) as count FROM doctors');
+            const [patientCount] = await pool.query('SELECT COUNT(*) as count FROM patients');
+            const [todayAppointments] = await pool.query(
+                'SELECT COUNT(*) as count FROM appointments WHERE date = CURDATE()'
+            );
 
-        return {
-            doctors: doctorCount[0].count,
-            patients: patientCount[0].count,
-            todayAppointments: todayAppointments[0].count,
-            pendingTokens: pendingTokens[0].count,
-            todayRevenue: todayRevenue[0].total
-        };
+            // Resilient queries for optional/new tables
+            let pendingTokensValue = 0;
+            try {
+                const [pendingTokens] = await pool.query(
+                    `SELECT COUNT(*) as count FROM tokens WHERE status IN ('Waiting', 'In Progress') AND DATE(created_at) = CURDATE()`
+                );
+                pendingTokensValue = pendingTokens[0].count;
+            } catch (e) {
+                console.warn('[AdminService] tokens table missing or inaccessible, defaulting to 0');
+            }
+
+            let todayRevenueValue = 0;
+            try {
+                const [todayRevenue] = await pool.query(
+                    `SELECT COALESCE(SUM(total), 0) as total FROM invoices WHERE DATE(issued_date) = CURDATE() AND payment_status = 'Paid'`
+                );
+                todayRevenueValue = todayRevenue[0].total;
+            } catch (e) {
+                console.warn('[AdminService] invoices table missing or inaccessible, defaulting to 0');
+            }
+
+            return {
+                doctors: doctorCount[0].count,
+                patients: patientCount[0].count,
+                todayAppointments: todayAppointments[0].count,
+                pendingTokens: pendingTokensValue,
+                todayRevenue: todayRevenueValue
+            };
+        } catch (error) {
+            console.error('[AdminService] getDashboardSummary critical failure:', error);
+            throw error;
+        }
     }
 };
 

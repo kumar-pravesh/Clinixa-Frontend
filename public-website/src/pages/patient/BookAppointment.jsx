@@ -135,8 +135,8 @@ const BookAppointment = () => {
                         <div key={s.id} className="flex items-center flex-1 last:flex-none">
                             <div
                                 className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-500 ${step >= s.id
-                                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                                        : 'text-gray-400'
+                                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                    : 'text-gray-400'
                                     }`}
                             >
                                 <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs ${step >= s.id ? 'bg-white text-primary' : 'bg-gray-100 text-gray-400'
@@ -185,8 +185,20 @@ const BookAppointment = () => {
                                     >
                                         <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-full -mr-6 -mt-6 group-hover:bg-primary/10 transition-colors"></div>
                                         <div className="flex flex-col items-center text-center relative z-10">
-                                            <div className="w-16 h-16 bg-secondary rounded-full border-4 border-white shadow-md flex items-center justify-center text-primary text-xl font-black italic mb-4">
-                                                {doc.name.charAt(0)}
+                                            <div className="w-16 h-16 bg-secondary rounded-full border-4 border-white shadow-md flex items-center justify-center text-primary text-xl font-black italic mb-4 overflow-hidden">
+                                                {doc.image_url ? (
+                                                    <img
+                                                        src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${doc.image_url}`}
+                                                        alt={doc.name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                            e.target.parentElement.innerText = doc.name.charAt(0);
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    doc.name.charAt(0)
+                                                )}
                                             </div>
                                             <h3 className="font-bold text-gray-800 text-lg leading-tight mb-1">{doc.name}</h3>
                                             <p className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-3 py-1 rounded-full mb-4">
@@ -255,10 +267,10 @@ const BookAppointment = () => {
                                                     disabled={!slot.available}
                                                     onClick={() => setSelectedTime(slot.time)}
                                                     className={`py-3 rounded-xl text-xs font-bold transition-all ${!slot.available
-                                                            ? 'bg-gray-50 text-gray-300 cursor-not-allowed opacity-50'
-                                                            : selectedTime === slot.time
-                                                                ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105 border-transparent'
-                                                                : 'bg-white/50 text-gray-500 hover:bg-white border border-white/40'
+                                                        ? 'bg-gray-50 text-gray-300 cursor-not-allowed opacity-50'
+                                                        : selectedTime === slot.time
+                                                            ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105 border-transparent'
+                                                            : 'bg-white/50 text-gray-500 hover:bg-white border border-white/40'
                                                         }`}
                                                 >
                                                     {slot.time}
@@ -307,8 +319,16 @@ const BookAppointment = () => {
                             <div className="space-y-4 mb-10">
                                 <div className="p-4 bg-white/50 rounded-2xl border border-white/40 shadow-sm flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                                            <User size={18} />
+                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary overflow-hidden">
+                                            {selectedDoctor?.image_url ? (
+                                                <img
+                                                    src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${selectedDoctor.image_url}`}
+                                                    alt={selectedDoctor.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <User size={18} />
+                                            )}
                                         </div>
                                         <div>
                                             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Expert</p>

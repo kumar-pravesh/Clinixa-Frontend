@@ -9,7 +9,7 @@ const MotionDiv = motion.div;
 const AppointmentReview = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { doctorId, date, timeSlot, doctorName, fee } = location.state || {};
+    const { doctorId, date, timeSlot, doctorName, fee, image_url } = location.state || {};
 
     const [processing, setProcessing] = useState(false);
     const [agreed, setAgreed] = useState(false);
@@ -98,8 +98,16 @@ const AppointmentReview = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="flex gap-4">
-                                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                                        <User size={32} />
+                                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary overflow-hidden">
+                                        {image_url ? (
+                                            <img
+                                                src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${image_url}`}
+                                                alt={doctorName}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <User size={32} />
+                                        )}
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-400 uppercase font-black tracking-widest mb-1">Doctor</p>
