@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { patientService } from '../../services/patientService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +20,8 @@ const loadScript = (src) => {
     });
 };
 
+const MotionDiv = motion.div;
+
 const BookAppointment = () => {
     const [doctors, setDoctors] = useState([]);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -30,50 +32,9 @@ const BookAppointment = () => {
     const [loadingSlots, setLoadingSlots] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-    const { resumePayment, initData, appointmentId, doctorId: initialDoctorId, doctorName, fee } = location.state || {};
+    const { resumePayment, initData, appointmentId, doctorId: initialDoctorId } = location.state || {};
 
-    useEffect(() => {
-        patientService.getDoctors()
-            .then(data => {
-                setDoctors(data);
-                if (initialDoctorId) {
-                    const doc = data.find(d => d.id === initialDoctorId || d.id === `DOC-${String(initialDoctorId).padStart(4, '0')}`);
-                    if (doc) setSelectedDoctor(doc);
-                }
-            })
-            .finally(() => setLoading(false));
-
-        // Handle Payment Resumption from Review Page
-        if (resumePayment && initData) {
-            processPayment(appointmentId, initData);
-        }
-    }, [initialDoctorId, resumePayment, initData, appointmentId]);
-
-    useEffect(() => {
-        if (selectedDoctor && formData.date) {
-            setLoadingSlots(true);
-            patientService.getAvailability(selectedDoctor.id, formData.date)
-                .then(data => setAvailableSlots(data))
-                .catch(err => console.error('Error fetching slots:', err))
-                .finally(() => setLoadingSlots(false));
-        }
-    }, [selectedDoctor, formData.date]);
-
-    const handleBook = async (e) => {
-        e.preventDefault();
-        // Transition to Review Step
-        navigate('/patient/appointment-review', {
-            state: {
-                doctorId: selectedDoctor.id,
-                doctorName: selectedDoctor.name,
-                fee: selectedDoctor.consultation_fee,
-                date: formData.date,
-                timeSlot: formData.timeSlot
-            }
-        });
-    };
-
-    const processPayment = async (apptId, preInitData = null) => {
+    const processPayment = useCallback(async (apptId, preInitData = null) => {
         setProcessing(true);
         console.log('Initiating payment process for apptId:', apptId);
         try {
@@ -100,9 +61,9 @@ const BookAppointment = () => {
                     currency: currentInitData.payload.currency,
                     name: "Clinixa Hospital",
                     description: "Appointment Payment",
-                    order_id: currentInitData.payload.orderId,
+                    order_id: currentInitData.payload.order_id,
                     prefill: {
-                        name: "Tejas", // Use dynamic data in production
+                        name: "Tejas",
                         email: "patient@clinixa.com",
                         contact: "9999999999"
                     },
@@ -148,8 +109,7 @@ const BookAppointment = () => {
                 }
 
             } else {
-                // MOCK PROVIDER
-                await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 const confirmData = await patientService.confirmPayment(activePaymentId, { status: 'SUCCESS' });
 
                 if (confirmData.status === 'SUCCESS') {
@@ -164,6 +124,47 @@ const BookAppointment = () => {
             alert('Payment Error: ' + err.message);
             setProcessing(false);
         }
+    }, [navigate]);
+
+    useEffect(() => {
+        patientService.getDoctors()
+            .then(data => {
+                setDoctors(data);
+                if (initialDoctorId) {
+                    const doc = data.find(d => d.id === initialDoctorId || d.id === `DOC-${String(initialDoctorId).padStart(4, '0')}`);
+                    if (doc) setSelectedDoctor(doc);
+                }
+            })
+            .finally(() => setLoading(false));
+
+        // Handle Payment Resumption from Review Page
+        if (resumePayment && initData) {
+            processPayment(appointmentId, initData);
+        }
+    }, [initialDoctorId, resumePayment, initData, appointmentId, processPayment]);
+
+    useEffect(() => {
+        if (selectedDoctor && formData.date) {
+            setLoadingSlots(true);
+            patientService.getAvailability(selectedDoctor.id, formData.date)
+                .then(data => setAvailableSlots(data))
+                .catch(err => console.error('Error fetching slots:', err))
+                .finally(() => setLoadingSlots(false));
+        }
+    }, [selectedDoctor, formData.date]);
+
+    const handleBook = async (e) => {
+        e.preventDefault();
+        // Transition to Review Step
+        navigate('/patient/appointment-review', {
+            state: {
+                doctorId: selectedDoctor.id,
+                doctorName: selectedDoctor.name,
+                fee: selectedDoctor.consultation_fee,
+                date: formData.date,
+                timeSlot: formData.timeSlot
+            }
+        });
     };
 
     return (
@@ -198,7 +199,7 @@ const BookAppointment = () => {
                                 ) : (
                                     <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                                         {doctors.map(doc => (
-                                            <motion.div
+                                            <MotionDiv
                                                 key={doc.id}
                                                 whileHover={{ x: 5 }}
                                                 onClick={() => setSelectedDoctor(doc)}
@@ -221,7 +222,7 @@ const BookAppointment = () => {
                                                     </div>
                                                     {selectedDoctor?.id === doc.id && <CheckCircle size={20} className="text-primary" />}
                                                 </div>
-                                            </motion.div>
+                                            </MotionDiv>
                                         ))}
                                     </div>
                                 )}
@@ -233,7 +234,7 @@ const BookAppointment = () => {
                     <div className={initialDoctorId ? "lg:col-span-3 max-w-3xl mx-auto w-full" : "lg:col-span-2"}>
                         <AnimatePresence mode="wait">
                             {selectedDoctor ? (
-                                <motion.div
+                                <MotionDiv
                                     key="form"
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
@@ -339,9 +340,9 @@ const BookAppointment = () => {
                                             </p>
                                         </div>
                                     </form>
-                                </motion.div>
+                                </MotionDiv>
                             ) : (
-                                <motion.div
+                                <MotionDiv
                                     key="placeholder"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
@@ -352,7 +353,7 @@ const BookAppointment = () => {
                                     </div>
                                     <h3 className="text-xl font-bold text-gray-400">Select a Doctor to Continue</h3>
                                     <p className="text-sm text-gray-300 mt-2 max-w-xs">Please pick a specialist from the list on the left to see their available slots.</p>
-                                </motion.div>
+                                </MotionDiv>
                             )}
                         </AnimatePresence>
                     </div>

@@ -15,23 +15,28 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import NotificationDropdown from '../reception/NotificationDropdown';
 import { cn } from '../../utils/cn';
+import Logo from '../common/Logo';
 
-const SidebarLink = ({ to, icon: Icon, children, end, onClick }) => (
-    <NavLink
-        to={to}
-        end={end}
-        onClick={onClick}
-        className={({ isActive }) => cn(
-            "flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] transition-all duration-300 group",
-            isActive
-                ? "bg-primary text-white shadow-xl shadow-primary/30 scale-[1.02]"
-                : "text-slate-400 hover:bg-white/5 hover:text-white"
-        )}
-    >
-        <Icon className={cn("w-5 h-5 transition-transform group-hover:scale-110 group-active:scale-95")} />
-        <span className="font-bold text-sm tracking-tight">{children}</span>
-    </NavLink>
-);
+const SidebarLink = ({ to, icon: Icon, children, end, onClick }) => {
+    const IconComponent = Icon;
+
+    return (
+        <NavLink
+            to={to}
+            end={end}
+            onClick={onClick}
+            className={({ isActive }) => cn(
+                "flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] transition-all duration-300 group",
+                isActive
+                    ? "bg-primary text-white shadow-xl shadow-primary/30 scale-[1.02]"
+                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+            )}
+        >
+            <IconComponent className={cn("w-5 h-5 transition-transform group-hover:scale-110 group-active:scale-95")} />
+            <span className="font-bold text-sm tracking-tight">{children}</span>
+        </NavLink>
+    );
+};
 
 const LabLayout = () => {
     const { logout } = useAuth();
@@ -67,9 +72,7 @@ const LabLayout = () => {
             )}>
                 <div className="p-8 pb-10 flex items-center justify-between lg:justify-start gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="h-10 w-auto overflow-hidden rounded-lg bg-slate-50 p-1 border border-slate-100 shadow-sm">
-                            <img src="/logo.png" alt="Clinixa Logo" className="h-full w-auto object-contain" />
-                        </div>
+                        <Logo className="scale-90" showText={false} forceLight={true} />
                         <div>
                             <h1 className="font-bold text-xl text-white leading-tight">Clinixa</h1>
                             <p className="text-[10px] text-primary font-black uppercase tracking-widest mt-0.5">Lab Portal</p>

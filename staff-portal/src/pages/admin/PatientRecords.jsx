@@ -15,28 +15,35 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useNotification } from '../../context/NotificationContext';
+import api from '../../api/axios';
 
 const PatientRecords = () => {
     const { addNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPatient, setSelectedPatient] = useState(null);
+    const [activeFilter, setActiveFilter] = useState('All');
+    const [loading, setLoading] = useState(true);
+    const [patients, setPatients] = useState([]);
 
-    const [patients, setPatients] = useState([
-        { id: 'PID-8821', name: 'Rahul Sharma', age: '32', gender: 'Male', contact: '+91 9988001122', lastVisit: '2026-02-05', bloodGroup: 'O+', status: 'OPD', condition: 'Hypertension', address: '123, MG Road, Mumbai' },
-        { id: 'PID-8822', name: 'Priya Singh', age: '28', gender: 'Female', contact: '+91 9988001133', lastVisit: '2026-02-04', bloodGroup: 'A+', status: 'IPD', condition: 'Pneumonia', address: 'Apartment 4B, Skyview, Delhi' },
-        { id: 'PID-8823', name: 'Amit Patel', age: '45', gender: 'Male', contact: '+91 9988001144', lastVisit: '2026-02-01', bloodGroup: 'B-', status: 'Emergency', condition: 'Multiple Fractures', address: 'Sector 15, Chandigarh' },
-        { id: 'PID-8824', name: 'John Doe', age: '45', gender: 'Male', contact: '+91 9988665544', lastVisit: '2026-02-07', bloodGroup: 'AB+', status: 'OPD', condition: 'General Checkup', address: 'Greenwood Lane, Bangalore' },
-        { id: 'PID-8825', name: 'Emma Wilson', age: '28', gender: 'Female', contact: '+91 9900112233', lastVisit: '2026-01-30', bloodGroup: 'O-', status: 'Completed', condition: 'Allergy Treatment', address: 'Ocean Ave, Chennai' },
-    ]);
-
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case 'OPD': return "bg-blue-50 text-blue-600 border-blue-100";
-            case 'IPD': return "bg-indigo-50 text-indigo-600 border-indigo-100";
-            case 'Emergency': return "bg-rose-50 text-rose-600 border-rose-100";
-            default: return "bg-slate-50 text-slate-500 border-slate-100";
+    const fetchPatients = React.useCallback(async () => {
+        try {
+            const response = await api.get('/admin/patients');
+            setPatients(response.data);
+        } catch (error) {
+            console.error('[PatientRecords] Error fetching patients:', error);
+            addNotification({
+                type: 'error',
+                title: 'Data Load Error',
+                message: 'Failed to access clinical records repository.'
+            });
+        } finally {
+            setLoading(false);
         }
-    };
+    }, [addNotification]);
+
+    React.useEffect(() => {
+        fetchPatients();
+    }, [fetchPatients]);
 
     /**
      * Simulates a data export for patient records
@@ -77,11 +84,21 @@ const PatientRecords = () => {
         });
     };
 
-    const filteredPatients = patients.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.bloodGroup.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredPatients = patients.filter(p => {
+        const nameMatch = (p.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const idMatch = (p.id || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const bloodMatch = (p.blood_group || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesFilter = activeFilter === 'All' || (p.status || 'OPD') === activeFilter;
+        return (nameMatch || idMatch || bloodMatch) && matchesFilter;
+    });
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-12">
@@ -104,10 +121,21 @@ const PatientRecords = () => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
+                    <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                        {['All', 'OPD', 'IPD', 'Emergency'].map(f => (
+                            <button
+                                key={f}
+                                onClick={() => setActiveFilter(f)}
+                                className={cn(
+                                    "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                    activeFilter === f ? "bg-white text-primary shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                )}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
                     <div className="flex items-center gap-3">
-                        <button className="px-6 h-14 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-all flex items-center gap-2">
-                            <Filter className="w-4 h-4" /> Advanced Filter
-                        </button>
                         <button
                             onClick={() => simulateExport()}
                             className="p-4 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-200 hover:scale-105 active:scale-95 transition-all"
@@ -134,7 +162,7 @@ const PatientRecords = () => {
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 font-black group-hover:bg-primary/5 group-hover:text-primary transition-colors text-xs">
-                                                {patient.name.split(' ').map(n => n[0]).join('')}
+                                                {patient.name ? patient.name.split(' ').map(n => n[0]).join('') : '??'}
                                             </div>
                                             <div>
                                                 <p className="text-sm font-black text-slate-800 tracking-tight">{patient.name}</p>
@@ -149,34 +177,30 @@ const PatientRecords = () => {
                                     <td className="px-8 py-6">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
-                                                <div className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded text-[9px] font-black">{patient.bloodGroup}</div>
+                                                <div className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded text-[9px] font-black">{patient.blood_group || 'N/A'}</div>
                                                 <span className="text-xs font-bold text-slate-600">Blood Group</span>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="w-3.5 h-3.5 text-slate-300" />
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Last: {patient.lastVisit}</span>
-                                            </div>
+                                            {patient.last_visit && (
+                                                <div className="flex items-center gap-2">
+                                                    <Clock className="w-3.5 h-3.5 text-slate-300" />
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Last: {patient.last_visit}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2 text-slate-600">
                                                 <Smartphone className="w-3.5 h-3.5 text-slate-400" />
-                                                <span className="text-xs font-bold">{patient.contact}</span>
+                                                <span className="text-xs font-bold">{patient.phone}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-slate-400">
-                                                <MapPin className="w-3.5 h-3.5 text-slate-300" />
-                                                <span className="text-[10px] font-bold uppercase tracking-wider truncate max-w-[150px]">{patient.address}</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider truncate max-w-[180px]">{patient.email}</span>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <span className={cn(
-                                            "inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm",
-                                            getStatusStyle(patient.status)
-                                        )}>
-                                            {patient.status}
-                                        </span>
+                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{patient.registered_date}</div>
                                     </td>
                                     <td className="px-8 py-6 text-right">
                                         <button
@@ -210,7 +234,7 @@ const PatientRecords = () => {
                         <div className="p-12">
                             <div className="flex items-center gap-6 mb-10">
                                 <div className="w-24 h-24 bg-slate-100 rounded-[2.5rem] flex items-center justify-center text-slate-400 font-black text-2xl border-4 border-white shadow-xl">
-                                    {selectedPatient.name.split(' ').map(n => n[0]).join('')}
+                                    {selectedPatient.name ? selectedPatient.name.split(' ').map(n => n[0]).join('') : '??'}
                                 </div>
                                 <div>
                                     <h2 className="text-3xl font-black text-slate-900 tracking-tight">{selectedPatient.name}</h2>
@@ -224,11 +248,11 @@ const PatientRecords = () => {
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
                                             <span className="text-xs font-bold text-slate-500">Blood Group</span>
-                                            <span className="text-sm font-black text-rose-500">{selectedPatient.bloodGroup}</span>
+                                            <span className="text-sm font-black text-rose-500">{selectedPatient.blood_group || 'N/A'}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                                            <span className="text-xs font-bold text-slate-500">Age / Gender</span>
-                                            <span className="text-sm font-black text-slate-800">{selectedPatient.age}y / {selectedPatient.gender}</span>
+                                            <span className="text-xs font-bold text-slate-500">Date of Birth / Gender</span>
+                                            <span className="text-sm font-black text-slate-800">{selectedPatient.dob || 'N/A'} / {selectedPatient.gender}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -236,12 +260,12 @@ const PatientRecords = () => {
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Clinical Status</h4>
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                                            <span className="text-xs font-bold text-slate-500">Primary Condition</span>
-                                            <span className="text-sm font-black text-slate-800">{selectedPatient.condition}</span>
+                                            <span className="text-xs font-bold text-slate-500">Visit Count</span>
+                                            <span className="text-sm font-black text-slate-800">{selectedPatient.visit_count || 0}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                                            <span className="text-xs font-bold text-slate-500">Care Unit</span>
-                                            <span className="text-sm font-black text-primary">{selectedPatient.status}</span>
+                                            <span className="text-xs font-bold text-slate-500">Last Visit</span>
+                                            <span className="text-sm font-black text-primary">{selectedPatient.last_visit || 'No visits'}</span>
                                         </div>
                                     </div>
                                 </div>

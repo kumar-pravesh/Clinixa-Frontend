@@ -21,9 +21,7 @@ const AssignedPatients = () => {
         setSelectedPatient(patient);
     };
 
-    const handleSchedule = (patient) => {
-        // Navigate to appointments page, ideally pre-selecting the patient in a real app
-        // For now, we just navigate to the page
+    const handleSchedule = () => {
         navigate('/doctor/appointments');
     };
 
@@ -105,7 +103,7 @@ const AssignedPatients = () => {
                                                 <FileText className="w-4 h-4" />
                                             </button>
                                             <button
-                                                onClick={() => handleSchedule(patient)}
+                                                onClick={handleSchedule}
                                                 className="p-2 rounded-lg hover:bg-primary/5 text-slate-400 hover:text-primary transition-colors"
                                                 title="Schedule Follow-up"
                                             >
@@ -163,7 +161,7 @@ const AssignedPatients = () => {
                                     <FileText className="w-3 h-3" /> View Details
                                 </button>
                                 <button
-                                    onClick={() => handleSchedule(patient)}
+                                    onClick={handleSchedule}
                                     className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-primary/5 text-primary hover:bg-primary/10 transition-colors flex items-center justify-center gap-2"
                                 >
                                     <Calendar className="w-3 h-3" /> Schedule

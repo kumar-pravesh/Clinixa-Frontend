@@ -14,22 +14,26 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import { useLab } from '../../context/LabContext';
 
-const StatCard = ({ title, value, icon: Icon, color, trend }) => (
-    <div className="dashboard-card group hover:border-primary/30 transition-all cursor-default">
-        <div className="flex justify-between items-start mb-4">
-            <div className={`p-3 rounded-xl ${color} text-white shadow-lg`}>
-                <Icon className="w-6 h-6" />
+const StatCard = ({ title, value, icon: Icon, color, trend }) => {
+    const IconComponent = Icon;
+
+    return (
+        <div className="dashboard-card group hover:border-primary/30 transition-all cursor-default">
+            <div className="flex justify-between items-start mb-4">
+                <div className={`p-3 rounded-xl ${color} text-white shadow-lg`}>
+                    <IconComponent className="w-6 h-6" />
+                </div>
+                {trend && (
+                    <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        {trend}
+                    </span>
+                )}
             </div>
-            {trend && (
-                <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                    {trend}
-                </span>
-            )}
+            <p className="text-slate-500 text-sm font-medium tracking-wide">{title}</p>
+            <h3 className="text-3xl font-black text-slate-900 mt-1 tracking-tight">{value}</h3>
         </div>
-        <p className="text-slate-500 text-sm font-medium tracking-wide">{title}</p>
-        <h3 className="text-3xl font-black text-slate-900 mt-1 tracking-tight">{value}</h3>
-    </div>
-);
+    );
+};
 
 const LabDashboard = () => {
     const navigate = useNavigate();

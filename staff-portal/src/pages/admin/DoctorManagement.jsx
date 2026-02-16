@@ -27,30 +27,30 @@ const DoctorManagement = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState(null);
     const [activeFilter, setActiveFilter] = useState('All');
-    const [doctors, setDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [doctors, setDoctors] = useState([]);
 
-    // Fetch Doctors from Backend
+    const fetchDoctors = React.useCallback(async () => {
+        try {
+            // No need for search query here as filtering is done frontend for now, 
+            // but we can pass it if we want server-side filtering
+            const response = await api.get('/admin/doctors');
+            setDoctors(response.data);
+        } catch (error) {
+            console.error('[DoctorManagement] Error fetching doctors:', error);
+            addNotification({
+                type: 'error',
+                title: 'Load Error',
+                message: 'Failed to fetch medical personnel data.'
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [addNotification]);
+
     React.useEffect(() => {
-        const fetchDoctors = async () => {
-            try {
-                // Determine API URL based on environment or hardcode for dev
-                const response = await api.get('/admin/doctors');
-                setDoctors(response.data);
-            } catch (error) {
-                console.error('Error loading doctors:', error);
-                addNotification({
-                    type: 'error',
-                    title: 'Sync Error',
-                    message: 'Could not fetch doctors list from server.'
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchDoctors();
-    }, []);
+    }, [fetchDoctors]);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -86,7 +86,8 @@ const DoctorManagement = () => {
 
                 consultation_fee: '',
                 status: 'Active',
-                password: ''
+                password: '',
+                profile_pic: ''
             });
         }
         setIsModalOpen(true);
@@ -164,6 +165,14 @@ const DoctorManagement = () => {
         return matchesSearch && matchesFilter;
     });
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-12">
             {/* Header Area */}
@@ -220,14 +229,14 @@ const DoctorManagement = () => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <div className="flex gap-2">
-                        {['All', 'Active', 'On Leave'].map(filter => (
+                    <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                        {['All', 'Active', 'On Leave', 'Inactive'].map(filter => (
                             <button
                                 key={filter}
                                 onClick={() => setActiveFilter(filter)}
                                 className={cn(
-                                    "px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all underline-offset-8 decoration-2 hover:underline",
-                                    activeFilter === filter ? "text-primary underline" : "text-slate-400"
+                                    "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                    activeFilter === filter ? "bg-white text-primary shadow-sm" : "text-slate-400 hover:text-slate-600"
                                 )}
                             >
                                 {filter}
@@ -251,8 +260,12 @@ const DoctorManagement = () => {
                                 <tr key={doc.id} className="group hover:bg-slate-50/30 transition-all">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 font-black text-sm group-hover:bg-primary/5 group-hover:text-primary transition-colors">
-                                                {doc.name.split(' ').map(n => n[0]).join('')}
+                                            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 font-black text-sm group-hover:bg-primary/5 group-hover:text-primary transition-colors overflow-hidden">
+                                                {doc.profile_pic ? (
+                                                    <img src={doc.profile_pic} alt={doc.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    doc.name.split(' ').map(n => n[0]).join('')
+                                                )}
                                             </div>
                                             <div>
                                                 <p className="text-sm font-black text-slate-800 tracking-tight">{doc.name}</p>
@@ -301,17 +314,22 @@ const DoctorManagement = () => {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
-                    <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden relative">
-                        <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-600 transition-colors">
+                    <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col">
+                        <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-600 transition-colors z-10">
                             <X className="w-6 h-6" />
                         </button>
-                        <div className="p-12">
-                            <div className="mb-10">
+
+                        {/* Fixed Header */}
+                        <div className="p-12 pb-6">
+                            <div className="mb-6">
                                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">{editingDoctor ? 'Modify Credentials' : 'Onboard New Personnel'}</h2>
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-1">Initialize medical profile and credentials</p>
                             </div>
+                        </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Scrollable Form Content */}
+                        <div className="px-12 overflow-y-auto flex-1">
+                            <form onSubmit={handleSubmit} className="space-y-6 pb-6" id="doctor-form">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Full Legal Name</label>
@@ -393,6 +411,16 @@ const DoctorManagement = () => {
                                             <option>On Leave</option>
                                             <option>Inactive</option>
                                         </select>
+                                    </div>
+                                    <div className="space-y-2 col-span-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Profile Picture URL</label>
+                                        <input
+                                            type="text"
+                                            placeholder="https://example.com/photo.jpg"
+                                            className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold"
+                                            value={formData.profile_pic || ''}
+                                            onChange={(e) => setFormData({ ...formData, profile_pic: e.target.value })}
+                                        />
                                     </div>
                                 </div>
 

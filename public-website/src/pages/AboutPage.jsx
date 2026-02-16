@@ -1,6 +1,11 @@
 import { motion } from "framer-motion";
 import { CheckCircle, Award, Users, Heart } from "lucide-react";
 
+const MotionDiv = motion.div;
+const MotionH1 = motion.h1;
+const MotionP = motion.p;
+const MotionLi = motion.li;
+
 const AboutPage = () => {
   return (
     <div className="overflow-x-hidden">
@@ -10,28 +15,28 @@ const AboutPage = () => {
           <Heart size={400} className="text-primary" />
         </div>
         <div className="container mx-auto px-6 relative z-10 text-center">
-          <motion.h1
+          <MotionH1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-5xl font-bold mb-4"
           >
             About Clinixa
-          </motion.h1>
-          <motion.p
+          </MotionH1>
+          <MotionP
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="text-xl text-teal-100 max-w-2xl mx-auto"
           >
             Dedicated to providing the highest quality healthcare with compassion and excellence.
-          </motion.p>
+          </MotionP>
         </div>
       </section>
 
       {/* MISSION & VISION */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -41,7 +46,7 @@ const AboutPage = () => {
               alt="Hospital Team"
               className="rounded-3xl shadow-2xl"
             />
-          </motion.div>
+          </MotionDiv>
           <div>
             <h3 className="text-secondary font-bold uppercase tracking-wider mb-2">Our Mission</h3>
             <h2 className="text-4xl font-bold text-gray-900 mb-6">Healing with Heart & Science</h2>
@@ -55,7 +60,7 @@ const AboutPage = () => {
                 "Innovation & Research",
                 "Integrity & Transparency"
               ].map((item, i) => (
-                <motion.li
+                <MotionLi
                   key={i}
                   initial={{ opacity: 0, x: 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -64,7 +69,7 @@ const AboutPage = () => {
                   className="flex items-center gap-3 text-gray-800 font-medium"
                 >
                   <CheckCircle className="text-secondary" /> {item}
-                </motion.li>
+                </MotionLi>
               ))}
             </ul>
           </div>

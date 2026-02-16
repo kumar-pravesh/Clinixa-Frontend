@@ -8,17 +8,30 @@ const receptionistService = {
   /**
    * Search patient by phone number
    */
-  async searchPatientByPhone(phone) {
-    const [rows] = await pool.query(`
+  async searchPatients(query) {
+    const cleanId = query.toUpperCase().replace('PID-', '');
+    const isId = !isNaN(cleanId) && cleanId.length > 0;
+
+    let sql = `
             SELECT 
                 CONCAT('PID-', LPAD(id, 4, '0')) as id,
                 name, email, phone, dob, gender, blood_group,
                 address, emergency_contact,
                 DATE_FORMAT(created_at, '%Y-%m-%d') as registered_date
             FROM patients 
-            WHERE phone LIKE ?
-            LIMIT 10
-        `, [`%${phone}%`]);
+            WHERE phone LIKE ? OR name LIKE ?
+        `;
+
+    const params = [`%${query}%`, `%${query}%`];
+
+    if (isId) {
+      sql += ` OR id = ?`;
+      params.push(cleanId);
+    }
+
+    sql += ` LIMIT 10`;
+
+    const [rows] = await pool.query(sql, params);
     return rows;
   },
 

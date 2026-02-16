@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000',
-    withCredentials: true, // refresh token cookie
+    baseURL: import.meta.env.VITE_API_ROOT || 'http://localhost:5000',
+    withCredentials: true,
 });
 
 /**
@@ -38,7 +38,7 @@ api.interceptors.response.use(
 
             try {
                 const { data } = await axios.post(
-                    'http://localhost:5000/auth/refresh',
+                    `${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/auth/refresh`,
                     {},
                     { withCredentials: true }
                 );

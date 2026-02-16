@@ -9,7 +9,7 @@ export const patientService = {
 
     // Doctors (used for booking)
     getDoctors: async () => {
-        const res = await api.get('/doctors');
+        const res = await api.get('/api/public/doctors');
         return res.data;
     },
 
@@ -43,6 +43,11 @@ export const patientService = {
             paymentId,
             verificationData
         });
+        return res.data;
+    },
+
+    getPublicDepartments: async () => {
+        const res = await api.get('/api/public/departments');
         return res.data;
     }
 };

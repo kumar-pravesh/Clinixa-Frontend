@@ -86,7 +86,7 @@ const AddPrescription = () => {
                         </div>
 
                         <div className="space-y-4">
-                            {medications.map((med, index) => (
+                            {medications.map((med) => (
                                 <div key={med.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start bg-slate-50 p-4 rounded-xl border border-slate-100 group hover:border-primary/20 transition-all">
                                     <div className="md:col-span-4">
                                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Drug Name</label>

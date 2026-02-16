@@ -2,7 +2,7 @@ const { pool } = require('../../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const notificationService = require('../notification/notification.service');
 
 const generateTokens = (user) => {
     const accessToken = jwt.sign(
@@ -51,6 +51,12 @@ const register = async (name, email, password, gender, dob, phone) => {
         );
 
         await connection.commit();
+
+        // Send Welcome Notification (Non-blocking)
+        notificationService.sendWelcomeNotification(email, name, phone).catch(err =>
+            console.error('[Auth] Failed to send welcome notification:', err.message)
+        );
+
         return user;
     } catch (error) {
         await connection.rollback();
@@ -111,29 +117,11 @@ const forgotPassword = async (email) => {
         [otpHash, expires, user.id]
     );
 
-    // Send email (Mocked for now if real SMTP not configured)
+    // Send email using Notification Service
     try {
-        const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-            port: process.env.EMAIL_PORT || 587,
-            secure: false,
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-
-        await transporter.sendMail({
-            from: `"Clinixa Health" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: "Password Reset OTP",
-            text: `Your OTP for password reset is: ${otp}. It expires in 10 minutes.`,
-            html: `<b>Your OTP for password reset is: ${otp}</b><p>It expires in 10 minutes.</p>`
-        });
+        await notificationService.sendOTP(email, otp);
     } catch (error) {
         console.error('Email sending failed:', error.message);
-        // We still return success of OTP generation for security reasons (don't leak success/fail usually)
-        // but for development, we want to know.
         throw new Error('Failed to send email. Please check configuration.');
     }
 

@@ -1,14 +1,43 @@
 const { pool } = require('../../config/db');
+const { createAdminNotification } = require('../admin/admin.notification.controller');
+const notificationService = require('../notification/notification.service');
 
 const createAppointment = async (userId, doctorId, date, timeSlot) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
 
-        // Get Patient ID
-        const [patientRes] = await connection.query('SELECT id FROM patients WHERE user_id = ?', [userId]);
-        if (patientRes.length === 0) throw new Error('Patient profile not found');
+        // Get Patient ID and Patient Name
+        let [patientRes] = await connection.query(
+            'SELECT p.id, u.name FROM patients p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?',
+            [userId]
+        );
+
+        if (patientRes.length === 0) {
+            // Auto-create patient profile for non-patient users (like Admin) to allow demo/booking
+            const [userRes] = await connection.query('SELECT name, email, phone FROM users WHERE id = ?', [userId]);
+            if (userRes.length === 0) throw new Error('User not found');
+
+            const { name, email, phone } = userRes[0];
+            const [newPatient] = await connection.query(
+                'INSERT INTO patients (user_id, name, email, phone) VALUES (?, ?, ?, ?)',
+                [userId, name, email, phone]
+            );
+            patientRes = [{ id: newPatient.insertId, name }];
+        }
         const patientId = patientRes[0].id;
+        const patientName = patientRes[0].name;
+
+        // Get Doctor Name and Department
+        const [doctorRes] = await connection.query(
+            `SELECT u.name as doctor_name, d.specialization as dept 
+             FROM doctors d 
+             JOIN users u ON d.user_id = u.id 
+             WHERE d.id = ?`,
+            [doctorId]
+        );
+        const doctorName = doctorRes[0]?.doctor_name || 'Doctor';
+        const dept = doctorRes[0]?.dept || 'General';
 
         // Check availability
         const [existing] = await connection.query(
@@ -22,13 +51,34 @@ const createAppointment = async (userId, doctorId, date, timeSlot) => {
         // Create Appointment
         const [result] = await connection.query(
             `INSERT INTO appointments (patient_id, doctor_id, date, time, status)
-       VALUES (?, ?, ?, ?, 'Scheduled')`,
+       VALUES (?, ?, ?, ?, 'CREATED')`,
             [patientId, doctorId, date, timeSlot]
         );
 
         const appointmentId = result.insertId;
 
         await connection.commit();
+
+        // Create admin notification
+        await createAdminNotification(
+            'appointment',
+            'New Appointment Booked',
+            `${patientName} booked an appointment with ${doctorName} (${dept}) on ${date} at ${timeSlot}`,
+            appointmentId,
+            'appointments'
+        );
+
+        // Send Booking Confirmation to Patient (Non-blocking)
+        // We need patient email. The query above only got name and id.
+        // Let's optimize: fetch email in the first query.
+        const [patientEmailRes] = await connection.query('SELECT email FROM users WHERE id = ?', [userId]);
+        const patientEmail = patientEmailRes[0]?.email;
+
+        if (patientEmail) {
+            notificationService.sendBookingConfirmation(patientEmail, patientName, doctorName, date, timeSlot).catch(err =>
+                console.error('[Appointment] Failed to send booking notification:', err.message)
+            );
+        }
 
         // Return constructed object
         return {
@@ -37,7 +87,7 @@ const createAppointment = async (userId, doctorId, date, timeSlot) => {
             doctor_id: doctorId,
             date,
             time: timeSlot,
-            status: 'Scheduled'
+            status: 'CREATED'
         };
     } catch (error) {
         await connection.rollback();

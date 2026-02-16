@@ -16,37 +16,41 @@ import { useDoctor } from '../../context/DoctorContext';
 
 import { SimpleChart } from '../../components/common/SimpleChart';
 
-const StatCard = ({ title, value, icon: Icon, color, trend, chartData }) => (
-    <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white/50 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all group overflow-hidden relative cursor-default">
-        <div className={cn("absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full opacity-[0.03] group-hover:scale-150 transition-transform duration-700", color)}></div>
+const StatCard = ({ title, value, icon: Icon, color, trend, chartData }) => {
+    const IconComponent = Icon;
 
-        <div className="flex justify-between items-start mb-6 relative z-10">
-            <div className={`p-3.5 rounded-2xl ${color} text-white shadow-lg shadow-primary/20`}>
-                <Icon className="w-5 h-5" />
-            </div>
-            {trend && (
-                <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-                    <TrendingUp className="w-3 h-3" />
-                    {trend}
-                </span>
-            )}
-        </div>
+    return (
+        <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white/50 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all group overflow-hidden relative cursor-default">
+            <div className={cn("absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full opacity-[0.03] group-hover:scale-150 transition-transform duration-700", color)}></div>
 
-        <div className="relative z-10">
-            <div className="flex justify-between items-end">
-                <div>
-                    <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mb-1">{title}</p>
-                    <h3 className="text-3xl font-black text-slate-800 tracking-tighter">{value}</h3>
+            <div className="flex justify-between items-start mb-6 relative z-10">
+                <div className={`p-3.5 rounded-2xl ${color} text-white shadow-lg shadow-primary/20`}>
+                    <IconComponent className="w-5 h-5" />
                 </div>
-                {chartData && (
-                    <div className="w-24 h-12 -mb-2">
-                        <SimpleChart data={chartData} color={color.replace('bg-', 'text-')} height={40} />
-                    </div>
+                {trend && (
+                    <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                        <TrendingUp className="w-3 h-3" />
+                        {trend}
+                    </span>
                 )}
             </div>
+
+            <div className="relative z-10">
+                <div className="flex justify-between items-end">
+                    <div>
+                        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mb-1">{title}</p>
+                        <h3 className="text-3xl font-black text-slate-800 tracking-tighter">{value}</h3>
+                    </div>
+                    {chartData && (
+                        <div className="w-24 h-12 -mb-2">
+                            <SimpleChart data={chartData} color={color.replace('bg-', 'text-')} height={40} />
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const DoctorDashboard = () => {
     const navigate = useNavigate();

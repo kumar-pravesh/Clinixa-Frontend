@@ -6,6 +6,17 @@ const adminService = require('./admin.service');
 
 const adminController = {
     // Doctor Management
+    async getAllDoctors(req, res) {
+        try {
+            const { search, limit } = req.query;
+            const doctors = await adminService.getAllDoctors(search, parseInt(limit) || 100);
+            res.json(doctors);
+        } catch (error) {
+            console.error('[AdminController Error] getAllDoctors:', error);
+            res.status(500).json({ message: error.message });
+        }
+    },
+
     async createDoctor(req, res) {
         try {
             const result = await adminService.createDoctor(req.body);
@@ -109,6 +120,26 @@ const adminController = {
             res.json(result);
         } catch (error) {
             res.status(400).json({ message: error.message });
+        }
+    },
+
+    async updateAppointmentStatus(req, res) {
+        try {
+            const { status } = req.body;
+            const result = await adminService.updateAppointmentStatus(req.params.id, status);
+            res.json(result);
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    },
+
+    async getInvoices(req, res) {
+        try {
+            const { limit } = req.query;
+            const invoices = await adminService.getInvoices(parseInt(limit) || 100);
+            res.json(invoices);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
         }
     },
 

@@ -22,9 +22,11 @@ router.post('/prescriptions', doctorController.createPrescription);
 router.post('/medicines', doctorController.addMedicines);
 
 // Lab Reports
+router.get('/lab-reports', doctorController.getLabReports);
 router.post('/lab-reports', upload.single('reportFile'), doctorController.uploadLabReport);
 
-// Follow-up
+// Follow-up & Status
 router.post('/follow-up', doctorController.setFollowUp);
+router.put('/appointments/:id/status', doctorController.updateAppointmentStatus);
 
 module.exports = router;
