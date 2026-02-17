@@ -32,7 +32,7 @@ const PublicLayout = () => {
       <header
         className={`fixed top-0 z-50 w-full transition-all duration-300 ${isScrolled
           ? "bg-white/90 backdrop-blur-xl border-b border-slate-200/50 py-3 shadow-md"
-          : "bg-transparent py-8"
+          : "bg-transparent py-4"
           }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">

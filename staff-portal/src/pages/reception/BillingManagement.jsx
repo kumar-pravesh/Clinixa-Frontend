@@ -118,21 +118,19 @@ const BillingManagement = () => {
         try {
             // 1. Create Invoice in Backend
             const invoiceData = {
-                patient_id: selectedPatient.id.replace('PID-', ''), // Send numeric ID if backend expects it, or let service handle? Service usually handles raw, but backend expects numeric. Service wrapper doesn't strip PID-.
-                // Wait, service search returns formatted ID? backend search returns CONCAT PID-.
-                // Backend createInvoice expects patient_id.
-                // Let's strip PID- here to be safe or ensure backend handles it.
-                // My `receptionist.service.js` createInvoice doesn't strip PID-. It expects ID.
-                // I should strip it.
-                patient_id: selectedPatient.id.replace('PID-', ''),
-                consultation_fee: consultationFee,
-                lab_charges: labCharges,
-                medicine_charges: medicineCharges,
-                items: billItems,
-                discount_percent: discount,
+                patient_id: parseInt(selectedPatient.id.replace('PID-', '')), // Convert to numeric ID
+                consultation_fee: parseFloat(consultationFee),
+                lab_charges: parseFloat(labCharges),
+                medicine_charges: parseFloat(medicineCharges),
+                items: billItems.map(item => ({
+                    service: item.service,
+                    charge: parseFloat(item.charge) || 0
+                })),
+                discount_percent: parseFloat(discount),
                 payment_mode: paymentMode
             };
 
+            console.log('Invoice Data being sent:', invoiceData);
             await receptionService.createInvoice(invoiceData);
 
             // 2. Generate PDF
@@ -169,10 +167,16 @@ const BillingManagement = () => {
 
         } catch (error) {
             console.error('Invoice generation error:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                fullError: error
+            });
             addNotification({
                 type: 'emergency',
                 title: 'Invoice Failed',
-                message: 'Could not create invoice. Please try again.'
+                message: error.response?.data?.message || 'Could not create invoice. Please try again.'
             });
         } finally {
             setIsGenerating(false);
@@ -438,29 +442,38 @@ const BillingManagement = () => {
 
                     {/* Right: Patient & Payment */}
                     <div className="space-y-6">
-                        <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/50 shadow-xl shadow-slate-200/50">
+                        <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/50 shadow-xl shadow-slate-200/50 relative z-10">
                             <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-3">
                                 <Search className="w-5 h-5 text-primary" /> Select Patient
                             </h3>
-                            <div className="relative mb-6">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <div className="relative mb-6 z-50">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                 <input
                                     type="text"
-                                    placeholder="Search Patient ID or Name"
-                                    className="input-field !pl-12 h-12 bg-slate-50 border-slate-200 text-sm font-bold"
+                                    placeholder="Search by Name, Phone, or Patient ID (PID-xxxx)"
+                                    className="input-field !pl-12 h-12 bg-slate-50 border-slate-200 text-sm font-bold w-full"
                                     value={searchQuery}
                                     onChange={(e) => {
                                         setSearchQuery(e.target.value);
                                         if (selectedPatient) setSelectedPatient(null);
                                     }}
+                                    autoComplete="off"
                                 />
-                                {isSearching && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-primary" />}
-                                {searchQuery && searchResults.length > 0 && (
-                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-10 overflow-hidden divide-y divide-slate-50 animate-in fade-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto">
-                                        {searchResults.map(p => (
+                                {isSearching && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-primary pointer-events-none" />}
+                                {searchQuery && (
+                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 divide-y divide-slate-50 animate-in fade-in slide-in-from-top-2 duration-200 max-h-64 overflow-y-auto min-w-full">
+                                        {isSearching && (
+                                            <div className="p-4 text-center text-slate-400 text-sm font-bold">
+                                                Searching...
+                                            </div>
+                                        )}
+                                        {!isSearching && searchResults.length > 0 && searchResults.map(p => (
                                             <button
                                                 key={p.id}
-                                                onClick={() => {
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
                                                     setSelectedPatient({
                                                         id: p.id,
                                                         name: p.name,
@@ -470,17 +483,22 @@ const BillingManagement = () => {
                                                     setSearchQuery('');
                                                     setSearchResults([]);
                                                 }}
-                                                className="w-full p-4 text-left hover:bg-primary/5 transition-colors flex items-center gap-3 group"
+                                                className="w-full p-4 text-left hover:bg-primary/5 transition-colors flex items-center gap-3 group cursor-pointer"
                                             >
-                                                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black text-slate-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                                    {p.name.charAt(0)}
+                                                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black text-slate-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
+                                                    {p.name.charAt(0).toUpperCase()}
                                                 </div>
-                                                <div>
+                                                <div className="flex-1">
                                                     <p className="text-sm font-black text-slate-700 group-hover:text-primary transition-colors">{p.name}</p>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{p.id}</p>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{p.id} • {p.phone}</p>
                                                 </div>
                                             </button>
                                         ))}
+                                        {!isSearching && searchResults.length === 0 && (
+                                            <div className="p-4 text-center text-slate-400 text-sm font-bold">
+                                                No patients found. Try searching by name, phone, or patient ID.
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

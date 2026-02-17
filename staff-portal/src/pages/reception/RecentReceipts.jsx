@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Printer,
@@ -11,6 +11,7 @@ import {
     Loader2
 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
+import receptionService from '../../services/receptionService';
 
 const RecentReceipts = () => {
     const navigate = useNavigate();
@@ -21,6 +22,24 @@ const RecentReceipts = () => {
     const [isExporting, setIsExporting] = useState(false);
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
     const [reprintingId, setReprintingId] = useState(null);
+    const [receipts, setReceipts] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, []);
+
+    const fetchInvoices = async () => {
+        setIsLoading(true);
+        try {
+            const data = await receptionService.getInvoices();
+            setReceipts(data || []);
+        } catch (error) {
+            console.error("Failed to fetch invoices:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // HEX Color Constants for PDF Compatibility
     const colors = {
@@ -36,16 +55,11 @@ const RecentReceipts = () => {
         white: '#ffffff',
     };
 
-    const receipts = [
-        { id: 'INV-1001', patient: 'John Doe', date: '06 Feb 2026', amount: 500, mode: 'UPI', status: 'Paid' },
-        { id: 'INV-1002', patient: 'Emma Wilson', date: '06 Feb 2026', amount: 1200, mode: 'Cash', status: 'Paid' },
-        { id: 'INV-1003', patient: 'Robert Brown', date: '05 Feb 2026', amount: 800, mode: 'Card', status: 'Paid' },
-        { id: 'INV-1004', patient: 'Sarah Jenkins', date: '05 Feb 2026', amount: 1500, mode: 'UPI', status: 'Paid' },
-    ];
+
 
     const filteredReceipts = receipts.filter(receipt =>
-        receipt.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        receipt.patient.toLowerCase().includes(searchQuery.toLowerCase())
+        (receipt.invoice_number?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (receipt.patient_name?.toLowerCase() || '').includes(searchQuery.toLowerCase())
     );
 
     const handleReprint = (id) => {
@@ -119,8 +133,10 @@ const RecentReceipts = () => {
 
     // Calculate totals for summary
     const summaryData = receipts.reduce((acc, curr) => {
-        acc[curr.mode] = (acc[curr.mode] || 0) + curr.amount;
-        acc.total += curr.amount;
+        const mode = curr.payment_mode || 'Other';
+        const amount = parseFloat(curr.total) || 0;
+        acc[mode] = (acc[mode] || 0) + amount;
+        acc.total += amount;
         return acc;
     }, { total: 0 });
 
@@ -153,11 +169,11 @@ const RecentReceipts = () => {
                         <tbody>
                             {receipts.map(r => (
                                 <tr key={r.id} style={{ borderBottom: `1px solid ${colors.slate100}` }}>
-                                    <td style={{ padding: '12px', color: colors.slate800, fontWeight: 'bold' }}>{r.id}</td>
-                                    <td style={{ padding: '12px', color: colors.slate700 }}>{r.patient}</td>
+                                    <td style={{ padding: '12px', color: colors.slate800, fontWeight: 'bold' }}>{r.invoice_number}</td>
+                                    <td style={{ padding: '12px', color: colors.slate700 }}>{r.patient_name}</td>
                                     <td style={{ padding: '12px', color: colors.slate500 }}>{r.date}</td>
-                                    <td style={{ padding: '12px', color: colors.slate500 }}>{r.mode}</td>
-                                    <td style={{ padding: '12px', textAlign: 'right', color: colors.slate800, fontWeight: '900' }}>₹{r.amount.toLocaleString()}</td>
+                                    <td style={{ padding: '12px', color: colors.slate500 }}>{r.payment_mode}</td>
+                                    <td style={{ padding: '12px', textAlign: 'right', color: colors.slate800, fontWeight: '900' }}>₹{(parseFloat(r.total) || 0).toLocaleString()}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -239,27 +255,36 @@ const RecentReceipts = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {filteredReceipts.length > 0 ? (
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan="6" className="px-6 py-12 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                        <p className="text-slate-400 font-medium">Fetching receipts...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : filteredReceipts.length > 0 ? (
                             filteredReceipts.map((receipt) => (
                                 <tr key={receipt.id} className="group hover:bg-primary/[0.02] transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <FileText className="w-4 h-4 text-primary opacity-40" />
-                                            <span className="font-bold text-slate-800">{receipt.id}</span>
+                                            <span className="font-bold text-slate-800">{receipt.invoice_number}</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="font-bold text-slate-700">{receipt.patient}</span>
+                                        <span className="font-bold text-slate-700">{receipt.patient_name}</span>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-500 font-medium">
                                         {receipt.date}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <span className="font-black text-slate-800">₹{receipt.amount.toLocaleString()}</span>
+                                        <span className="font-black text-slate-800">₹{receipt.total?.toLocaleString()}</span>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                                            {receipt.mode}
+                                            {receipt.payment_mode}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">

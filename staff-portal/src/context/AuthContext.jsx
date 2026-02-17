@@ -31,46 +31,23 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (credentials) => {
-        // --- DEMO MODE DISABLED - Using Real Authentication ---
-        // Demo mode was causing 403 errors because fake tokens aren't valid JWTs
-        /*
-        const demoUsers = {
-            'admin@clinixa.life': { id: 'demo-admin', name: 'Demo Administrator', role: 'admin', email: 'admin@clinixa.life' },
-            'doctor@clinixa.life': { id: 'demo-doctor', name: 'Dr. Demo Specialist', role: 'doctor', email: 'doctor@clinixa.life' },
-            'receptionist@clinixa.life': { id: 'demo-reception', name: 'Demo Reception', role: 'receptionist', email: 'receptionist@clinixa.life' },
-            'lab@clinixa.life': { id: 'demo-lab', name: 'Demo Lab Technician', role: 'lab_tech', email: 'lab@clinixa.life' }
-        };
-
-        if (demoUsers[credentials.email]) {
-            console.log('Demo Mode: Authenticated as', credentials.email);
-            const mockData = { user: demoUsers[credentials.email], accessToken: 'demo-token-' + Date.now() };
-            localStorage.setItem('accessToken', mockData.accessToken);
-            setUser(mockData.user);
-            return mockData;
-        }
-        */
-        // ------------------------
-
         try {
-            // Attempt actual login
-            console.log('[AuthContext] Attempting real authentication...');
             const data = await authService.login(credentials);
-            console.log('[AuthContext] Login successful:', { user: data.user, hasToken: !!data.accessToken });
 
             if (data.accessToken) {
                 localStorage.setItem('accessToken', data.accessToken);
             }
-            if (data.user && !data.user.role) {
-                if (credentials.email.includes('admin')) data.user.role = 'admin';
-                else if (credentials.email.includes('lab')) data.user.role = 'lab_tech';
-                else if (credentials.email.includes('doc')) data.user.role = 'doctor';
-                else data.user.role = 'receptionist';
+
+            // Validate that user object has required fields
+            if (!data.user || !data.user.role) {
+                throw new Error('Invalid user data received from server');
             }
+
             setUser(data.user);
             return data;
         } catch (error) {
-            console.error('Login implementation error:', error.response?.data?.message || error.message);
-            throw new Error(error.response?.data?.message || 'Authentication system failure');
+            console.error('Login error:', error.response?.data?.message || error.message);
+            throw new Error(error.response?.data?.message || 'Authentication failed');
         }
     };
 

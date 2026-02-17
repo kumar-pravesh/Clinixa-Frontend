@@ -17,11 +17,12 @@ const FollowUps = () => {
     // Filter for appointments on selected date
     const filteredAppointments = appointments.filter(apt => apt.date === selectedDate);
 
-    const handleAddAppointment = (e) => {
+    const handleAddAppointment = async (e) => {
         e.preventDefault();
-        const patient = patients.find(p => p.id === newAppointment.patientId);
+        // Use loose equality to handle string vs numeric IDs safely
+        const patient = patients.find(p => String(p.id) === String(newAppointment.patientId));
         if (patient) {
-            addAppointment({
+            const result = await addAppointment({
                 patient: patient.name,
                 patientId: patient.id,
                 date: selectedDate,
@@ -29,8 +30,16 @@ const FollowUps = () => {
                 type: newAppointment.type,
                 reason: newAppointment.reason
             });
-            setShowAddModal(false);
-            setNewAppointment({ patientId: '', time: '', type: 'Follow-up', reason: '' });
+
+            if (result?.success) {
+                setShowAddModal(false);
+                setNewAppointment({ patientId: '', time: '', type: 'Follow-up', reason: '' });
+                alert('Appointment scheduled successfully!');
+            } else {
+                alert(result?.message || 'Failed to schedule appointment. Please try again.');
+            }
+        } else {
+            alert('Please select a valid patient.');
         }
     };
 
@@ -88,7 +97,7 @@ const FollowUps = () => {
                                                 <span className="text-xl text-slate-800">{new Date(apt.date).getDate()}</span>
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-slate-800 text-lg">{apt.patient}</h4>
+                                                <h4 className="font-bold text-slate-800 text-lg">{apt.patient || apt.patient_name || 'N/A'}</h4>
                                                 <div className="flex items-center gap-3 text-sm text-slate-500 mt-1">
                                                     <span className="flex items-center gap-1">
                                                         <Clock className="w-3.5 h-3.5" /> {apt.time}

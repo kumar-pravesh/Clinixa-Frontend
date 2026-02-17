@@ -1,13 +1,16 @@
 const jwt = require('jsonwebtoken');
 
 /**
- * Authenticate JWT token from Authorization header
+ * Authenticate JWT token from Authorization header or cookie
  */
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    let token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-    console.log(`[Auth Debug] ${req.method} ${req.url} - Auth Header: ${authHeader ? 'Present' : 'Missing'}`);
+    // Fallback to cookie if no Authorization header
+    if (!token && req.cookies && req.cookies.accessToken) {
+        token = req.cookies.accessToken;
+    }
 
     if (!token) {
         return res.status(401).json({ message: 'Authentication required' });
@@ -17,6 +20,7 @@ const authenticateToken = (req, res, next) => {
         if (err) {
             return res.status(403).json({ message: 'Invalid or expired token' });
         }
+        console.log('[DEBUG] Decoded User from Token:', user); // DEBUG LOG
         req.user = user;
         next();
     });
@@ -42,4 +46,12 @@ const authorizeRoles = (...allowedRoles) => {
     };
 };
 
-module.exports = { authenticateToken, authorizeRoles };
+/**
+ * Authorize a single role (helper for cleaner syntax)
+ * Usage: router.use(authorizeRole('admin'));
+ */
+const authorizeRole = (role) => {
+    return authorizeRoles(role);
+};
+
+module.exports = { authenticateToken, authorizeRoles, authorizeRole };

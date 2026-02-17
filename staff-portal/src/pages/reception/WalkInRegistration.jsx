@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import { useQueue } from '../../context/QueueContext';
 import { useNotification } from '../../context/NotificationContext';
+import receptionService from '../../services/receptionService';
 
 const WalkInRegistration = () => {
     const { generateToken } = useQueue();
@@ -56,43 +57,83 @@ const WalkInRegistration = () => {
         }
     };
 
-    const handleSearch = (e) => {
+    const handleSearch = async (e) => {
         e.preventDefault();
-        const found = mockPatients[mobile];
+        if (!mobile || mobile.length < 10) return;
 
-        if (found) {
-            setIsExisting(true);
-            setLastVisit(found.lastVisit);
-            setFormData({
-                name: found.name,
-                gender: found.gender,
-                dob: found.dob,
-                address: found.address,
-                reason: 'Follow-up consultation' // Default for existing
-            });
-        } else {
-            setIsExisting(false);
-            setLastVisit(null);
-            if (mobile.length >= 10) {
-                alert("Patient record not found. Please fill details to register.");
+        try {
+            const results = await receptionService.searchPatient(mobile);
+            const found = results.find(p => p.phone === mobile || p.id === mobile);
+
+            if (found) {
+                setIsExisting(true);
+                setLastVisit(found.registered_date);
+                setFormData({
+                    name: found.name,
+                    gender: found.gender,
+                    dob: found.dob,
+                    address: found.address || '',
+                    reason: 'Follow-up consultation'
+                });
+            } else {
+                setIsExisting(false);
+                setLastVisit(null);
+                setFormData({
+                    name: '',
+                    gender: '',
+                    dob: '',
+                    address: '',
+                    reason: ''
+                });
+                addNotification({
+                    type: 'info',
+                    title: 'Not Found',
+                    message: "Patient record not found. Please fill details to register."
+                });
             }
+        } catch (err) {
+            console.error('Error searching patient:', err);
         }
     };
 
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
-        const token = generateToken({
-            name: formData.name,
-            mobile: mobile,
-            dept: 'General Medicine',
-            doctor: 'Dr. Smith'
-        });
-        setGeneratedToken(token);
-        addNotification({
-            type: isExisting ? 'appointment' : 'emergency',
-            title: isExisting ? 'Follow-up Check-in' : 'New Patient Registered',
-            message: `${formData.name} has been ${isExisting ? 'checked in for follow-up' : 'registered as a new patient'}. Token: ${token.id}`
-        });
+        try {
+            let patientId = null;
+            if (!isExisting) {
+                const res = await receptionService.registerWalkIn({
+                    ...formData,
+                    phone: mobile
+                });
+                patientId = res.id;
+            } else {
+                // If existing, we need to extract numeric ID from PID-XXXX
+                const results = await receptionService.searchPatient(mobile);
+                const found = results.find(p => p.phone === mobile || p.id === mobile);
+                patientId = found.id.replace('PID-', '').replace(/^0+/, '');
+            }
+
+            const token = await generateToken({
+                patient_id: patientId,
+                dept: formData.dept || 'General Medicine',
+                doctor_id: formData.doctor_id || null, // Optional
+                department: formData.reason || 'Consultation'
+            });
+
+            setGeneratedToken(token);
+            addNotification({
+                type: isExisting ? 'appointment' : 'emergency',
+                title: isExisting ? 'Follow-up Check-in' : 'New Patient Registered',
+                message: `${formData.name} has been ${isExisting ? 'checked in for follow-up' : 'registered as a new patient'}. Token: ${token.id}`
+            });
+        } catch (err) {
+            console.error('Error saving registration:', err);
+            addNotification({
+                type: 'error',
+                title: 'Save Failed',
+                message: err.response?.data?.message || "Failed to register patient/generate token"
+            });
+        }
     };
 
     const handleInputChange = (field, value) => {

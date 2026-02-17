@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import doctorService from '../services/doctorService';
+import { useNotification } from './NotificationContext';
 
 const DoctorContext = createContext();
 
@@ -12,6 +13,8 @@ export const DoctorProvider = ({ children }) => {
     const [labReports, setLabReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const { addNotification } = useNotification();
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -46,12 +49,26 @@ export const DoctorProvider = ({ children }) => {
     const addPrescription = async (newPrescription) => {
         try {
             await doctorService.createPrescription(newPrescription);
+
+            // Add local notification
+            const patient = patients.find(p => String(p.id) === String(newPrescription.patientId));
+            addNotification({
+                type: 'success',
+                title: 'Prescription Created',
+                message: `New prescription for ${patient?.name || 'Patient'} has been issued.`
+            });
+
             // Re-fetch or update local state
             const updatedPrescriptions = await doctorService.getPrescriptions();
             setPrescriptions(updatedPrescriptions);
             return { success: true };
         } catch (err) {
             console.error("Error creating prescription:", err);
+            addNotification({
+                type: 'error',
+                title: 'Prescription Failed',
+                message: err.message
+            });
             return { success: false, message: err.message };
         }
     };
@@ -59,11 +76,23 @@ export const DoctorProvider = ({ children }) => {
     const uploadLabReport = async (formData) => {
         try {
             await doctorService.uploadLabReport(formData);
+
+            addNotification({
+                type: 'success',
+                title: 'Report Uploaded',
+                message: 'Lab report has been uploaded successfully.'
+            });
+
             const updatedReports = await doctorService.getLabReports();
             setLabReports(updatedReports);
             return { success: true };
         } catch (err) {
             console.error("Error uploading lab report:", err);
+            addNotification({
+                type: 'error',
+                title: 'Upload Failed',
+                message: err.message
+            });
             return { success: false, message: err.message };
         }
     };
@@ -71,17 +100,26 @@ export const DoctorProvider = ({ children }) => {
     // Note: Doctors usually don't "add" appointments directly in this dashboard flow,
     // but they might set follow-ups.
     const addAppointment = async (appointmentData) => {
-        // Mapping "Add Appointment" to "Set Follow Up" for now, or just logging warning
-        console.warn("addAppointment is deprecated in DoctorContext. Use setFollowUp.");
-        // If it's a follow-up:
-        if (appointmentData.type === 'Follow-up') {
-            try {
-                await doctorService.setFollowUp(appointmentData);
-                const updated = await doctorService.getAppointments();
-                setAppointments(updated);
-            } catch (err) {
-                console.error("Error setting follow-up:", err);
-            }
+        try {
+            await doctorService.setFollowUp(appointmentData);
+
+            addNotification({
+                type: 'appointment',
+                title: 'Appointment Scheduled',
+                message: `A ${appointmentData.type} has been set for ${appointmentData.patient} at ${appointmentData.time}.`
+            });
+
+            const updated = await doctorService.getAppointments();
+            setAppointments(updated);
+            return { success: true };
+        } catch (err) {
+            console.error("Error setting appointment:", err);
+            addNotification({
+                type: 'error',
+                title: 'Scheduling Failed',
+                message: err.message
+            });
+            return { success: false, message: err.message };
         }
     };
 
@@ -89,6 +127,12 @@ export const DoctorProvider = ({ children }) => {
         try {
             await doctorService.updateAppointmentStatus(id, status);
             setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+
+            addNotification({
+                type: 'info',
+                title: 'Status Updated',
+                message: `Appointment status changed to ${status}.`
+            });
         } catch (err) {
             console.error("Error updating appointment status:", err);
         }
@@ -96,20 +140,18 @@ export const DoctorProvider = ({ children }) => {
 
     const updateLabReportStatus = (id, status) => {
         // Lab reports status is usually updated by LAB technician.
-        // But if doctor reviews it? Backend doesn't have "review" endpoint yet.
-        // We'll update local state for UI feedback if needed, but it won't persist unless backend supports it.
         setLabReports(labReports.map(rpt =>
             rpt.id === id ? { ...rpt, status } : rpt
         ));
     };
 
     const getPatientStats = () => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('en-CA');
         return {
             totalPatients: patients.length,
             appointmentsToday: appointments.filter(a => a.date === today && a.status !== 'Completed' && a.status !== 'Cancelled').length,
-            pendingReports: labReports.filter(r => r.status === 'Pending').length, // Filter by status if available
-            criticalCases: patients.filter(p => p.diagnosis && p.diagnosis.toLowerCase().includes('critical')).length // logic depends on data
+            pendingReports: labReports.filter(r => r.status === 'Pending').length,
+            criticalCases: patients.filter(p => p.diagnosis && p.diagnosis.toLowerCase().includes('critical')).length
         };
     };
 

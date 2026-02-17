@@ -3,12 +3,12 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PublicLayout from "./layouts/PublicLayout.jsx";
 import PatientLayout from "./layouts/PatientLayout.jsx";
 
-import HomePage from "./pages/HomePage.jsx";
-import AboutPage from "./pages/AboutPage.jsx";
-import DepartmentsPage from "./pages/DepartmentsPage.jsx";
-import DoctorsPage from "./pages/DoctorsPage.jsx";
-import LoginPage from "./pages/LoginPage.jsx";
-import RegisterPage from "./pages/RegisterPage.jsx";
+import HomePage from "./pages/public/HomePage.jsx";
+import AboutPage from "./pages/public/AboutPage.jsx";
+import DepartmentsPage from "./pages/public/DepartmentsPage.jsx";
+import DoctorsPage from "./pages/public/DoctorsPage.jsx";
+import LoginPage from "./pages/auth/LoginPage.jsx";
+import RegisterPage from "./pages/auth/RegisterPage.jsx";
 
 import PatientDashboard from "./pages/patient/Dashboard.jsx";
 import BookAppointment from "./pages/patient/BookAppointment.jsx";

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, CheckCircle2, ArrowRight, AlertCircle, Loader2, ShieldCheck, Activity, Smartphone } from 'lucide-react';
+import { Mail, Lock, CheckCircle2, ArrowRight, AlertCircle, Loader2, ShieldCheck, Activity, Globe, Server, UserCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,16 +25,13 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // Call the actual login from AuthContext
             const data = await login({ email, password });
-
-            // Redirection logic based on role (returned from login)
             const role = data.user?.role;
             console.log('Login successful, role:', role);
 
             if (role === 'admin') {
                 navigate('/admin', { replace: true });
-            } else if (role === 'lab_tech') {
+            } else if (role === 'lab_technician') {
                 navigate('/lab', { replace: true });
             } else if (role === 'doctor') {
                 navigate('/doctor', { replace: true });
@@ -53,141 +50,159 @@ const Login = () => {
 
     return (
         <div className="min-h-screen flex bg-white font-sans overflow-hidden">
-            {/* Left Side - Hero/Branding (Premium Dark) */}
+            {/* 🛡️ LEFT SIDE: Enterprise Operator Interface */}
             <div className="hidden lg:flex w-[55%] bg-slate-950 text-white p-20 flex-col justify-between relative overflow-hidden">
-                {/* 🌊 Advanced Mesh Gradient */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <MotionDiv
-                        animate={{
-                            scale: [1, 1.2, 1],
-                            rotate: [0, 45, 0],
-                            x: [0, 100, 0]
-                        }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                        className="absolute -top-[20%] -left-[20%] w-[80%] h-[80%] bg-primary/20 rounded-full blur-[140px]"
-                    />
-                    <MotionDiv
-                        animate={{
-                            scale: [1.2, 1, 1.2],
-                            rotate: [45, 0, 45],
-                            x: [0, -50, 0]
-                        }}
-                        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                        className="absolute -bottom-[20%] -right-[20%] w-[70%] h-[70%] bg-accent/10 rounded-full blur-[120px]"
-                    />
+                {/* 💓 Animated ECG Heartbeat Background */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none">
+                    <svg viewBox="0 0 1000 200" className="w-[200%] h-auto absolute top-1/2 -translate-y-1/2 left-[-50%] text-primary/40">
+                        <motion.path
+                            d="M0,100 L300,100 L310,80 L325,120 L335,100 L350,100 L360,20 L380,180 L395,100 L410,100 L420,90 L430,110 L440,100 L1000,100"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1"
+                            initial={{ pathLength: 0, opacity: 0 }}
+                            animate={{ pathLength: 1, opacity: [0, 1, 0] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                        />
+                    </svg>
                 </div>
 
-                {/* 📐 Decorative Grid Pattern */}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                    style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+                {/* 📐 Professional Medical Grid Pattern */}
+                <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
+                    style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
 
                 <MotionDiv
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8 }}
                     className="relative z-10"
                 >
-                    <Logo forceLight={true} className="mb-24 scale-110 origin-left" />
+                    <Logo forceLight={true} className="mb-24 scale-125 origin-left hover:scale-130 transition-transform" />
 
-                    <div className="space-y-2 mb-8">
-                        <p className="text-primary font-bold text-xs uppercase tracking-[0.4em]">Enterprise Access</p>
-                        <h1 className="text-6xl font-black leading-[1.1] tracking-tighter">
+                    <div className="space-y-3 mb-10">
+                        <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 w-fit">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Enterprise Operator Interface</span>
+                        </div>
+                        <h1 className="text-7xl font-black leading-[0.95] tracking-tighter">
                             Advanced<br />
-                            <span className="text-primary">Clinical</span> Workflow
+                            <span className="text-gradient">Clinical Command.</span>
                         </h1>
                     </div>
 
-                    <p className="text-lg text-slate-400 max-w-lg leading-relaxed font-medium mb-12">
-                        Precision-engineered tools for modern healthcare professionals. Securely manage patient flows, diagnostics, and administrative intelligence with the Clinixa Staff Ecosystem.
+                    <p className="text-xl text-slate-400 max-w-lg leading-relaxed font-medium mb-12">
+                        Precision-engineered ecosystem for modern healthcare professionals. Securely manage clinical intelligence with Clinixa Core.
                     </p>
                 </MotionDiv>
 
-                <div className="relative z-10 grid grid-cols-2 gap-6 max-w-xl">
+                {/* Operational Status Cards */}
+                <div className="relative z-10 grid grid-cols-2 gap-8 max-w-2xl">
                     {[
-                        { title: "24/7 Operations", desc: "Real-time sync", icon: Activity },
-                        { title: "Military Grade", desc: "End-to-end encryption", icon: ShieldCheck },
+                        { title: "Active Operations", desc: "Live System Sync", icon: Activity, status: "Normal", color: "text-sky-400" },
+                        { title: "Operator Security", desc: "Multi-layered Auth", icon: ShieldCheck, status: "Active", color: "text-emerald-400" },
                     ].map((feature, i) => (
                         <MotionDiv
                             key={i}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.5 + (i * 0.1) }}
-                            className="bg-white/5 backdrop-blur-2xl p-6 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-colors"
+                            className="group bg-slate-900/40 backdrop-blur-3xl p-8 rounded-[40px] border border-white/5 hover:border-white/10 transition-all duration-500"
                         >
-                            <feature.icon className="text-primary mb-4" size={24} />
-                            <p className="font-black text-sm uppercase tracking-wider mb-1">{feature.title}</p>
+                            <div className="flex justify-between items-start mb-6">
+                                <div className={`w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center ${feature.color}`}>
+                                    <feature.icon size={24} />
+                                </div>
+                                <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                                    <div className={`w-1 h-1 rounded-full ${feature.color.replace('text-', 'bg-')} animate-pulse`} />
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">{feature.status}</span>
+                                </div>
+                            </div>
+                            <p className="font-black text-white text-lg tracking-tight mb-1">{feature.title}</p>
                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{feature.desc}</p>
                         </MotionDiv>
                     ))}
                 </div>
 
                 <div className="relative z-10 border-t border-white/5 pt-10 flex items-center justify-between">
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">
-                        Clinixa internal portal v4.0
-                    </p>
-                    <div className="flex gap-2">
-                        <div className="w-8 h-1 bg-primary rounded-full" />
+                    <div className="flex items-center gap-4">
+                        <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em]">Clinixa Staff v4.2.0</p>
+                        <div className="w-1 h-1 rounded-full bg-slate-800" />
+                        <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em]">Medical Node 0871</p>
+                    </div>
+                    <div className="flex gap-1.5">
+                        <div className="w-12 h-1 bg-primary rounded-full" />
                         <div className="w-4 h-1 bg-white/10 rounded-full" />
                     </div>
                 </div>
             </div>
 
-            {/* Right Side - Login Form (Minimal Premium) */}
+            {/* 🔐 RIGHT SIDE: Staff Authentication Gateway */}
             <div className="w-full lg:w-[45%] flex items-center justify-center p-8 lg:p-24 bg-white relative">
+                {/* Subtle Grid for right side */}
+                <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle, #0D9488 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+
                 <MotionDiv
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="w-full max-w-md"
+                    className="w-full max-w-md relative z-10"
                 >
-                    <div className="lg:hidden mb-12">
+                    <div className="lg:hidden mb-16">
                         <Logo />
                     </div>
 
-                    <div className="mb-12">
-                        <h2 className="text-5xl font-black text-slate-900 tracking-tighter leading-none mb-4">Welcome Back.</h2>
-                        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em] flex items-center gap-2">
-                            <Lock size={12} className="text-primary" /> Multi-Factor Secured Access
-                        </p>
+                    <div className="mb-14">
+                        <h2 className="text-6xl font-black text-slate-950 tracking-tighter leading-none mb-6">Staff Portal.</h2>
+                        <div className="flex items-center gap-3">
+                            <UserCheck size={18} className="text-primary" />
+                            <span className="text-slate-400 font-black uppercase text-[10px] tracking-[0.4em]">Institutional Identity Required</span>
+                        </div>
                     </div>
 
                     <AnimatePresence mode="wait">
                         {error && (
                             <MotionDiv
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="mb-8 p-5 bg-red-50 border border-red-100 rounded-3xl flex items-center gap-4 overflow-hidden"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="mb-10 p-6 bg-red-50 border border-red-100 rounded-[2.5rem] flex items-center gap-5"
                             >
-                                <div className="w-10 h-10 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 shrink-0">
-                                    <AlertCircle className="w-6 h-6" />
+                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-red-500 shrink-0 shadow-sm">
+                                    <AlertCircle size={24} />
                                 </div>
-                                <p className="text-xs font-bold text-red-600 leading-tight">{error}</p>
+                                <div className="space-y-0.5">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-red-400 leading-none">Security Flag</p>
+                                    <p className="text-xs font-bold text-red-600 leading-tight">{error}</p>
+                                </div>
                             </MotionDiv>
                         )}
                     </AnimatePresence>
 
-                    <form onSubmit={handleLogin} className="space-y-8">
+                    <form onSubmit={handleLogin} className="space-y-10">
                         <div className="space-y-6">
-                            <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-1">Staff Credentials</label>
+                            <div className="space-y-5">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 ml-2">Operator Credentials</p>
                                 <div className="space-y-4">
                                     <div className="group relative">
-                                        <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                        <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                                         <input
                                             type="email"
                                             name="email"
-                                            placeholder="Staff Email Address"
-                                            className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                                            placeholder="Staff Identification Email"
+                                            className="w-full pl-16 pr-8 py-6 bg-slate-50 border-2 border-slate-50 rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[15px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300 shadow-sm"
                                             required
                                         />
                                     </div>
 
                                     <div className="group relative">
-                                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                        <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                                         <input
                                             type="password"
                                             name="password"
-                                            placeholder="System Password"
-                                            className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                                            placeholder="Institutional Secret Key"
+                                            className="w-full pl-16 pr-8 py-6 bg-slate-50 border-2 border-slate-50 rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[15px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300 shadow-sm"
                                             required
                                         />
                                     </div>
@@ -196,34 +211,34 @@ const Login = () => {
                         </div>
 
                         <div className="flex items-center justify-between px-2">
-                            <div className="flex items-center gap-3">
-                                <input type="checkbox" id="remember" className="w-5 h-5 rounded-lg border-2 border-slate-200 text-primary focus:ring-primary/20 transition-all cursor-pointer accent-primary" />
-                                <label htmlFor="remember" className="text-xs font-bold text-slate-500 cursor-pointer">Remember Station</label>
+                            <div className="flex items-center gap-4">
+                                <input type="checkbox" id="remember" className="w-5 h-5 rounded-lg border-2 border-slate-200 text-primary focus:ring-primary/20 accent-primary cursor-pointer" />
+                                <label htmlFor="remember" className="text-xs font-bold text-slate-600 cursor-pointer">Remember Station</label>
                             </div>
-                            <a href="#" className="text-[10px] font-black text-primary hover:opacity-70 uppercase tracking-widest">Forgot?</a>
+                            <Link to="/forgot-password" global="true" className="text-[10px] font-black text-primary hover:text-slate-950 uppercase tracking-[0.2em] transition-colors">Forgot Password</Link>
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-slate-900 py-6 rounded-[2rem] text-white font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-slate-900/40 hover:bg-primary hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 group"
+                            className="w-full bg-slate-950 py-7 rounded-[2rem] text-white font-black uppercase tracking-[0.3em] text-[10px] shadow-3xl shadow-slate-950/20 hover:bg-primary hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50 group"
                         >
                             {loading ? (
                                 <>
                                     <Loader2 className="animate-spin w-5 h-5" />
-                                    Initialing Secure Tunnel...
+                                    Validating Node Access...
                                 </>
                             ) : (
                                 <>
-                                    Initialize Session <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                                    Sign In <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                                 </>
                             )}
                         </button>
                     </form>
 
-                    <div className="mt-16 pt-10 border-t border-slate-100 text-center">
-                        <p className="text-slate-400 font-bold text-xs">
-                            Not registered on this node? <Link to="/register" className="text-slate-900 hover:text-primary transition-colors underline underline-offset-4">Register Staff</Link>
+                    <div className="mt-20 pt-12 border-t border-slate-100 text-center">
+                        <p className="text-slate-400 font-bold text-xs uppercase tracking-tight">
+                            Restricted Medical Network Zone. <Link to="/register" className="text-primary hover:text-slate-950 transition-colors underline underline-offset-8 decoration-2 font-black">Create Account</Link>
                         </p>
                     </div>
                 </MotionDiv>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     CreditCard,
     Search,
@@ -16,71 +16,148 @@ import {
     Filter,
     Download,
     X,
-    FileText
+    FileText,
+    Loader2
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useNotification } from '../../context/NotificationContext';
+import html2pdf from 'html2pdf.js';
+import api from '../../api/axios';
+
+const PDF_COLORS = {
+    primary: '#0D9488',
+    slate800: '#1e293b',
+    slate700: '#334155',
+    slate600: '#475569',
+    slate500: '#64748b',
+    slate400: '#94a3b8',
+    slate200: '#e2e8f0',
+    slate100: '#f1f5f9',
+    slate50: '#f8fafc',
+    white: '#ffffff',
+};
 
 const BillingControl = () => {
     const { addNotification } = useNotification();
+    const reportRef = useRef(null);
+    const invoiceRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTxFilter, setActiveTxFilter] = useState('All');
     const [openMenuId, setOpenMenuId] = useState(null);
-    const [transactions, setTransactions] = useState([
-        { id: 'INV-9021', patient: 'Sophia Martinez', method: 'UPI', type: 'Consultation', amount: 1200, status: 'Paid', date: '2026-02-10' },
-        { id: 'INV-9022', patient: 'Ethan Brooks', method: 'Card', type: 'Diagnostics', amount: 3200, status: 'Pending', date: '2026-02-11' },
-        { id: 'INV-9023', patient: 'Zara Ahmed', method: 'Cash', type: 'Pharmacy', amount: 560, status: 'Failed', date: '2026-02-11' },
-        { id: 'INV-9024', patient: 'James Wilson', method: 'UPI', type: 'Admission', amount: 8500, status: 'Paid', date: '2026-02-09' }
-    ]);
+    const [transactions, setTransactions] = useState([]);
+    const [selectedInvoice, setSelectedInvoice] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isExporting, setIsExporting] = useState(false);
+
+    const fetchInvoices = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const response = await api.get('/admin/invoices');
+            // Backend returns id, invoice_number, amount, total, payment_status, payment_mode, issued_date, patient_name
+            const mappedData = response.data.map(inv => ({
+                id: inv.invoice_number || `INV-${String(inv.id).padStart(4, '0')}`,
+                raw_id: inv.id,
+                patient: inv.patient_name,
+                method: inv.payment_mode || 'UPI',
+                type: inv.type || 'Consultation',
+                amount: Number(inv.total || inv.amount || 0),
+                status: inv.payment_status,
+                date: inv.issued_date
+            }));
+            setTransactions(mappedData);
+        } catch (error) {
+            console.error('Error fetching invoices:', error);
+            addNotification({
+                type: 'error',
+                title: 'Data Synchronization Error',
+                message: 'Failed to retrieve real-time financial records.'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [addNotification]);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, [fetchInvoices]);
 
     const handleUpdateStatus = async (id, newStatus) => {
         try {
-            // If we had a generic invoice status update endpoint, we'd call it here.
-            // For now, let's assume we might need one or we just update local state if it's a simulated action for now.
-            // Since I haven't added a PUT /invoices/:id/status yet, I'll stick to local for a moment or add it if needed.
-            // Actually, let's add the backend update for completeness if possible, or just mock it carefully.
+            const tx = transactions.find(t => t.id === id);
+            await api.put(`/admin/invoices/${tx.raw_id}/status`, { status: newStatus });
 
-            setTransactions(prev => prev.map(tx => tx.id === id ? { ...tx, status: newStatus } : tx));
             addNotification({
                 type: newStatus === 'Paid' ? 'success' : 'info',
-                title: 'Transaction Updated',
-                message: `Invoice ${id} marked as ${newStatus}.`
+                title: 'Treasury Updated',
+                message: `Invoice ${id} has been marked as ${newStatus.toLowerCase()}.`
             });
             setOpenMenuId(null);
+            fetchInvoices(); // Refresh from DB
         } catch (error) {
             console.error('Error updating transaction:', error);
+            addNotification({
+                type: 'error',
+                title: 'Transaction Error',
+                message: `Failed up update status for invoice ${id}.`
+            });
         }
     };
 
-    /**
-     * Simulates a data export by creating a .txt file
-     */
-    const simulateExport = (title, patient = null) => {
+    const handleExportPDF = async (title, specificTransaction = null) => {
+        setIsExporting(true);
+
+        // If specific transaction, set state and wait for render
+        if (specificTransaction) {
+            setSelectedInvoice(specificTransaction);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Allow state update
+        } else {
+            setSelectedInvoice(null);
+        }
+
+        // Determine which element to print
+        const element = specificTransaction ? invoiceRef.current : reportRef.current;
+
+        if (!element) {
+            setIsExporting(false);
+            return;
+        }
+
         addNotification({
             type: 'info',
-            title: 'Generating Report',
-            message: `Compiling data for ${title}...`
+            title: 'Generating PDF',
+            message: `Compiling ${title}...`
         });
 
-        setTimeout(() => {
-            const content = `---- CLINIXA FINANCIAL DATA EXPORT ----\n\nTitle: ${title}\nGenerated on: ${new Date().toLocaleString()}\n${patient ? `Patient: ${patient}\n` : ''}\nTotal Revenue Analyzed: ₹${transactions.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}\nStatus: Verified\n\n© 2026 CLINIXA HOSPITAL MANAGEMENT`;
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${title.toLowerCase().replace(/\s+/g, '_')}_${new Date().getTime()}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: `${title.toLowerCase().replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
 
+        try {
+            await html2pdf().set(opt).from(element).save();
             addNotification({
                 type: 'success',
-                title: 'Export Complete',
-                message: `${title} data has been saved to your downloads.`
+                title: 'Export Success',
+                message: `${title} has been downloaded.`
             });
-            setOpenMenuId(null); // Close menu after action
-        }, 1500);
+        } catch (error) {
+            console.error('PDF generation error:', error);
+            addNotification({
+                type: 'error',
+                title: 'Export Failed',
+                message: 'Could not generate PDF document.'
+            });
+        } finally {
+            setIsExporting(false);
+            setOpenMenuId(null);
+            if (specificTransaction) {
+                // Reset selected invoice after a delay to ensure print is done
+                setTimeout(() => setSelectedInvoice(null), 500);
+            }
+        }
     };
 
     const getStatusStyle = (status) => {
@@ -108,10 +185,11 @@ const BillingControl = () => {
         return matchesSearch && matchesFilter;
     });
 
+    const todayStr = new Date().toISOString().split('T')[0];
     const stats = [
-        { label: 'Today Collections', val: `₹${transactions.filter(t => t.status === 'Paid').reduce((acc, t) => acc + t.amount, 0).toLocaleString()}`, trend: 15, color: 'text-emerald-500' },
-        { label: 'Receivables (Pending)', val: `₹${transactions.filter(t => t.status === 'Pending').reduce((acc, t) => acc + t.amount, 0).toLocaleString()}`, trend: -8, color: 'text-amber-500' },
-        { label: 'Failed Transactions', val: `₹${transactions.filter(t => t.status === 'Failed').reduce((acc, t) => acc + t.amount, 0).toLocaleString()}`, trend: 2, color: 'text-rose-500' },
+        { label: 'Today Collections', val: `₹${transactions.filter(t => t.status === 'Paid' && t.date === todayStr).reduce((acc, t) => acc + (Number(t.amount) || 0), 0).toLocaleString('en-IN')}`, trend: 15, color: 'text-emerald-500' },
+        { label: 'Receivables (Pending)', val: `₹${transactions.filter(t => t.status === 'Pending').reduce((acc, t) => acc + (Number(t.amount) || 0), 0).toLocaleString('en-IN')}`, trend: -8, color: 'text-amber-500' },
+        { label: 'Failed Transactions', val: `₹${transactions.filter(t => t.status === 'Failed').reduce((acc, t) => acc + (Number(t.amount) || 0), 0).toLocaleString('en-IN')}`, trend: 2, color: 'text-rose-500' },
     ];
 
     return (
@@ -129,11 +207,12 @@ const BillingControl = () => {
                         <span className="font-black uppercase tracking-widest text-xs">Revenue Insights</span>
                     </button>
                     <button
-                        onClick={() => simulateExport('Revenue Analysis Report')}
-                        className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-primary hover:border-primary/30 transition-all shadow-sm flex items-center gap-2 group"
+                        onClick={() => handleExportPDF('Revenue Analysis Report')}
+                        disabled={isExporting}
+                        className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-primary hover:border-primary/30 transition-all shadow-sm flex items-center gap-2 group disabled:opacity-50"
                         title="Download Revenue Data as PDF"
                     >
-                        <Download className="w-6 h-6 group-hover:translate-y-0.5 transition-transform" />
+                        {isExporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-6 h-6 group-hover:translate-y-0.5 transition-transform" />}
                     </button>
                 </div>
             </div>
@@ -199,7 +278,31 @@ const BillingControl = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {filteredTx.length > 0 ? filteredTx.map((tx) => (
+                            {isLoading ? (
+                                [1, 2, 3, 4].map(i => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td className="px-8 py-6">
+                                            <div className="h-4 bg-slate-100 w-24 rounded mb-2"></div>
+                                            <div className="h-3 bg-slate-50 w-16 rounded"></div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="h-4 bg-slate-100 w-32 rounded"></div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="flex gap-2">
+                                                <div className="w-8 h-8 bg-slate-100 rounded"></div>
+                                                <div className="space-y-1">
+                                                    <div className="h-3 bg-slate-100 w-12 rounded"></div>
+                                                    <div className="h-2 bg-slate-50 w-10 rounded"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6"><div className="h-4 bg-slate-100 w-16 rounded"></div></td>
+                                        <td className="px-8 py-6"><div className="h-6 bg-slate-100 w-20 rounded-full"></div></td>
+                                        <td className="px-8 py-6 text-right"><div className="w-10 h-10 bg-slate-100 rounded-xl ml-auto"></div></td>
+                                    </tr>
+                                ))
+                            ) : filteredTx.length > 0 ? filteredTx.map((tx) => (
                                 <tr key={tx.id} className="group hover:bg-slate-50/30 transition-all">
                                     <td className="px-8 py-6">
                                         <p className="text-sm font-black text-slate-800 tracking-tight">{tx.id}</p>
@@ -221,7 +324,7 @@ const BillingControl = () => {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <span className="text-sm font-black text-slate-800 tracking-tighter">₹{tx.amount.toLocaleString()}</span>
+                                        <span className="text-sm font-black text-slate-800 tracking-tighter">₹{tx.amount.toLocaleString('en-IN')}</span>
                                     </td>
                                     <td className="px-8 py-6">
                                         <span className={cn(
@@ -265,10 +368,12 @@ const BillingControl = () => {
                                                             </button>
                                                         )}
                                                         <button
-                                                            onClick={() => simulateExport(`Invoice_${tx.id}`, tx.patient)}
-                                                            className="w-full px-5 py-4 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 flex items-center gap-3 transition-colors text-left"
+                                                            onClick={() => handleExportPDF(`Invoice_${tx.id}`, tx)}
+                                                            disabled={isExporting}
+                                                            className="w-full px-5 py-4 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 flex items-center gap-3 transition-colors text-left disabled:opacity-50"
                                                         >
-                                                            <FileText className="w-4 h-4" /> Export Data (.txt)
+                                                            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                                                            Export Invoice (PDF)
                                                         </button>
                                                     </div>
                                                 </>
@@ -286,6 +391,165 @@ const BillingControl = () => {
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            {/* Hidden PDF Templates (HEX Only Styles) */}
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+                <div ref={reportRef} style={{ width: '700px', padding: '40px', backgroundColor: 'white', fontFamily: 'sans-serif' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${PDF_COLORS.primary}`, paddingBottom: '20px', marginBottom: '30px' }}>
+                        <div>
+                            <h1 style={{ margin: 0, color: PDF_COLORS.slate800, fontSize: '28px' }}>Financial Revenue Audit</h1>
+                            <p style={{ margin: '5px 0 0 0', color: PDF_COLORS.slate500 }}>Generated on: {new Date().toLocaleString()}</p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <h2 style={{ margin: 0, color: PDF_COLORS.primary, fontWeight: '900', textTransform: 'uppercase' }}>Clinixa</h2>
+                            <p style={{ margin: 0, fontSize: '12px', color: PDF_COLORS.slate400 }}>Treasury Department</p>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '40px' }}>
+                        {stats.map((s, idx) => (
+                            <div key={idx} style={{ backgroundColor: PDF_COLORS.slate50, padding: '20px', borderRadius: '15px', border: `1px solid ${PDF_COLORS.slate100}` }}>
+                                <p style={{ margin: 0, color: PDF_COLORS.slate400, fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', trackingWidest: '0.1em' }}>{s.label}</p>
+                                <p style={{ margin: '5px 0 0 0', fontSize: '22px', fontWeight: '900', color: PDF_COLORS.slate800 }}>{s.val}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ backgroundColor: PDF_COLORS.slate50, borderBottom: `1px solid ${PDF_COLORS.slate200}` }}>
+                                <th style={{ padding: '12px', textAlign: 'left', color: PDF_COLORS.slate600, fontSize: '10px', textTransform: 'uppercase' }}>Transaction ID</th>
+                                <th style={{ padding: '12px', textAlign: 'left', color: PDF_COLORS.slate600, fontSize: '10px', textTransform: 'uppercase' }}>Patient Name</th>
+                                <th style={{ padding: '12px', textAlign: 'left', color: PDF_COLORS.slate600, fontSize: '10px', textTransform: 'uppercase' }}>Method</th>
+                                <th style={{ padding: '12px', textAlign: 'left', color: PDF_COLORS.slate600, fontSize: '10px', textTransform: 'uppercase' }}>Status</th>
+                                <th style={{ padding: '12px', textAlign: 'right', color: PDF_COLORS.slate600, fontSize: '10px', textTransform: 'uppercase' }}>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredTx.map(tx => (
+                                <tr key={tx.id} style={{ borderBottom: `1px solid ${PDF_COLORS.slate100}` }}>
+                                    <td style={{ padding: '12px', color: PDF_COLORS.slate800, fontWeight: 'bold', fontSize: '12px' }}>{tx.id}</td>
+                                    <td style={{ padding: '12px', color: PDF_COLORS.slate700, fontSize: '12px' }}>{tx.patient}</td>
+                                    <td style={{ padding: '12px', color: PDF_COLORS.slate500, fontSize: '12px' }}>{tx.method}</td>
+                                    <td style={{ padding: '12px', fontSize: '10px', fontWeight: 'bold' }}>
+                                        <span style={{
+                                            padding: '4px 8px',
+                                            borderRadius: '10px',
+                                            backgroundColor: tx.status === 'Paid' ? '#ecfdf5' : tx.status === 'Pending' ? '#fffbeb' : '#fef2f2',
+                                            color: tx.status === 'Paid' ? '#059669' : tx.status === 'Pending' ? '#d97706' : '#dc2626'
+                                        }}>
+                                            {tx.status}
+                                        </span>
+                                    </td>
+                                    <td style={{ padding: '12px', textAlign: 'right', color: PDF_COLORS.slate800, fontWeight: '900', fontSize: '12px' }}>₹{tx.amount.toLocaleString('en-IN')}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <div style={{ marginTop: '40px', paddingTop: '20px', borderTop: `1px solid ${PDF_COLORS.slate200}`, textAlign: 'center' }}>
+                        <p style={{ fontSize: '10px', color: PDF_COLORS.slate400, margin: 0 }}>© 2026 Clinixa Management - This document is electronically generated and verified by the Audit Control Center.</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Hidden Single Invoice Template */}
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+                {selectedInvoice && (
+                    <div ref={invoiceRef} style={{ width: '700px', padding: '50px', backgroundColor: 'white', fontFamily: 'sans-serif', border: `1px solid ${PDF_COLORS.slate200}` }}>
+                        {/* Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: `2px solid ${PDF_COLORS.primary}`, paddingBottom: '30px', marginBottom: '40px' }}>
+                            <div>
+                                <h1 style={{ margin: 0, color: PDF_COLORS.primary, fontSize: '32px', fontWeight: '900', letterSpacing: '-0.02em' }}>CLINIXA</h1>
+                                <p style={{ margin: '5px 0 0 0', color: PDF_COLORS.slate500, fontSize: '12px', lineHeight: '1.5' }}>
+                                    Health & Wellness Center<br />
+                                    123 Medical Plaza, Suite 400<br />
+                                    Sector 62, Noida, UP 201301<br />
+                                    Phone: +91 98765 43210
+                                </p>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <h2 style={{ margin: 0, color: PDF_COLORS.slate800, fontSize: '24px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tax Invoice</h2>
+                                <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: PDF_COLORS.slate600 }}>Invoice #: <strong>{selectedInvoice.id}</strong></p>
+                                <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: PDF_COLORS.slate600 }}>Date: <strong>{new Date(selectedInvoice.date).toLocaleDateString()}</strong></p>
+                            </div>
+                        </div>
+
+                        {/* Bill To */}
+                        <div style={{ marginBottom: '40px', backgroundColor: PDF_COLORS.slate50, padding: '25px', borderRadius: '12px' }}>
+                            <p style={{ margin: '0 0 10px 0', fontSize: '10px', fontWeight: 'bold', color: PDF_COLORS.slate400, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Bill To</p>
+                            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: PDF_COLORS.slate800 }}>{selectedInvoice.patient}</h3>
+                            <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: PDF_COLORS.slate500 }}>Medical ID: #882{String(selectedInvoice.id).replace(/\D/g, '').slice(-1) || '0'}</p>
+                            <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: PDF_COLORS.slate500 }}>Payment Method: <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{selectedInvoice.method}</span></p>
+                        </div>
+
+                        {/* Line Items */}
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '40px' }}>
+                            <thead>
+                                <tr style={{ borderBottom: `2px solid ${PDF_COLORS.slate200}` }}>
+                                    <th style={{ padding: '15px 0', textAlign: 'left', color: PDF_COLORS.slate400, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Description</th>
+                                    <th style={{ padding: '15px 0', textAlign: 'right', color: PDF_COLORS.slate400, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Qty</th>
+                                    <th style={{ padding: '15px 0', textAlign: 'right', color: PDF_COLORS.slate400, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Price</th>
+                                    <th style={{ padding: '15px 0', textAlign: 'right', color: PDF_COLORS.slate400, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style={{ borderBottom: `1px solid ${PDF_COLORS.slate100}` }}>
+                                    <td style={{ padding: '20px 0', color: PDF_COLORS.slate700, fontSize: '14px', fontWeight: 'bold' }}>
+                                        {selectedInvoice.type} Services
+                                        <div style={{ fontSize: '12px', color: PDF_COLORS.slate400, fontWeight: 'normal', marginTop: '5px' }}>Standard consultation and medical review</div>
+                                    </td>
+                                    <td style={{ padding: '20px 0', textAlign: 'right', color: PDF_COLORS.slate600, fontSize: '14px' }}>1</td>
+                                    <td style={{ padding: '20px 0', textAlign: 'right', color: PDF_COLORS.slate600, fontSize: '14px' }}>₹{selectedInvoice.amount.toLocaleString('en-IN')}</td>
+                                    <td style={{ padding: '20px 0', textAlign: 'right', color: PDF_COLORS.slate800, fontSize: '14px', fontWeight: 'bold' }}>₹{selectedInvoice.amount.toLocaleString('en-IN')}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        {/* Total */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '60px' }}>
+                            <div style={{ width: '250px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <span style={{ fontSize: '14px', color: PDF_COLORS.slate500 }}>Subtotal:</span>
+                                    <span style={{ fontSize: '14px', color: PDF_COLORS.slate800, fontWeight: 'bold' }}>₹{selectedInvoice.amount.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <span style={{ fontSize: '14px', color: PDF_COLORS.slate500 }}>Tax (0%):</span>
+                                    <span style={{ fontSize: '14px', color: PDF_COLORS.slate800, fontWeight: 'bold' }}>₹0</span>
+                                </div>
+                                <div style={{ borderTop: `2px solid ${PDF_COLORS.slate200}`, marginTop: '15px', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '16px', color: PDF_COLORS.slate800, fontWeight: '900' }}>TOTAL AMOUNT</span>
+                                    <span style={{ fontSize: '24px', color: PDF_COLORS.primary, fontWeight: '900' }}>₹{selectedInvoice.amount.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div style={{ marginTop: '20px', textAlign: 'right' }}>
+                                    <span style={{
+                                        padding: '6px 16px',
+                                        borderRadius: '20px',
+                                        fontSize: '11px',
+                                        fontWeight: '900',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.05em',
+                                        backgroundColor: selectedInvoice.status === 'Paid' ? '#ecfdf5' : '#fffbeb',
+                                        color: selectedInvoice.status === 'Paid' ? '#059669' : '#d97706',
+                                        border: `1px solid ${selectedInvoice.status === 'Paid' ? '#a7f3d0' : '#fde68a'}`
+                                    }}>
+                                        {selectedInvoice.status.toUpperCase()}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div style={{ borderTop: `1px solid ${PDF_COLORS.slate200}`, paddingTop: '30px', textAlign: 'center' }}>
+                            <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: PDF_COLORS.slate800, fontWeight: 'bold' }}>Thank you for choosing Clinixa!</h4>
+                            <p style={{ margin: 0, fontSize: '12px', color: PDF_COLORS.slate400, lineHeight: '1.6' }}>
+                                This is a computer-generated invoice and does not require a physical signature.<br />
+                                For any billing inquiries, please contact accounts@clinixa.com within 7 days.
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

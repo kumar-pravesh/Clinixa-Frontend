@@ -15,13 +15,19 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useNotification } from '../../context/NotificationContext';
+<<<<<<< HEAD
 import api from '../../api/axios';
+=======
+import adminService from '../../services/adminService';
+import { useEffect } from 'react';
+>>>>>>> fe50d5d16cb0ff4f897020bf606253f5f7bf3b08
 
 const PatientRecords = () => {
     const { addNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [activeFilter, setActiveFilter] = useState('All');
+<<<<<<< HEAD
     const [loading, setLoading] = useState(true);
     const [patients, setPatients] = useState([]);
 
@@ -35,15 +41,50 @@ const PatientRecords = () => {
                 type: 'error',
                 title: 'Data Load Error',
                 message: 'Failed to access clinical records repository.'
+=======
+    const [patients, setPatients] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchPatients = async () => {
+        try {
+            setLoading(true);
+            const data = await adminService.getPatients(searchQuery);
+            // Transform data if needed to match UI expectations (e.g., status)
+            const formattedData = data.map(p => ({
+                ...p,
+                // Ensure fields match what UI expects
+                lastVisit: p.last_visit, // Backend: last_visit, UI uses last_visit in JSX but previously had both
+                bloodGroup: p.blood_group,
+                status: 'OPD' // Default to OPD as backend doesn't have status yet
+            }));
+            setPatients(formattedData);
+        } catch (error) {
+            console.error("Failed to fetch patients", error);
+            addNotification({
+                type: 'error',
+                title: 'Error',
+                message: 'Failed to load patient records'
+>>>>>>> fe50d5d16cb0ff4f897020bf606253f5f7bf3b08
             });
         } finally {
             setLoading(false);
         }
+<<<<<<< HEAD
     }, [addNotification]);
 
     React.useEffect(() => {
         fetchPatients();
     }, [fetchPatients]);
+=======
+    };
+
+    useEffect(() => {
+        const debounceTimer = setTimeout(() => {
+            fetchPatients();
+        }, 500); // Debounce search
+        return () => clearTimeout(debounceTimer);
+    }, [searchQuery]);
+>>>>>>> fe50d5d16cb0ff4f897020bf606253f5f7bf3b08
 
     /**
      * Simulates a data export for patient records
@@ -85,11 +126,8 @@ const PatientRecords = () => {
     };
 
     const filteredPatients = patients.filter(p => {
-        const nameMatch = (p.name || '').toLowerCase().includes(searchQuery.toLowerCase());
-        const idMatch = (p.id || '').toLowerCase().includes(searchQuery.toLowerCase());
-        const bloodMatch = (p.blood_group || '').toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter = activeFilter === 'All' || (p.status || 'OPD') === activeFilter;
-        return (nameMatch || idMatch || bloodMatch) && matchesFilter;
+        // Search is handled by backend, but we keep status filter client-side
+        return activeFilter === 'All' || (p.status || 'OPD') === activeFilter;
     });
 
     if (loading) {

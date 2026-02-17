@@ -1,20 +1,23 @@
-import { rootApi } from '../api/axios';
+import api from '../api/axios';
 
 const authService = {
     login: async (credentials) => {
-        const response = await rootApi.post('/auth/login', credentials);
+        // Use staff-specific login endpoint
+        const response = await api.post('/auth/login', credentials);
         return response.data;
     },
     logout: async () => {
-        const response = await rootApi.post('/auth/logout');
+        // Use staff-specific logout endpoint
+        const response = await api.post('/auth/logout');
         return response.data;
     },
     register: async (userData) => {
-        const response = await rootApi.post('/auth/register', userData);
-        return response.data;
+        // Staff registration not supported - use admin panel
+        throw new Error('Staff registration must be done through admin panel');
     },
     refresh: async () => {
-        const response = await rootApi.post('/auth/refresh');
+        // Use staff-specific refresh endpoint
+        const response = await api.post('/auth/refresh');
         return response.data;
     },
 };

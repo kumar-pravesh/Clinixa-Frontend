@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import receptionService from '../services/receptionService';
+import { useAuth } from './AuthContext';
 
 const QueueContext = createContext();
 
@@ -11,43 +13,95 @@ export const useQueue = () => {
 };
 
 export const QueueProvider = ({ children }) => {
-    // Initial mock data
-    const [tokens, setTokens] = useState([
-        { id: 'TK-1024', patient: 'John Doe', dept: 'General Medicine', doctor: 'Dr. Smith', status: 'Waiting', time: '10:30 AM', mobile: '9876543210' },
-        { id: 'TK-1025', patient: 'Emma Wilson', dept: 'Pediatrics', doctor: 'Dr. Brown', status: 'In Progress', time: '10:35 AM', mobile: '9876543211' },
-    ]);
+    const { user, loading: authLoading } = useAuth();
+    const [stats, setStats] = useState({
+        newRegistrations: 0,
+        activeQueue: 0,
+        avgWaitingTime: 0,
+        revenueToday: 0
+    });
+    const [tokens, setTokens] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    const generateToken = (patientData) => {
-        const nextIdNumber = tokens.length > 0
-            ? Math.max(...tokens.map(t => parseInt(t.id.split('-')[1]))) + 1
-            : 1000;
+    const fetchStats = useCallback(async () => {
+        if (authLoading || !user || user.role !== 'receptionist') return;
+        try {
+            const data = await receptionService.getDashboardStats();
+            setStats(data);
+        } catch (err) {
+            console.error('Error fetching dashboard stats:', err);
+        }
+    }, [user, authLoading]);
 
-        const newToken = {
-            id: `TK-${nextIdNumber}`,
-            patient: patientData.name || patientData.patient,
-            dept: patientData.dept || 'General Medicine',
-            doctor: patientData.doctor || 'Dr. Smith',
-            mobile: patientData.mobile,
-            status: 'Waiting',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
+    const fetchTokens = useCallback(async () => {
+        if (authLoading) return;
 
-        setTokens(prev => [newToken, ...prev]);
-        return newToken;
+        // Only fetch if user is receptionist
+        if (!user || user.role !== 'receptionist') {
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const data = await receptionService.getTokens();
+            setTokens(data);
+            setError(null);
+            fetchStats(); // Also fetch stats
+        } catch (err) {
+            console.error('Error fetching tokens:', err);
+            setError('Failed to load tokens');
+            // Fallback to empty array on error
+            setTokens([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [user, authLoading, fetchStats]);
+
+    useEffect(() => {
+        fetchTokens();
+    }, [fetchTokens]);
+
+    const generateToken = async (patientData) => {
+        try {
+            const newToken = await receptionService.generateToken(patientData);
+            await fetchTokens(); // Refresh list and stats
+            return newToken;
+        } catch (err) {
+            console.error('Error generating token:', err);
+            throw err;
+        }
     };
 
-    const updateTokenStatus = (tokenId, newStatus) => {
-        setTokens(prev => prev.map(t =>
-            t.id === tokenId ? { ...t, status: newStatus } : t
-        ));
+    const updateTokenStatus = async (tokenId, newStatus) => {
+        try {
+            await receptionService.updateTokenStatus(tokenId, newStatus);
+            // Optimistic update
+            setTokens(prev => prev.map(t =>
+                t.id === tokenId ? { ...t, status: newStatus } : t
+            ));
+            fetchStats(); // Update stats (active queue counts)
+        } catch (err) {
+            console.error('Error updating token status:', err);
+            // Revert on error
+            await fetchTokens();
+        }
     };
 
-    const deleteToken = (tokenId) => {
-        setTokens(prev => prev.filter(t => t.id !== tokenId));
+    const deleteToken = async (tokenId) => {
+        try {
+            await receptionService.deleteToken(tokenId);
+            setTokens(prev => prev.filter(t => t.id !== tokenId));
+            fetchStats();
+        } catch (err) {
+            console.error('Error deleting token:', err);
+            throw err;
+        }
     };
 
     return (
-        <QueueContext.Provider value={{ tokens, generateToken, updateTokenStatus, deleteToken }}>
+        <QueueContext.Provider value={{ tokens, stats, loading, error, fetchTokens, fetchStats, generateToken, updateTokenStatus, deleteToken }}>
             {children}
         </QueueContext.Provider>
     );
