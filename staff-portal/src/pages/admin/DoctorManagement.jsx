@@ -15,7 +15,12 @@ import {
     ShieldCheck,
     AlertCircle,
     ChevronRight,
-    Users
+    Users,
+    ArrowUpRight,
+    MapPin,
+    User,
+    Award,
+    Briefcase
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useNotification } from '../../context/NotificationContext';
@@ -29,6 +34,7 @@ const DoctorManagement = () => {
     const [activeFilter, setActiveFilter] = useState('All');
     const [loading, setLoading] = useState(true);
     const [doctors, setDoctors] = useState([]);
+    const [selectedDoctor, setSelectedDoctor] = useState(null);
 
     const fetchDoctors = React.useCallback(async () => {
         try {
@@ -91,6 +97,15 @@ const DoctorManagement = () => {
             });
         }
         setIsModalOpen(true);
+    };
+
+    const handleViewDetails = (doctor) => {
+        setSelectedDoctor(doctor);
+        addNotification({
+            type: 'info',
+            title: 'Medical Profile Accessed',
+            message: `Credentials for ${doctor.name} are now visible.`
+        });
     };
 
     const handleDelete = async (id, name) => {
@@ -291,14 +306,23 @@ const DoctorManagement = () => {
                                     <td className="px-8 py-6">
                                         <div className="flex items-center justify-end gap-2">
                                             <button
+                                                onClick={() => handleViewDetails(doc)}
+                                                className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
+                                                title="View Profile"
+                                            >
+                                                <ArrowUpRight className="w-4 h-4" />
+                                            </button>
+                                            <button
                                                 onClick={() => handleOpenModal(doc)}
                                                 className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
+                                                title="Edit Doctor"
                                             >
                                                 <Edit3 className="w-4 h-4" />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(doc.id, doc.name)}
                                                 className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                                title="Delete Doctor"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
@@ -428,6 +452,108 @@ const DoctorManagement = () => {
                                     {editingDoctor ? 'Update Profile' : 'Finalize Registration'}
                                 </button>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Doctor Profile View Modal */}
+            {selectedDoctor && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden relative">
+                        <button onClick={() => setSelectedDoctor(null)} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-600 transition-colors z-10">
+                            <X className="w-6 h-6" />
+                        </button>
+
+                        <div className="p-12">
+                            <div className="flex items-center gap-6 mb-10">
+                                <div className="w-24 h-24 bg-slate-100 rounded-[2.5rem] flex items-center justify-center text-slate-400 font-black text-2xl border-4 border-white shadow-xl overflow-hidden">
+                                    {selectedDoctor.profile_pic ? (
+                                        <img src={selectedDoctor.profile_pic} alt={selectedDoctor.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        selectedDoctor.name.split(' ').map(n => n[0]).join('')
+                                    )}
+                                </div>
+                                <div>
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">{selectedDoctor.name}</h2>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">Personnel ID: {selectedDoctor.id}</span>
+                                        <span className={cn(
+                                            "px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border",
+                                            getStatusStyle(selectedDoctor.status)
+                                        )}>
+                                            {selectedDoctor.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-8 mb-10">
+                                <div>
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <ShieldCheck className="w-3 h-3" /> Credentials & Dept
+                                    </h4>
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                                            <span className="text-xs font-bold text-slate-500">Department</span>
+                                            <span className="text-sm font-black text-primary">{selectedDoctor.dept || 'General Medicine'}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                                            <span className="text-xs font-bold text-slate-500">Qualification</span>
+                                            <span className="text-sm font-black text-slate-800">{selectedDoctor.qualification || 'MBBS, MD'}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                                            <span className="text-xs font-bold text-slate-500">Experience</span>
+                                            <span className="text-sm font-black text-slate-800">{selectedDoctor.experience_years || 0} Years</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <Briefcase className="w-3 h-3" /> Practice Details
+                                    </h4>
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                                            <span className="text-xs font-bold text-slate-500">Consultation Fee</span>
+                                            <span className="text-sm font-black text-emerald-600">₹{selectedDoctor.consultation_fee}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                                            <span className="text-xs font-bold text-slate-500">Joined Date</span>
+                                            <span className="text-sm font-black text-slate-800">{selectedDoctor.created_at || 'Feb 10, 2026'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-50 rounded-3xl p-6 mb-10">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <Phone className="w-3 h-3" /> Contact Channels
+                                </h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                            <Mail className="w-4 h-4 text-slate-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Email Address</p>
+                                            <p className="text-xs font-bold text-slate-700">{selectedDoctor.email}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                            <Phone className="w-4 h-4 text-slate-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Mobile Number</p>
+                                            <p className="text-xs font-bold text-slate-700">{selectedDoctor.phone}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onClick={() => setSelectedDoctor(null)} className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl shadow-slate-200 hover:scale-[1.01] active:scale-[0.99] transition-all">
+                                Close Personnel Profile
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -107,6 +107,7 @@ const DoctorLayout = () => {
                     <SidebarLink to="/doctor/prescriptions" icon={FileText} onClick={() => setIsMobileMenuOpen(false)}>Prescriptions</SidebarLink>
                     <SidebarLink to="/doctor/lab-reports" icon={Upload} onClick={() => setIsMobileMenuOpen(false)}>Lab Reports</SidebarLink>
                     <SidebarLink to="/doctor/appointments" icon={Calendar} onClick={() => setIsMobileMenuOpen(false)}>Appointments</SidebarLink>
+                    <SidebarLink to="/doctor/profile" icon={User} onClick={() => setIsMobileMenuOpen(false)}>My Profile</SidebarLink>
                 </nav>
 
                 <div className="p-4 border-t border-slate-100">
