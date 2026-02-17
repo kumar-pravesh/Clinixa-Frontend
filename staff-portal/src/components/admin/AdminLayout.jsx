@@ -20,7 +20,7 @@ import {
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
-import NotificationDropdown from '../reception/NotificationDropdown';
+import NotificationDropdown from '../notifications/NotificationDropdown';
 import Logo from '../common/Logo';
 
 const SidebarLink = ({ to, icon: Icon, children, end, onClick }) => {

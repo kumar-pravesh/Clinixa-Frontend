@@ -15,56 +15,48 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useNotification } from '../../context/NotificationContext';
+import adminService from '../../services/adminService';
+import { useEffect } from 'react';
 
 const PatientRecords = () => {
     const { addNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [activeFilter, setActiveFilter] = useState('All');
-    const [patients] = useState([
-        {
-            id: 'PAT-1001',
-            name: 'Sophia Martinez',
-            age: 34,
-            gender: 'F',
-            blood_group: 'O+',
-            bloodGroup: 'O+',
-            last_visit: '2026-02-02',
-            lastVisit: '2026-02-02',
-            phone: '+1 (555) 291-1122',
-            email: 'sophia.martinez@example.com',
-            registered_date: '2025-08-11',
-            status: 'OPD'
-        },
-        {
-            id: 'PAT-1002',
-            name: 'Ethan Brooks',
-            age: 42,
-            gender: 'M',
-            blood_group: 'A-',
-            bloodGroup: 'A-',
-            last_visit: '2026-01-28',
-            lastVisit: '2026-01-28',
-            phone: '+1 (555) 884-2201',
-            email: 'ethan.brooks@example.com',
-            registered_date: '2024-11-19',
-            status: 'IPD'
-        },
-        {
-            id: 'PAT-1003',
-            name: 'Zara Ahmed',
-            age: 29,
-            gender: 'F',
-            blood_group: 'B+',
-            bloodGroup: 'B+',
-            last_visit: '2026-02-08',
-            lastVisit: '2026-02-08',
-            phone: '+1 (555) 667-9310',
-            email: 'zara.ahmed@example.com',
-            registered_date: '2026-01-12',
-            status: 'Emergency'
+    const [patients, setPatients] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchPatients = async () => {
+        try {
+            setLoading(true);
+            const data = await adminService.getPatients(searchQuery);
+            // Transform data if needed to match UI expectations (e.g., status)
+            const formattedData = data.map(p => ({
+                ...p,
+                // Ensure fields match what UI expects
+                lastVisit: p.last_visit, // Backend: last_visit, UI uses last_visit in JSX but previously had both
+                bloodGroup: p.blood_group,
+                status: 'OPD' // Default to OPD as backend doesn't have status yet
+            }));
+            setPatients(formattedData);
+        } catch (error) {
+            console.error("Failed to fetch patients", error);
+            addNotification({
+                type: 'error',
+                title: 'Error',
+                message: 'Failed to load patient records'
+            });
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
+
+    useEffect(() => {
+        const debounceTimer = setTimeout(() => {
+            fetchPatients();
+        }, 500); // Debounce search
+        return () => clearTimeout(debounceTimer);
+    }, [searchQuery]);
 
     /**
      * Simulates a data export for patient records
@@ -106,11 +98,8 @@ const PatientRecords = () => {
     };
 
     const filteredPatients = patients.filter(p => {
-        const nameMatch = (p.name || '').toLowerCase().includes(searchQuery.toLowerCase());
-        const idMatch = (p.id || '').toLowerCase().includes(searchQuery.toLowerCase());
-        const bloodMatch = (p.blood_group || '').toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter = activeFilter === 'All' || (p.status || 'OPD') === activeFilter;
-        return (nameMatch || idMatch || bloodMatch) && matchesFilter;
+        // Search is handled by backend, but we keep status filter client-side
+        return activeFilter === 'All' || (p.status || 'OPD') === activeFilter;
     });
 
     return (

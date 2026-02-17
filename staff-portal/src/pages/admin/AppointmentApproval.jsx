@@ -20,16 +20,33 @@ import api from '../../api/axios';
 const AppointmentApproval = () => {
     const { addNotification } = useNotification();
     const [activeTab, setActiveTab] = useState('Pending');
-    const [appointments, setAppointments] = useState([
-        { id: 'APT-1001', patient: 'John Doe', status: 'Pending', doctor: 'Dr. Smith', dept: 'General Medicine', date: '2026-02-11', time: '10:30 AM', type: 'Routine' },
-        { id: 'APT-1002', patient: 'Emma Wilson', status: 'Approved', doctor: 'Dr. Brown', dept: 'Pediatrics', date: '2026-02-11', time: '11:15 AM', type: 'Routine' },
-        { id: 'APT-1003', patient: 'Robert Brown', status: 'Rescheduled', doctor: 'Dr. Lee', dept: 'Cardiology', date: '2026-02-12', time: '09:45 AM', type: 'Emergency' },
-        { id: 'APT-1004', patient: 'Tejas Kumar', status: 'Cancelled', doctor: 'Dr. Wilson', dept: 'Dentistry', date: '2026-02-12', time: '02:00 PM', type: 'Routine' }
-    ]);
+    const [appointments, setAppointments] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchAppointments = async () => {
+        try {
+            setIsLoading(true);
+            const response = await api.get('/admin/appointments');
+            setAppointments(response.data);
+        } catch (error) {
+            console.error('Error fetching appointments:', error);
+            addNotification({
+                type: 'error',
+                title: 'Data Fetch Error',
+                message: 'Failed to retrieve live appointment records.'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchAppointments();
+    }, []);
 
     const handleStatusUpdate = async (id, newStatus, patientName) => {
         try {
-            if (newStatus === 'Approved') {
+            if (newStatus === 'Approved' || newStatus === 'Scheduled') {
                 await api.put(`/admin/appointments/${id}/approve`);
             } else if (newStatus === 'Cancelled') {
                 await api.put(`/admin/appointments/${id}/reject`);
@@ -38,26 +55,28 @@ const AppointmentApproval = () => {
             }
 
             addNotification({
-                type: newStatus === 'Approved' ? 'success' : 'info',
-                title: `Appointment ${newStatus}`,
-                message: `Consultation for ${patientName} has been ${newStatus.toLowerCase()}.`
+                type: (newStatus === 'Approved' || newStatus === 'Scheduled') ? 'success' : 'info',
+                title: `Status Updated`,
+                message: `Consultation for ${patientName} is now ${newStatus.toLowerCase()}.`
             });
 
-            setAppointments(prev => prev.map(app => app.id === id ? { ...app, status: newStatus } : app));
+            fetchAppointments(); // Re-fetch to get consistent status from DB
         } catch (error) {
             console.error('Error updating appointment:', error);
             addNotification({
                 type: 'error',
-                title: 'Update Failed',
-                message: `Failed to ${newStatus.toLowerCase()} appointment.`
+                title: 'Action Failed',
+                message: `Failed to update status for ${patientName}.`
             });
         }
     };
 
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'Pending': return "bg-amber-50 text-amber-600 border-amber-100 shadow-amber-100/10";
+            case 'Pending':
+            case 'CREATED': return "bg-amber-50 text-amber-600 border-amber-100 shadow-amber-100/10";
             case 'Approved':
+            case 'Scheduled':
             case 'Confirmed': return "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-100/10";
             case 'Rescheduled': return "bg-blue-50 text-blue-600 border-blue-100 shadow-blue-100/10";
             case 'Cancelled': return "bg-rose-50 text-rose-600 border-rose-100 shadow-rose-100/10";
@@ -67,7 +86,8 @@ const AppointmentApproval = () => {
 
     const filteredAppointments = appointments.filter(app => {
         if (activeTab === 'Schedules') return true;
-        if (activeTab === 'Approved') return app.status === 'Approved' || app.status === 'Confirmed';
+        if (activeTab === 'Pending') return app.status === 'Pending' || app.status === 'CREATED';
+        if (activeTab === 'Approved') return app.status === 'Approved' || app.status === 'Confirmed' || app.status === 'Scheduled';
         return app.status === activeTab;
     });
 
@@ -129,7 +149,7 @@ const AppointmentApproval = () => {
                             </div>
 
                             <div className="flex items-center gap-3">
-                                {app.status === 'Pending' && (
+                                {(app.status === 'Pending' || app.status === 'CREATED') && (
                                     <>
                                         <button
                                             onClick={() => handleStatusUpdate(app.id, 'Rescheduled', app.patient)}
@@ -145,7 +165,7 @@ const AppointmentApproval = () => {
                                                 <XCircle className="w-6 h-6" />
                                             </button>
                                             <button
-                                                onClick={() => handleStatusUpdate(app.id, 'Approved', app.patient)}
+                                                onClick={() => handleStatusUpdate(app.id, 'Scheduled', app.patient)}
                                                 className="h-14 px-8 bg-emerald-500 text-white rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-emerald-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
                                             >
                                                 <CheckCircle2 className="w-6 h-6" />
@@ -154,7 +174,7 @@ const AppointmentApproval = () => {
                                         </div>
                                     </>
                                 )}
-                                {(app.status === 'Approved' || app.status === 'Confirmed') && (
+                                {(app.status === 'Approved' || app.status === 'Confirmed' || app.status === 'Scheduled') && (
                                     <button
                                         onClick={() => handleStatusUpdate(app.id, 'Cancelled', app.patient)}
                                         className="h-14 px-8 bg-slate-50 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-slate-100 hover:text-rose-500 transition-all"

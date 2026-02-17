@@ -1,9 +1,25 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Calendar, FileText, PlusCircle, ArrowRight, Activity, Clock, ShieldCheck } from 'lucide-react';
+import { patientService } from '../../services/patientService';
 
 const PatientDashboard = () => {
     const profile = JSON.parse(localStorage.getItem("user"));
     const firstName = profile?.name?.split(' ')[0] || 'Patient';
+
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        patientService.getDashboardStats()
+            .then(data => setStats(data))
+            .catch(err => console.error(err))
+            .finally(() => setLoading(false));
+    }, []);
+
+    const nextAppointmentText = stats?.nextAppointment
+        ? `${new Date(stats.nextAppointment.date).toLocaleDateString('en-US', { weekday: 'short' })}, ${stats.nextAppointment.time}`
+        : 'No upcoming visits';
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
@@ -16,15 +32,10 @@ const PatientDashboard = () => {
                             Good Morning, <span className="text-secondary">{firstName}!</span>
                         </h1>
                         <p className="text-base opacity-90 max-w-lg leading-relaxed">
-                            Your health is our priority. You have <span className="font-bold underline decoration-secondary decoration-2 underline-offset-4">1 appointment</span> today.
+                            Your health is our priority. You have <span className="font-bold underline decoration-secondary decoration-2 underline-offset-4">
+                                {stats?.todayCount || 0} appointment{stats?.todayCount !== 1 ? 's' : ''}
+                            </span> today.
                         </p>
-                    </div>
-                    <div className="flex -space-x-2">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-white shadow-md">
-                                <img src={`https://i.pravatar.cc/150?u=${i + 10}`} alt="doctor" className="w-full h-full object-cover" />
-                            </div>
-                        ))}
                     </div>
                 </div>
             </div>
@@ -37,7 +48,7 @@ const PatientDashboard = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Health Score</p>
-                        <h3 className="text-xl font-bold text-gray-800">92/100</h3>
+                        <h3 className="text-xl font-bold text-gray-800">{stats?.healthScore || '--'}/100</h3>
                     </div>
                 </div>
                 <div className="glass-card p-4 rounded-2xl flex items-center space-x-3 border-l-4 border-accent shadow-sm hover:shadow-md transition-shadow">
@@ -46,7 +57,9 @@ const PatientDashboard = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Next Booking</p>
-                        <h3 className="text-sm font-bold text-gray-800 leading-tight">Tomorrow, 10:00 AM</h3>
+                        <h3 className="text-sm font-bold text-gray-800 leading-tight">
+                            {loading ? 'Loading...' : nextAppointmentText}
+                        </h3>
                     </div>
                 </div>
                 <div className="glass-card p-4 rounded-2xl flex items-center space-x-3 border-l-4 border-green-500 shadow-sm hover:shadow-md transition-shadow">
@@ -55,7 +68,7 @@ const PatientDashboard = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Status</p>
-                        <h3 className="text-xl font-bold text-gray-800">Active</h3>
+                        <h3 className="text-xl font-bold text-gray-800">{stats?.status || 'Active'}</h3>
                     </div>
                 </div>
             </div>
@@ -100,7 +113,9 @@ const PatientDashboard = () => {
                             <FileText size={24} />
                         </div>
                         <h2 className="text-xl font-bold text-gray-800 mb-1.5">Reports & History</h2>
-                        <p className="text-sm text-gray-500 mb-6 leading-relaxed">Access your prescriptions and lab results.</p>
+                        <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+                            {loading ? 'Refreshing records...' : `Access your ${stats?.totalRecords || 0} prescriptions and lab results.`}
+                        </p>
                         <Link to="/patient/prescriptions" className="text-accent text-sm font-bold flex items-center space-x-2 hover:opacity-80 transition-opacity">
                             <span>View Records</span>
                             <ArrowRight size={16} />

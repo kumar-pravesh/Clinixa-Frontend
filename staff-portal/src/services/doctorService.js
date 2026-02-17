@@ -17,6 +17,11 @@ const doctorService = {
         return response.data;
     },
 
+    searchPatients: async (query) => {
+        const response = await api.get(`/doctor/patients/search?query=${query}`);
+        return response.data;
+    },
+
     // Prescriptions
     getPrescriptions: async (appointmentId = null) => {
         const url = appointmentId
@@ -53,7 +58,7 @@ const doctorService = {
 
     // Follow-up & Status
     setFollowUp: async (data) => {
-        const response = await api.post('/doctor/follow-up', data);
+        const response = await api.post('/doctor/appointments/follow-up', data);
         return response.data;
     },
 

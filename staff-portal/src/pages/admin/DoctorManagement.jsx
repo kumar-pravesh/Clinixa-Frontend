@@ -159,16 +159,16 @@ const DoctorManagement = () => {
                     message: `${formData.name} has been added to the directory.`
                 });
             }
-            setShowModal(false);
+            setIsModalOpen(false);
             setEditingDoctor(null);
             setFormData({
                 name: '',
                 email: '',
                 phone: '',
-                dept: '',
+                dept: 'General Medicine',
                 qualification: '',
-                experience_years: '',
-                consultation_fee: '',
+                experience_years: 0,
+                consultation_fee: 500,
                 status: 'Active',
                 image: null,
                 password: ''

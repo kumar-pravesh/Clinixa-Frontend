@@ -15,7 +15,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
             } else if (allowedRoles && !allowedRoles.includes(user.role)) {
                 console.log('ProtectedRoute: Unauthorized role, redirecting to dashboard');
                 const defaultPath = user.role === 'admin' ? '/admin' :
-                    user.role === 'lab_tech' ? '/lab' :
+                    user.role === 'lab_technician' ? '/lab' :
                         user.role === 'doctor' ? '/doctor' :
                             user.role === 'receptionist' ? '/reception' : '/';
                 navigate(defaultPath, { replace: true });

@@ -7,16 +7,18 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger-output.json');
 
 // Import routes
-const authRoutes = require('./modules/auth/auth.routes');
-const patientRoutes = require('./modules/patient/patient.routes');
-const appointmentRoutes = require('./modules/appointment/appointment.routes');
-const paymentRoutes = require('./modules/payment/payment.routes');
-const adminRoutes = require('./modules/admin/admin.routes');
-const doctorRoutes = require('./modules/doctor/doctor.routes');
-const publicDoctorRoutes = require('./modules/doctor/public.routes');
-const publicRoutes = require('./modules/public/public.routes');
-const receptionistRoutes = require('./modules/receptionist/receptionist.routes');
-const labRoutes = require('./modules/lab/lab.routes');
+const authRoutes = require('./routes/auth.routes');
+const staffAuthRoutes = require('./routes/staff-auth.routes');
+const patientRoutes = require('./routes/patient.routes');
+const appointmentRoutes = require('./routes/appointment.routes');
+const paymentRoutes = require('./routes/payment.routes');
+const adminRoutes = require('./routes/admin.routes');
+const doctorRoutes = require('./routes/doctor.routes');
+const publicDoctorRoutes = require('./routes/doctor.public.routes');
+const publicRoutes = require('./routes/public.routes');
+const receptionistRoutes = require('./routes/receptionist.routes');
+const labRoutes = require('./routes/lab.routes');
+const notificationRoutes = require('./routes/notification.routes');
 
 const app = express();
 
@@ -31,12 +33,6 @@ app.use(cookieParser());
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Debug Middleware
-app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next();
-});
-
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
@@ -48,6 +44,8 @@ app.use('/api/public', publicRoutes);           // Public departments, doctors
 // ============================================
 // STAFF PORTAL API ROUTES
 // ============================================
+app.use('/api/staff/auth', staffAuthRoutes);    // Staff authentication
+app.use('/api/staff', notificationRoutes);      // Staff notifications
 app.use('/api/staff/admin', adminRoutes);       // Admin module
 app.use('/api/staff/receptionist', receptionistRoutes);  // Receptionist module
 app.use('/api/staff/doctor', doctorRoutes);     // Doctor module
@@ -60,6 +58,7 @@ app.use('/auth', authRoutes);                   // Authentication
 app.use('/patient', patientRoutes);             // Patient operations
 app.use('/appointment', appointmentRoutes);     // Appointments
 app.use('/payments', paymentRoutes);            // Payments
+app.use('/api', notificationRoutes);            // Shared notifications
 
 // ============================================
 // LEGACY ROUTES (Backward Compatibility)
@@ -72,15 +71,8 @@ app.use('/receptionist', receptionistRoutes);   // Legacy receptionist routes
 app.use('/lab', labRoutes);                     // Legacy lab routes
 
 // Public Departments (Legacy - will be removed)
-const adminService = require('./modules/admin/admin.service');
-app.get('/departments', async (req, res) => {
-    try {
-        const rows = await adminService.getDepartments();
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to fetch departments' });
-    }
-});
+// Public Departments (Legacy - will be removed)
+// Route removed as public-website uses /api/public/departments
 
 // Health check
 app.get('/', (req, res) => {

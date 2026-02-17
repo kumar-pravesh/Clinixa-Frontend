@@ -14,7 +14,6 @@ import AddPrescription from './pages/doctor/AddPrescription';
 import LabReports from './pages/doctor/LabReports';
 import FollowUps from './pages/doctor/FollowUps';
 import DoctorLayout from './components/doctor/DoctorLayout';
-import PatientDashboard from './pages/patient/PatientDashboard';
 import NotFound from './pages/NotFound';
 
 // Auth & Protected Routes
@@ -46,16 +45,16 @@ import AppointmentApproval from './pages/admin/AppointmentApproval';
 import BillingControl from './pages/admin/BillingControl';
 import ReportGeneration from './pages/admin/ReportGeneration';
 
-import NotificationDropdown from './components/reception/NotificationDropdown';
+import NotificationDropdown from './components/notifications/NotificationDropdown';
 import ToastContainer from './components/notifications/ToastContainer';
 
 function App() {
   return (
     <NotificationProvider>
       <ToastContainer />
-      <QueueProvider>
-        <LabProvider>
-          <AuthProvider>
+      <AuthProvider>
+        <QueueProvider>
+          <LabProvider>
             <Router>
               <div className="app-container">
                 <Routes>
@@ -79,14 +78,7 @@ function App() {
                     <Route path="appointments" element={<FollowUps />} />
                   </Route>
 
-                  <Route
-                    path="/patient"
-                    element={
-                      <ProtectedRoute allowedRoles={['patient']}>
-                        <PatientDashboard />
-                      </ProtectedRoute>
-                    }
-                  />
+
 
                   {/* Reception Module Routes */}
                   <Route
@@ -109,7 +101,7 @@ function App() {
                   <Route
                     path="/lab"
                     element={
-                      <ProtectedRoute allowedRoles={['lab_tech']}>
+                      <ProtectedRoute allowedRoles={['lab_technician']}>
                         <LabLayout />
                       </ProtectedRoute>
                     }
@@ -143,9 +135,9 @@ function App() {
                 </Routes>
               </div>
             </Router>
-          </AuthProvider>
-        </LabProvider>
-      </QueueProvider>
+          </LabProvider>
+        </QueueProvider>
+      </AuthProvider>
     </NotificationProvider>
   );
 }

@@ -15,7 +15,7 @@ import {
     Upload
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
-import NotificationDropdown from '../reception/NotificationDropdown';
+import NotificationDropdown from '../notifications/NotificationDropdown';
 import Logo from '../common/Logo';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';

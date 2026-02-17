@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import labService from '../services/labService';
+import { useAuth } from './AuthContext';
 
 const LabContext = createContext();
 
@@ -12,12 +13,22 @@ export const useLab = () => {
 };
 
 export const LabProvider = ({ children }) => {
+    const { user, loading: authLoading } = useAuth();
     const [labQueue, setLabQueue] = useState([]);
     const [labHistory, setLabHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     const fetchData = useCallback(async () => {
+        if (authLoading) return;
+
+        // Only fetch if user is lab_staff (or admin if allowed, but for now restricted to lab_staff to fix 403)
+        // If the user is NOT lab_staff, we simply don't fetch and set loading to false.
+        if (!user || user.role !== 'lab_technician') {
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         try {
             const [queueData, historyData] = await Promise.all([
@@ -33,7 +44,7 @@ export const LabProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [user, authLoading]);
 
     useEffect(() => {
         fetchData();
@@ -80,12 +91,12 @@ export const LabProvider = ({ children }) => {
 
             let dataToSend = reportData;
             if (!(reportData instanceof FormData)) {
-                // If simple object, we might need to handle file separately or assume no file for simple completion?
-                // But uploadReport usually requires a file or at least results.
-                // Let's assume strictly FormData for upload.
-                // The UI "Complete" modal likely has file input.
+                // ... assuming this branch is handled elsewhere or not hit
             } else {
-                dataToSend.append('lab_test_id', testId);
+                // Only append if it doesn't already exist to avoid duplication/arrays on backend
+                if (!dataToSend.has('lab_test_id')) {
+                    dataToSend.append('lab_test_id', testId);
+                }
             }
 
             await labService.uploadReport(dataToSend);

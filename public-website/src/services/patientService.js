@@ -49,5 +49,38 @@ export const patientService = {
     getPublicDepartments: async () => {
         const res = await api.get('/api/public/departments');
         return res.data;
+    },
+
+    // Public stats (kept for reference, but dashboard now uses private stats)
+    getPublicStats: async () => {
+        const res = await api.get('/api/public/stats');
+        return res.data;
+    },
+
+    // 🏥 Real Patient Data
+    getDashboardStats: async () => {
+        const res = await api.get('/patient/dashboard-stats');
+        return res.data;
+    },
+
+    getMedicalRecords: async () => {
+        const res = await api.get('/patient/medical-records');
+        return res.data;
+    },
+
+    // 🔔 Notifications
+    getNotifications: async () => {
+        const res = await api.get('/api/notifications');
+        return res.data;
+    },
+
+    markNotificationAsRead: async (id) => {
+        const res = await api.patch(`/api/notifications/${id}/read`);
+        return res.data;
+    },
+
+    markAllNotificationsAsRead: async () => {
+        const res = await api.patch('/api/notifications/read-all');
+        return res.data;
     }
 };

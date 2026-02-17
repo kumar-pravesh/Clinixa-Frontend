@@ -10,10 +10,16 @@ const Prescriptions = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPrescription, setSelectedPrescription] = useState(null);
 
-    const filteredPrescriptions = prescriptions.filter(rx =>
-        rx.patient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rx.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredPrescriptions = prescriptions.filter(rx => {
+        const patientName = rx.patient || rx.patient_name || '';
+        const prescriptionId = String(rx.id || '');
+        const search = searchTerm.toLowerCase();
+
+        return (
+            patientName.toLowerCase().includes(search) ||
+            prescriptionId.toLowerCase().includes(search)
+        );
+    });
 
     const handlePrint = (rx) => {
         const printWindow = window.open('', '', 'width=800,height=600');
@@ -40,7 +46,7 @@ const Prescriptions = () => {
                     </div>
                     <div class="details">
                         <p><strong>Prescription ID:</strong> ${rx.id}</p>
-                        <p><strong>Patient Name:</strong> ${rx.patient}</p>
+                        <p><strong>Patient Name:</strong> ${rx.patient || rx.patient_name || 'N/A'}</p>
                         <p><strong>Date:</strong> ${rx.date}</p>
                         <p><strong>Status:</strong> ${rx.status}</p>
                     </div>
@@ -130,7 +136,7 @@ const Prescriptions = () => {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 font-bold text-slate-800">
-                                        {rx.patient}
+                                        {rx.patient || rx.patient_name || 'N/A'}
                                     </td>
                                     <td className="px-8 py-6 text-sm text-slate-500">
                                         {rx.date}
@@ -183,7 +189,7 @@ const Prescriptions = () => {
                                         <FileText className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-slate-800">{rx.patient}</h3>
+                                        <h3 className="font-bold text-slate-800">{rx.patient || rx.patient_name || 'N/A'}</h3>
                                         <span className="text-xs font-medium text-slate-400">{rx.id}</span>
                                     </div>
                                 </div>
@@ -248,7 +254,7 @@ const Prescriptions = () => {
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Patient</p>
-                                    <p className="font-bold text-slate-800">{selectedPrescription.patient}</p>
+                                    <p className="font-bold text-slate-800">{selectedPrescription.patient || selectedPrescription.patient_name || 'N/A'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Date</p>

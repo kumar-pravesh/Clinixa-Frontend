@@ -6,8 +6,15 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "db:setup": "node src/scripts/setupDatabase.js",
-    "db:setup:seed": "node src/scripts/setupDatabase.js --seed",
+    "db:setup": "node src/scripts/db-utils.js setup",
+    "db:setup:seed": "node src/scripts/db-utils.js setup --seed",
+    "db:cloud": "node src/scripts/db-utils.js cloud-setup",
+    "db:cloud:seed": "node src/scripts/db-utils.js cloud-setup --seed",
+    "db:reset": "node src/scripts/db-utils.js reset",
+    "db:clean": "node src/scripts/db-utils.js clean",
+    "db:list": "node src/scripts/db-utils.js list",
+    "db:patch": "node src/scripts/db-utils.js patch",
+    "db:test": "node src/scripts/db-utils.js test",
     "swagger": "node src/swagger.js"
   },
   "dependencies": {
@@ -20,7 +27,6 @@
     "multer": "^2.0.2",
     "mysql2": "^3.16.3",
     "nodemailer": "^8.0.1",
-    "pg": "^8.11.5",
     "razorpay": "^2.9.6",
     "swagger-autogen": "^2.23.7",
     "swagger-ui-express": "^5.0.1",

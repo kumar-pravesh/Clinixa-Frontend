@@ -27,36 +27,17 @@ const attachInterceptors = (instance) => {
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
-            console.log(`[API Request] ${config.method.toUpperCase()} ${config.url}`, {
-                hasToken: !!token,
-                headers: config.headers,
-                baseURL: instance.defaults.baseURL,
-            });
             return config;
         },
         (error) => {
-            console.error('[API Request Error]', error);
             return Promise.reject(error);
         }
     );
 
     instance.interceptors.response.use(
-        (response) => {
-            console.log(
-                `[API Response] ${response.config.method.toUpperCase()} ${response.config.url} - Status: ${response.status}`
-            );
-            return response;
-        },
+        (response) => response,
         (error) => {
-            console.error('[API Response Error]', {
-                url: error.config?.url,
-                status: error.response?.status,
-                message: error.response?.data?.message || error.message,
-                fullError: error,
-            });
-
             if (error.response?.status === 401) {
-                console.warn('Authentication error - redirecting to login');
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('user');
                 if (!window.location.pathname.includes('/login')) {

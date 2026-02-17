@@ -82,7 +82,7 @@ const MyAppointments = () => {
                                                     }}
                                                 />
                                             ) : (
-                                                appt.doctor_name.charAt(0)
+                                                appt.doctor_name?.charAt(0) || 'D'
                                             )}
                                         </div>
                                         <div>

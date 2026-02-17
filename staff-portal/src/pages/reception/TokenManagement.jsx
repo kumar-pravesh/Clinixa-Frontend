@@ -16,64 +16,144 @@ import {
 import { cn } from '../../utils/cn';
 import { useQueue } from '../../context/QueueContext';
 
+import receptionService from '../../services/receptionService';
+
 export const GenerateTokenModal = ({ isOpen, onClose, onGenerate }) => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [selectedPatient, setSelectedPatient] = useState(null);
+    const [isSearching, setIsSearching] = useState(false);
     const [formData, setFormData] = useState({
-        patient: '',
         dept: 'General Medicine',
-        doctor: 'Dr. Smith',
-        mobile: ''
+        doctor_id: '',
+        reason: 'General Consultation'
     });
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
+    const handleSearch = async (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+        if (query.length < 3) {
+            setSearchResults([]);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            const results = await receptionService.searchPatient(query);
+            setSearchResults(results);
+        } catch (err) {
+            console.error('Search error:', err);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const selectPatient = (patient) => {
+        setSelectedPatient(patient);
+        setSearchQuery(patient.name);
+        setSearchResults([]);
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onGenerate(formData);
-        onClose();
+        if (!selectedPatient) {
+            alert("Please select a patient first");
+            return;
+        }
+
+        try {
+            await onGenerate({
+                patient_id: selectedPatient.id.replace('PID-', '').replace(/^0+/, ''),
+                dept: formData.dept,
+                doctor_id: formData.doctor_id || null,
+                department: formData.reason
+            });
+            onClose();
+        } catch (err) {
+            console.error('Error in modal token generation:', err);
+        }
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        <Ticket className="w-5 h-5 text-primary" /> Generate Token
-                    </h2>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
-                        <XCircle className="w-6 h-6" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl scale-100 animate-in zoom-in-95 duration-300 overflow-hidden border border-slate-100">
+                <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+                    <div>
+                        <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-xl">
+                                <Ticket className="w-6 h-6 text-primary" />
+                            </div>
+                            Generate Token
+                        </h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Issue a new queue ticket</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors group">
+                        <XCircle className="w-6 h-6 text-slate-300 group-hover:text-rose-500" />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Patient Name</label>
-                        <input
-                            required
-                            type="text"
-                            placeholder="John Doe"
-                            className="input-field !pl-4 h-11"
-                            value={formData.patient}
-                            onChange={(e) => setFormData({ ...formData, patient: e.target.value })}
-                        />
+                <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                    {/* Patient Search */}
+                    <div className="relative">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Search Patient (Name/Phone/ID)</label>
+                        <div className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                                required
+                                type="text"
+                                placeholder="Search e.g. Emma or 98765..."
+                                className={cn(
+                                    "input-field !pl-12 !pr-10 h-14 font-bold border-2",
+                                    selectedPatient ? "border-primary/20 bg-primary/[0.02]" : "border-slate-100"
+                                )}
+                                value={searchQuery}
+                                onChange={handleSearch}
+                                readOnly={!!selectedPatient}
+                            />
+                            {selectedPatient && (
+                                <button
+                                    type="button"
+                                    onClick={() => { setSelectedPatient(null); setSearchQuery(''); }}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-colors"
+                                >
+                                    <XCircle className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Search Results Dropdown */}
+                        {searchResults.length > 0 && (
+                            <div className="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 max-h-60 overflow-y-auto animate-in slide-in-from-top-2 duration-200">
+                                {searchResults.map(patient => (
+                                    <button
+                                        key={patient.id}
+                                        type="button"
+                                        onClick={() => selectPatient(patient)}
+                                        className="w-full px-6 py-3 hover:bg-slate-50 flex items-center justify-between group transition-colors"
+                                    >
+                                        <div className="text-left">
+                                            <p className="font-black text-slate-800 group-hover:text-primary transition-colors">{patient.name}</p>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{patient.id} • {patient.phone}</p>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:translate-x-1 transition-all" />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {isSearching && (
+                            <div className="absolute right-4 top-[3.2rem]">
+                                <RefreshCw className="w-4 h-4 text-primary animate-spin" />
+                            </div>
+                        )}
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mobile Number</label>
-                        <input
-                            required
-                            type="tel"
-                            placeholder="9876543210"
-                            className="input-field !pl-4 h-11"
-                            value={formData.mobile}
-                            onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Department</label>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Department</label>
                             <select
-                                className="input-field appearance-none h-11 !pl-4"
+                                className="input-field appearance-none h-12 !pl-4 border-slate-100 font-bold"
                                 value={formData.dept}
                                 onChange={(e) => setFormData({ ...formData, dept: e.target.value })}
                             >
@@ -81,29 +161,36 @@ export const GenerateTokenModal = ({ isOpen, onClose, onGenerate }) => {
                                 <option>Pediatrics</option>
                                 <option>Dentistry</option>
                                 <option>Cardiology</option>
+                                <option>Orthopedics</option>
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Doctor</label>
-                            <select
-                                className="input-field appearance-none h-11 !pl-4"
-                                value={formData.doctor}
-                                onChange={(e) => setFormData({ ...formData, doctor: e.target.value })}
-                            >
-                                <option>Dr. Smith</option>
-                                <option>Dr. Brown</option>
-                                <option>Dr. Lee</option>
-                                <option>Dr. Wilson</option>
-                            </select>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Consultation Reason</label>
+                            <input
+                                type="text"
+                                className="input-field h-12 !pl-4 border-slate-100 font-bold"
+                                placeholder="e.g. Regular Checkup"
+                                value={formData.reason}
+                                onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                            />
                         </div>
                     </div>
 
-                    <div className="pt-4 flex gap-3">
-                        <button type="button" onClick={onClose} className="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-colors">
-                            Cancel
+                    <div className="pt-6 flex gap-4">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 py-4 font-black text-slate-400 hover:bg-slate-50 rounded-2xl transition-all active:scale-[0.98] uppercase tracking-widest text-xs"
+                        >
+                            Dismiss
                         </button>
-                        <button type="submit" className="flex-1 btn-primary py-3 flex items-center justify-center gap-2">
-                            <Ticket className="w-5 h-5" /> Generate
+                        <button
+                            type="submit"
+                            disabled={!selectedPatient}
+                            className="flex-1 btn-primary py-4 flex items-center justify-center gap-3 shadow-xl shadow-primary/20 disabled:opacity-50 disabled:shadow-none"
+                        >
+                            <Ticket className="w-5 h-5" />
+                            <span className="font-black uppercase tracking-widest text-xs">Issue Token</span>
                         </button>
                     </div>
                 </form>

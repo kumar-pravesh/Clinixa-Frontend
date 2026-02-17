@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Save, ArrowLeft, Search } from 'lucide-react';
 import { useDoctor } from '../../context/DoctorContext';
+import doctorService from '../../services/doctorService';
 
 const AddPrescription = () => {
     const navigate = useNavigate();
     const { addPrescription } = useDoctor();
-    const [patientName, setPatientName] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedPatient, setSelectedPatient] = useState(null);
+    const [searchResults, setSearchResults] = useState([]);
+
     const [medications, setMedications] = useState([
         { id: 1, name: '', dosage: '', frequency: '', duration: '' }
     ]);
@@ -22,6 +26,29 @@ const AddPrescription = () => {
         setMedications(medications.filter(med => med.id !== id));
     };
 
+    const handleSearchChange = async (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+        setSelectedPatient(null); // Reset selection on type
+
+        if (query.length > 1) {
+            try {
+                const results = await doctorService.searchPatients(query);
+                setSearchResults(results);
+            } catch (err) {
+                console.error("Search failed", err);
+            }
+        } else {
+            setSearchResults([]);
+        }
+    };
+
+    const selectPatient = (patient) => {
+        setSelectedPatient(patient);
+        setSearchQuery(`${patient.name} (${patient.id})`);
+        setSearchResults([]);
+    };
+
     const updateMedication = (id, field, value) => {
         setMedications(medications.map(med =>
             med.id === id ? { ...med, [field]: value } : med
@@ -30,8 +57,14 @@ const AddPrescription = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        if (!selectedPatient) {
+            alert("Please select a valid patient from the search results.");
+            return;
+        }
+
         addPrescription({
-            patient: patientName,
+            patientId: selectedPatient.id.replace('PID-', ''), // Ensure pure ID if needed, or backend handles it
             medications: medications
         });
         navigate('/doctor/prescriptions');
@@ -62,11 +95,31 @@ const AddPrescription = () => {
                             <input
                                 type="text"
                                 placeholder="Search for patient by name or ID..."
-                                value={patientName}
-                                onChange={(e) => setPatientName(e.target.value)}
+                                value={searchQuery}
+                                onChange={handleSearchChange}
                                 className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-xl text-sm font-medium outline-none transition-all"
                                 required
                             />
+                            {searchResults.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 max-h-60 overflow-y-auto z-50">
+                                    {searchResults.map(patient => (
+                                        <button
+                                            key={patient.id}
+                                            type="button"
+                                            onClick={() => selectPatient(patient)}
+                                            className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center justify-between group transition-colors"
+                                        >
+                                            <div>
+                                                <p className="font-bold text-slate-800 text-sm">{patient.name}</p>
+                                                <p className="text-xs text-slate-500">{patient.phone} • {patient.gender}</p>
+                                            </div>
+                                            <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-md group-hover:bg-white group-hover:text-primary transition-colors">
+                                                {patient.id}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 

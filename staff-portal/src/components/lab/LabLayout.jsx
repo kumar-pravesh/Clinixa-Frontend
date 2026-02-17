@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
-import NotificationDropdown from '../reception/NotificationDropdown';
+import NotificationDropdown from '../notifications/NotificationDropdown';
 import { cn } from '../../utils/cn';
 import Logo from '../common/Logo';
 
@@ -29,7 +29,7 @@ const SidebarLink = ({ to, icon: Icon, children, end, onClick }) => {
                 "flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] transition-all duration-300 group",
                 isActive
                     ? "bg-primary text-white shadow-xl shadow-primary/30 scale-[1.02]"
-                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-primary"
             )}
         >
             <IconComponent className={cn("w-5 h-5 transition-transform group-hover:scale-110 group-active:scale-95")} />
@@ -67,14 +67,14 @@ const LabLayout = () => {
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed inset-y-0 left-0 w-72 bg-[#0F172A] flex flex-col z-50 transition-all duration-500 transform lg:translate-x-0 lg:static lg:h-screen",
+                "fixed inset-y-0 left-0 w-72 bg-white flex flex-col z-50 transition-all duration-500 transform lg:translate-x-0 lg:static lg:h-screen border-r border-slate-200",
                 isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
             )}>
                 <div className="p-8 pb-10 flex items-center justify-between lg:justify-start gap-4">
                     <div className="flex items-center gap-4">
-                        <Logo className="scale-90" showText={false} forceLight={true} />
+                        <Logo className="scale-90" showText={false} />
                         <div>
-                            <h1 className="font-bold text-xl text-white leading-tight">Clinixa</h1>
+                            <h1 className="font-bold text-xl text-slate-900 leading-tight">Clinixa</h1>
                             <p className="text-[10px] text-primary font-black uppercase tracking-widest mt-0.5">Lab Portal</p>
                         </div>
                     </div>
@@ -96,19 +96,19 @@ const LabLayout = () => {
                 <div className="p-6 mt-auto">
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-6 py-4 w-full text-slate-400 hover:text-white hover:bg-red-500/10 rounded-[1.25rem] transition-all group border border-transparent hover:border-red-500/20"
+                        className="flex items-center gap-3 px-6 py-4 w-full text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-[1.25rem] transition-all group border border-transparent hover:border-rose-100"
                     >
                         <LogOut className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
                         <span className="font-bold text-sm">Sign Out</span>
                     </button>
 
-                    <div className="mt-6 p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-black">
                                 LT
                             </div>
                             <div className="overflow-hidden">
-                                <p className="text-xs font-bold text-white truncate">Lab Technician</p>
+                                <p className="text-xs font-bold text-slate-900 truncate">Lab Technician</p>
                                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-0.5">Active Now</p>
                             </div>
                         </div>
