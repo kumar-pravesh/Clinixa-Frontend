@@ -32,6 +32,7 @@ const DoctorManagement = () => {
     const [doctors, setDoctors] = useState([]);
     const [showCropper, setShowCropper] = useState(false);
     const [imageToCrop, setImageToCrop] = useState(null);
+    const [departments, setDepartments] = useState([]);
 
     const fetchDoctors = useCallback(async () => {
         try {
@@ -50,9 +51,19 @@ const DoctorManagement = () => {
         }
     }, [addNotification]);
 
+    const fetchDepartments = useCallback(async () => {
+        try {
+            const response = await api.get('/admin/departments');
+            setDepartments(response.data);
+        } catch (error) {
+            console.error('[DoctorManagement] Error fetching departments:', error);
+        }
+    }, []);
+
     useEffect(() => {
         fetchDoctors();
-    }, [fetchDoctors]);
+        fetchDepartments();
+    }, [fetchDoctors, fetchDepartments]);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -396,12 +407,13 @@ const DoctorManagement = () => {
                                             value={formData.dept}
                                             onChange={(e) => setFormData({ ...formData, dept: e.target.value })}
                                         >
-                                            <option>General Medicine</option>
-                                            <option>Cardiology</option>
-                                            <option>Pediatrics</option>
-                                            <option>Neurology</option>
-                                            <option>Surgery</option>
-                                            <option>Dermatology</option>
+                                            {departments.length > 0 ? (
+                                                departments.map(dept => (
+                                                    <option key={dept.id} value={dept.name}>{dept.name}</option>
+                                                ))
+                                            ) : (
+                                                <option>General Medicine</option>
+                                            )}
                                         </select>
                                     </div>
                                     <div className="space-y-2">

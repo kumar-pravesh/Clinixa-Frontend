@@ -12,14 +12,35 @@ const Login = () => {
     const { login } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [errors, setErrors] = useState({});
+
+    const validateForm = (email, password) => {
+        const newErrors = {};
+        if (!email) {
+            newErrors.email = 'Staff email is required';
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            newErrors.email = 'Invalid email format';
+        }
+        if (!password) {
+            newErrors.password = 'Access key is required';
+        }
+        return newErrors;
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
+        setErrors({});
 
         const formData = new FormData(e.currentTarget);
         const email = formData.get('email');
         const password = formData.get('password');
+
+        const validationErrors = validateForm(email, password);
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
 
         console.log('Login attempt for email:', email);
         setLoading(true);
@@ -147,7 +168,7 @@ const Login = () => {
                 <MotionDiv
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="w-full max-w-md relative z-10"
+                    className="w-full max-md relative z-10"
                 >
                     <div className="lg:hidden mb-16">
                         <Logo />
@@ -180,31 +201,31 @@ const Login = () => {
                         )}
                     </AnimatePresence>
 
-                    <form onSubmit={handleLogin} className="space-y-10">
+                    <form onSubmit={handleLogin} className="space-y-10" noValidate>
                         <div className="space-y-6">
                             <div className="space-y-5">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 ml-2">Operator Credentials</p>
                                 <div className="space-y-4">
                                     <div className="group relative">
-                                        <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                                        <Mail className={`absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.email ? 'text-red-500' : 'text-slate-400 group-focus-within:text-primary'}`} />
                                         <input
                                             type="email"
                                             name="email"
                                             placeholder="Staff Identification Email"
-                                            className="w-full pl-16 pr-8 py-6 bg-slate-50 border-2 border-slate-50 rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[15px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300 shadow-sm"
-                                            required
+                                            className={`w-full pl-16 pr-8 py-6 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300 shadow-sm ${errors.email ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-slate-50 focus:bg-white focus:border-primary/20 focus:ring-[15px] focus:ring-primary/5'}`}
                                         />
+                                        {errors.email && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.email}</p>}
                                     </div>
 
                                     <div className="group relative">
-                                        <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                                        <Lock className={`absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.password ? 'text-red-500' : 'text-slate-400 group-focus-within:text-primary'}`} />
                                         <input
                                             type="password"
                                             name="password"
                                             placeholder="Institutional Secret Key"
-                                            className="w-full pl-16 pr-8 py-6 bg-slate-50 border-2 border-slate-50 rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[15px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300 shadow-sm"
-                                            required
+                                            className={`w-full pl-16 pr-8 py-6 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-900 placeholder:text-slate-300 shadow-sm ${errors.password ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-slate-50 focus:bg-white focus:border-primary/20 focus:ring-[15px] focus:ring-primary/5'}`}
                                         />
+                                        {errors.password && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.password}</p>}
                                     </div>
                                 </div>
                             </div>

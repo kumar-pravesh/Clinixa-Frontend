@@ -11,6 +11,11 @@ const RegisterPage = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [errors, setErrors] = useState({});
+
+    // Stable today's date in YYYY-MM-DD format (local time)
+    const todayStr = new Date().toLocaleDateString('en-CA');
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -21,12 +26,55 @@ const RegisterPage = () => {
     });
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        // Extra guard for DOB future dates manually entered
+        if (name === 'dob' && value > todayStr) {
+            setErrors({ ...errors, dob: 'DOB cannot be in the future' });
+            return;
+        }
+
+        setFormData({ ...formData, [name]: value });
+        if (errors[name]) {
+            setErrors({ ...errors, [name]: '' });
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+        if (!formData.name.trim()) newErrors.name = 'Full name is required';
+        else if (formData.name.trim().length < 3) newErrors.name = 'Name must be at least 3 characters';
+
+        if (!formData.email) newErrors.email = 'Email is required';
+        else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email format';
+
+        if (!formData.phone) newErrors.phone = 'Phone number is required';
+        else if (!/^[1-9]\d{9}$/.test(formData.phone)) newErrors.phone = 'Phone must be exactly 10 digits and cannot start with 0';
+
+        if (!formData.dob) newErrors.dob = 'Date of birth is required';
+        else {
+            const birthDate = new Date(formData.dob);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (birthDate > today) newErrors.dob = 'DOB cannot be in the future';
+        }
+
+        if (!formData.password) newErrors.password = 'Password is required';
+        else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+
+        return newErrors;
     };
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setError('');
+
+        const validationErrors = validateForm();
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -142,64 +190,69 @@ const RegisterPage = () => {
                         )}
                     </AnimatePresence>
 
-                    <form onSubmit={handleRegister} className="space-y-8">
+                    <form onSubmit={handleRegister} className="space-y-8" noValidate>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="md:col-span-2 group relative">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Legal Identity</label>
                                 <div className="relative">
-                                    <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                    <User className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.name ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
                                     <input
                                         type="text"
                                         name="name"
                                         placeholder="Full Legal Name"
-                                        className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                                        required
+                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.name ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
                                         onChange={handleChange}
+                                        value={formData.name}
                                     />
+                                    {errors.name && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.name}</p>}
                                 </div>
                             </div>
 
                             <div className="group relative">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Digital Mail</label>
                                 <div className="relative">
-                                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                    <Mail className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.email ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
                                     <input
                                         type="email"
                                         name="email"
                                         placeholder="Identification Email"
-                                        className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                                        required
+                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.email ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
                                         onChange={handleChange}
+                                        value={formData.email}
                                     />
+                                    {errors.email && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.email}</p>}
                                 </div>
                             </div>
 
                             <div className="group relative">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Contact Signal</label>
                                 <div className="relative">
-                                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                    <Phone className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.phone ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
                                     <input
                                         type="text"
                                         name="phone"
                                         placeholder="+91 00000 00000"
-                                        className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                                        required
+                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.phone ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
                                         onChange={handleChange}
+                                        value={formData.phone}
                                     />
+                                    {errors.phone && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.phone}</p>}
                                 </div>
                             </div>
 
                             <div className="group relative">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Cycle Start (DOB)</label>
                                 <div className="relative">
-                                    <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                    <Calendar className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.dob ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
                                     <input
                                         type="date"
                                         name="dob"
-                                        className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 text-sm"
-                                        required
+                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 text-sm ${errors.dob ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
                                         onChange={handleChange}
+                                        value={formData.dob}
+                                        max={todayStr}
                                     />
+                                    {errors.dob && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.dob}</p>}
                                 </div>
                             </div>
 
@@ -209,6 +262,7 @@ const RegisterPage = () => {
                                     name="gender"
                                     className="w-full pl-6 pr-10 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 appearance-none cursor-pointer"
                                     onChange={handleChange}
+                                    value={formData.gender}
                                 >
                                     <option value="Male">Biological Male</option>
                                     <option value="Female">Biological Female</option>
@@ -219,15 +273,16 @@ const RegisterPage = () => {
                             <div className="md:col-span-2 group relative">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Access Key Creation</label>
                                 <div className="relative">
-                                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                    <Lock className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.password ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
                                     <input
                                         type="password"
                                         name="password"
                                         placeholder="Minimum 8 characters, secure"
-                                        className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                                        required
+                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.password ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
                                         onChange={handleChange}
+                                        value={formData.password}
                                     />
+                                    {errors.password && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.password}</p>}
                                 </div>
                             </div>
                         </div>

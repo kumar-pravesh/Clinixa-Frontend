@@ -12,10 +12,33 @@ const Register = () => {
     const { register } = useAuth(); // Assuming register exists in context
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [errors, setErrors] = useState({});
+
+    const validateForm = (name, email, phone, password) => {
+        const newErrors = {};
+        if (!name.trim()) newErrors.name = 'Full name is required';
+        if (!email) {
+            newErrors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            newErrors.email = 'Invalid email format';
+        }
+        if (!phone) {
+            newErrors.phone = 'Phone number is required';
+        } else if (!/^[1-9]\d{9}$/.test(phone)) {
+            newErrors.phone = 'Phone must be exactly 10 digits and cannot start with 0';
+        }
+        if (!password) {
+            newErrors.password = 'Password is required';
+        } else if (password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters';
+        }
+        return newErrors;
+    };
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setError('');
+        setErrors({});
 
         const formData = new FormData(e.currentTarget);
         const name = formData.get('name');
@@ -23,15 +46,18 @@ const Register = () => {
         const phone = formData.get('phone');
         const password = formData.get('password');
 
+        const validationErrors = validateForm(name, email, phone, password);
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
         setLoading(true);
 
         try {
             // In real app, call context register. For now mock or use direct if available.
-            // If context doesn't have register, we might need to use authService directly or update context.
-            // But usually staff are created by admin, this is for public-website eventually.
             console.log('Registration attempt:', { name, email });
 
-            // For the staff portal, registration might be restricted, but we are building it for the UI sync.
             if (register) {
                 await register({ name, email, phone, password });
             } else {
@@ -97,7 +123,7 @@ const Register = () => {
                 <MotionDiv
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="w-full max-w-md"
+                    className="w-full max-md"
                 >
                     <div className="lg:hidden mb-12">
                         <Logo />
@@ -126,50 +152,50 @@ const Register = () => {
                         )}
                     </AnimatePresence>
 
-                    <form onSubmit={handleRegister} className="space-y-8">
+                    <form onSubmit={handleRegister} className="space-y-8" noValidate>
                         <div className="space-y-4">
                             <div className="group relative">
-                                <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                <User className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.name ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
                                 <input
                                     type="text"
                                     name="name"
                                     placeholder="Full Legal Name"
-                                    className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                                    required
+                                    className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.name ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
                                 />
+                                {errors.name && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.name}</p>}
                             </div>
 
                             <div className="group relative">
-                                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                <Mail className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.email ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
                                 <input
                                     type="email"
                                     name="email"
                                     placeholder="Email Address"
-                                    className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                                    required
+                                    className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.email ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
                                 />
+                                {errors.email && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.email}</p>}
                             </div>
 
                             <div className="group relative">
-                                <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                <Phone className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.phone ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
                                 <input
                                     type="text"
                                     name="phone"
                                     placeholder="Contact Signal (Phone)"
-                                    className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                                    required
+                                    className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.phone ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
                                 />
+                                {errors.phone && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.phone}</p>}
                             </div>
 
                             <div className="group relative">
-                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                <Lock className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.password ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
                                 <input
                                     type="password"
                                     name="password"
                                     placeholder="Secure Access Key"
-                                    className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                                    required
+                                    className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.password ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
                                 />
+                                {errors.password && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.password}</p>}
                             </div>
                         </div>
 
