@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Ticket,
     Search,
@@ -24,10 +24,29 @@ export const GenerateTokenModal = ({ isOpen, onClose, onGenerate }) => {
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
     const [formData, setFormData] = useState({
-        dept: 'General Medicine',
+        dept: '',
         doctor_id: '',
         reason: 'General Consultation'
     });
+    const [departments, setDepartments] = useState([]);
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchDepartments();
+        }
+    }, [isOpen]);
+
+    const fetchDepartments = async () => {
+        try {
+            const data = await receptionService.getDepartments();
+            setDepartments(data);
+            if (data.length > 0 && !formData.dept) {
+                setFormData(prev => ({ ...prev, dept: data[0].name }));
+            }
+        } catch (err) {
+            console.error('Error fetching departments:', err);
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -157,11 +176,20 @@ export const GenerateTokenModal = ({ isOpen, onClose, onGenerate }) => {
                                 value={formData.dept}
                                 onChange={(e) => setFormData({ ...formData, dept: e.target.value })}
                             >
-                                <option>General Medicine</option>
-                                <option>Pediatrics</option>
-                                <option>Dentistry</option>
-                                <option>Cardiology</option>
-                                <option>Orthopedics</option>
+                                {departments.map((dept) => (
+                                    <option key={dept.id || dept.name} value={dept.name}>
+                                        {dept.name}
+                                    </option>
+                                ))}
+                                {departments.length === 0 && (
+                                    <>
+                                        <option>General Medicine</option>
+                                        <option>Pediatrics</option>
+                                        <option>Dentistry</option>
+                                        <option>Cardiology</option>
+                                        <option>Orthopedics</option>
+                                    </>
+                                )}
                             </select>
                         </div>
                         <div>

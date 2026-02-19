@@ -93,6 +93,15 @@ const getPatients = async (req, res) => {
     }
 };
 
+const deletePatient = async (req, res) => {
+    try {
+        await adminService.deletePatient(req.params.id);
+        res.json({ message: 'Patient deleted successfully' });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 const getAppointments = async (req, res) => {
     try {
         const result = await adminService.getAppointments(req.query);
@@ -157,6 +166,7 @@ module.exports = {
     updateDepartment,
     deleteDepartment,
     getPatients,
+    deletePatient,
     getAppointments,
     approveAppointment,
     rejectAppointment,

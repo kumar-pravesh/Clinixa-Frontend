@@ -226,6 +226,40 @@ const adminService = {
     },
 
     /**
+     * Delete a patient and all linked data
+     */
+    async deletePatient(patientId) {
+        const numericId = patientId.toString().replace('PID-', '');
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+
+            // Delete linked data first
+            await connection.query('DELETE FROM appointments WHERE patient_id = ?', [numericId]);
+            await connection.query('DELETE FROM prescriptions WHERE patient_id = ?', [numericId]);
+            await connection.query('DELETE FROM lab_reports WHERE patient_id = ?', [numericId]);
+
+            // Get user_id before deleting patient
+            const [[patient]] = await connection.query('SELECT user_id FROM patients WHERE id = ?', [numericId]);
+            if (!patient) throw new Error('Patient not found');
+
+            // Delete patient profile and user account
+            await connection.query('DELETE FROM patients WHERE id = ?', [numericId]);
+            await connection.query('DELETE FROM users WHERE id = ?', [patient.user_id]);
+
+            await connection.query('SET FOREIGN_KEY_CHECKS = 1');
+            await connection.commit();
+            return { success: true };
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    },
+
+    /**
      * Get all appointments
      */
     async getAppointments(filters = {}) {

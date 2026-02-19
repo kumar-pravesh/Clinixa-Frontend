@@ -39,8 +39,9 @@ router.get('/patients/search', authenticateToken, authorizeRoles('doctor'), doct
 router.get('/prescriptions', authenticateToken, authorizeRoles('doctor'), doctorController.getPrescriptions);
 router.post('/prescriptions', authenticateToken, authorizeRoles('doctor'), doctorController.createPrescription);
 router.post('/prescriptions/add-medicines', authenticateToken, authorizeRoles('doctor'), doctorController.addMedicines);
-router.get('/lab-reports', authenticateToken, authorizeRoles('doctor'), doctorController.getLabReports);
-router.post('/lab-reports', authenticateToken, authorizeRoles('doctor'), upload.single('file'), doctorController.uploadLabReport);
+router.get('/lab-reports', authenticateToken, authorizeRoles('doctor', 'receptionist', 'admin'), doctorController.getLabReports);
+router.post('/lab-reports', authenticateToken, authorizeRoles('doctor', 'receptionist', 'admin'), upload.single('file'), doctorController.uploadLabReport);
+router.post('/lab-tests/request', authenticateToken, authorizeRoles('doctor', 'receptionist', 'admin'), doctorController.requestLabTest);
 router.post('/appointments/follow-up', authenticateToken, authorizeRoles('doctor'), doctorController.setFollowUp);
 router.put('/appointments/:id/status', authenticateToken, authorizeRoles('doctor'), doctorController.updateAppointmentStatus);
 

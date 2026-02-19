@@ -46,6 +46,8 @@ router.delete('/departments/:id', adminController.deleteDepartment);
 
 // Patients
 router.get('/patients', adminController.getPatients);
+router.delete('/patients/:id', adminController.deletePatient);
+
 
 // Appointments
 router.get('/appointments', adminController.getAppointments);

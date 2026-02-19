@@ -131,12 +131,15 @@ class AppointmentModel extends BaseModel {
                 u.name as doctor_name,
                 dep.name as specialization,
                 doc.consultation_fee,
-                doc.image_url
+                doc.image_url,
+                inv.total as paid_amount,
+                inv.payment_status
             FROM appointments a
             JOIN patients p ON a.patient_id = p.id
             JOIN doctors doc ON a.doctor_id = doc.id
             JOIN users u ON doc.user_id = u.id
             LEFT JOIN departments dep ON doc.department_id = dep.id
+            LEFT JOIN invoices inv ON inv.appointment_id = a.id
             WHERE p.user_id = ?
             ORDER BY a.date DESC, a.time ASC
         `, [userId]);

@@ -124,15 +124,170 @@ const UploadModal = ({ isOpen, onClose, patients, onUpload }) => {
     );
 };
 
+const OrderTestModal = ({ isOpen, onClose, patients, onOrder }) => {
+    const [selectedPatient, setSelectedPatient] = useState('');
+    const [testName, setTestName] = useState('');
+    const [category, setCategory] = useState('Diagnostic');
+    const [priority, setPriority] = useState('Routine');
+    const [notes, setNotes] = useState('');
+    const [ordering, setOrdering] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!selectedPatient || !testName) {
+            alert('Please select a patient and enter a test name.');
+            return;
+        }
+
+        setOrdering(true);
+        try {
+            const success = await onOrder({
+                patientId: selectedPatient,
+                testName,
+                category,
+                priority,
+                notes
+            });
+            if (success) {
+                onClose();
+            }
+        } finally {
+            setOrdering(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-black text-slate-800 tracking-tight">Order Lab Test</h2>
+                        <p className="text-sm text-slate-500 font-medium">Request a new diagnostic test for a patient.</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                        <X className="w-5 h-5 text-slate-400" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Select Patient</label>
+                            <select
+                                value={selectedPatient}
+                                onChange={(e) => setSelectedPatient(e.target.value)}
+                                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-xl text-sm outline-none transition-all appearance-none"
+                                required
+                            >
+                                <option value="">Choose a patient...</option>
+                                {patients.map(p => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Test Name</label>
+                                <input
+                                    type="text"
+                                    value={testName}
+                                    onChange={(e) => setTestName(e.target.value)}
+                                    placeholder="e.g., Blood Test"
+                                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-xl text-sm outline-none transition-all"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Category</label>
+                                <select
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-xl text-sm outline-none transition-all appearance-none"
+                                >
+                                    <option>Diagnostic</option>
+                                    <option>Pathology</option>
+                                    <option>Imaging</option>
+                                    <option>Biochemistry</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Priority</label>
+                            <div className="flex gap-3">
+                                {['Routine', 'Urgent', 'STAT'].map((p) => (
+                                    <button
+                                        key={p}
+                                        type="button"
+                                        onClick={() => setPriority(p)}
+                                        className={cn(
+                                            "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
+                                            priority === p
+                                                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+                                                : "bg-slate-50 text-slate-400 border-slate-200 hover:border-slate-300"
+                                        )}
+                                    >
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Notes / Instructions</label>
+                            <textarea
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Any specific instructions for the lab technician..."
+                                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-xl text-sm outline-none transition-all min-h-[100px] resize-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={ordering}
+                            className="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:shadow-none"
+                        >
+                            {ordering ? 'Ordering...' : 'Place Order'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 const LabReports = () => {
-    const { labReports, uploadLabReport, updateLabReportStatus, patients } = useDoctor();
+    const { labReports, uploadLabReport, requestLabTest, updateLabReportStatus, patients } = useDoctor();
     const [searchTerm, setSearchTerm] = useState('');
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
     const handleUpload = async (formData) => {
         const result = await uploadLabReport(formData);
         if (result.success) {
             setIsUploadModalOpen(false);
+            return true;
+        }
+        return false;
+    };
+
+    const handleOrder = async (testData) => {
+        const result = await requestLabTest(testData);
+        if (result.success) {
+            setIsOrderModalOpen(false);
             return true;
         }
         return false;
@@ -206,6 +361,13 @@ const LabReports = () => {
                             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-xl text-sm outline-none transition-all"
                         />
                     </div>
+                    <button
+                        onClick={() => setIsOrderModalOpen(true)}
+                        className="btn-secondary flex items-center gap-2 px-4 py-2.5"
+                    >
+                        <Clock className="w-4 h-4" />
+                        <span className="hidden sm:inline">Order Lab Test</span>
+                    </button>
                     <button
                         onClick={() => setIsUploadModalOpen(true)}
                         className="btn-primary flex items-center gap-2 px-4 py-2.5"
@@ -362,6 +524,12 @@ const LabReports = () => {
                 onClose={() => setIsUploadModalOpen(false)}
                 patients={patients}
                 onUpload={handleUpload}
+            />
+            <OrderTestModal
+                isOpen={isOrderModalOpen}
+                onClose={() => setIsOrderModalOpen(false)}
+                patients={patients}
+                onOrder={handleOrder}
             />
         </div>
     );

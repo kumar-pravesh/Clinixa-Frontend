@@ -147,6 +147,15 @@ const getPublicDoctorById = async (req, res) => {
     }
 };
 
+const requestLabTest = async (req, res) => {
+    try {
+        const result = await doctorService.requestLabTest(req.user.doctorId, req.body);
+        res.status(201).json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     login,
     getProfile,
@@ -158,6 +167,7 @@ module.exports = {
     createPrescription,
     addMedicines,
     uploadLabReport,
+    requestLabTest,
     setFollowUp,
     updateAppointmentStatus,
     getPublicDoctors,

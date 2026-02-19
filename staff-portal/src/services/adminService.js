@@ -42,6 +42,12 @@ const adminService = {
         return response.data;
     },
 
+    deletePatient: async (id) => {
+        const response = await api.delete(`/admin/patients/${id}`);
+        return response.data;
+    },
+
+
     // Dashboard
     getDashboardSummary: async () => {
         const response = await api.get('/admin/dashboard');

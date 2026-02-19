@@ -28,8 +28,18 @@ const getMedicalRecords = async (req, res) => {
     }
 };
 
+const updateProfile = async (req, res) => {
+    try {
+        const result = await patientService.updateProfile(req.user.id, req.body);
+        res.json({ message: 'Profile updated successfully', data: result });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getProfile,
     getDashboardStats,
-    getMedicalRecords
+    getMedicalRecords,
+    updateProfile
 };

@@ -7,6 +7,11 @@ export const patientService = {
         return res.data;
     },
 
+    updateProfile: async (profileData) => {
+        const res = await api.put('/patient/profile', profileData);
+        return res.data;
+    },
+
     // Doctors (used for booking)
     getDoctors: async () => {
         const res = await api.get('/api/public/doctors');

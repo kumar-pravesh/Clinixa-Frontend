@@ -6,6 +6,7 @@ const { authenticateToken } = require('../middlewares/auth.middleware');
 router.use(authenticateToken);
 
 router.get('/profile', patientController.getProfile);
+router.put('/profile', patientController.updateProfile);
 router.get('/dashboard-stats', patientController.getDashboardStats);
 router.get('/medical-records', patientController.getMedicalRecords);
 

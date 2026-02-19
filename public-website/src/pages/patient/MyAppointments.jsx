@@ -98,7 +98,9 @@ const MyAppointments = () => {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <CreditCard className="text-gray-300" size={16} />
-                                            <span className="text-xs font-semibold text-gray-500">Fees: ₹500</span>
+                                            <span className="text-xs font-semibold text-gray-500">
+                                                Fees: ₹{appt.paid_amount ? parseFloat(appt.paid_amount).toFixed(0) : (parseFloat(appt.consultation_fee || 500) * 1.18).toFixed(0)}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
