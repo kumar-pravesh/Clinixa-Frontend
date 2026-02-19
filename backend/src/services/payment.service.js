@@ -89,12 +89,41 @@ const paymentService = {
             if (!payment) throw new Error('Payment not found');
 
             const provider = getProvider(payment.method);
+
+            // ─── Temporary Debug Logging (remove after confirming fix) ───
+            if (payment.method === 'razorpay') {
+                const crypto = require('crypto');
+                console.log('[PaymentService:DEBUG] razorpay_order_id:', verificationData.razorpay_order_id);
+                console.log('[PaymentService:DEBUG] razorpay_payment_id:', verificationData.razorpay_payment_id);
+                console.log('[PaymentService:DEBUG] razorpay_signature:', verificationData.razorpay_signature);
+                console.log('[PaymentService:DEBUG] payment.transaction_id (order_id from DB):', payment.transaction_id);
+                const debugHmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+                debugHmac.update((verificationData.razorpay_order_id || '') + '|' + (verificationData.razorpay_payment_id || ''));
+                console.log('[PaymentService:DEBUG] generated_signature:', debugHmac.digest('hex'));
+            }
+            // ─── End Temporary Debug Logging ─────────────────────────────
+
             const isValid = await provider.verify(payment.transaction_id, verificationData);
+
+            // ─── Debug: log verification result ─────────────────────────
+            if (payment.method === 'razorpay') {
+                console.log('[PaymentService:DEBUG] isValid:', isValid);
+            }
+            // ─────────────────────────────────────────────────────────────
+
             const status = isValid ? 'SUCCESS' : 'FAILED';
 
             await PaymentModel.updateStatus(paymentId, status, connection);
 
             if (isValid) {
+                // Store razorpay_payment_id for future refund operations
+                if (verificationData.razorpay_payment_id) {
+                    await connection.query(
+                        'UPDATE payments SET transaction_id = ? WHERE id = ?',
+                        [verificationData.razorpay_payment_id, paymentId]
+                    );
+                    payment.transaction_id = verificationData.razorpay_payment_id;
+                }
                 // Get appointment ID via invoice
                 const invoiceId = payment.invoice_id; // PaymentModel row has invoice_id
                 const appointmentId = await InvoiceModel.getAppointmentId(invoiceId, connection);

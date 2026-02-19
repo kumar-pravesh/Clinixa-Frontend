@@ -1,4 +1,5 @@
 import api from '../api/axios';
+import { rootApi } from '../api/axios';
 
 const authService = {
     login: async (credentials) => {
@@ -20,6 +21,17 @@ const authService = {
         const response = await api.post('/auth/refresh');
         return response.data;
     },
+    // Forgot password — uses root API (auth endpoints are at root level)
+    forgotPassword: async (email) => {
+        const response = await rootApi.post('/auth/forgot-password', { email });
+        return response.data;
+    },
+    // Reset password — supports JWT token flow
+    resetPassword: async ({ token, newPassword }) => {
+        const response = await rootApi.post('/auth/reset-password', { token, newPassword });
+        return response.data;
+    },
 };
 
 export default authService;
+

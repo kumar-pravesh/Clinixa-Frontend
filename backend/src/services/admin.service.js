@@ -7,6 +7,7 @@ const PatientModel = require('../models/patient.model');
 const AppointmentModel = require('../models/appointment.model');
 const InvoiceModel = require('../models/invoice.model');
 const eventBus = require('../lib/event-bus');
+const razorpayProvider = require('./payment/razorpay.provider');
 
 // Note: TokenModel for dashboard summary (migrated later or raw SQL now)
 // I'll use raw SQL for TokenModel queries in getDashboardSummary for now as per original service resilience
@@ -294,8 +295,8 @@ const adminService = {
      * Approve appointment
      */
     async approveAppointment(id) {
-        await AppointmentModel.updateStatus(id, 'Scheduled');
-        return { success: true, status: 'Scheduled' };
+        await AppointmentModel.updateStatus(id, 'CONFIRMED');
+        return { success: true, status: 'CONFIRMED' };
     },
 
     /**
@@ -330,6 +331,41 @@ const adminService = {
                     reason: 'Appointment cancelled by the clinic'
                 });
             }
+
+            // ─── Refund if invoice was Paid ───────────────────────
+            if (rows.length > 0) {
+                try {
+                    const [invoiceRows] = await pool.query(`
+                        SELECT i.id, i.payment_status, i.amount,
+                               p.transaction_id
+                        FROM invoices i
+                        LEFT JOIN payments p ON p.invoice_id = i.id AND p.status = 'SUCCESS'
+                        WHERE i.appointment_id = ? AND i.payment_status = 'Paid'
+                        LIMIT 1
+                    `, [id]);
+
+                    if (invoiceRows.length > 0 && invoiceRows[0].transaction_id) {
+                        const invoice = invoiceRows[0];
+                        const refundResult = await razorpayProvider.refund(
+                            invoice.transaction_id,
+                            parseFloat(invoice.amount)
+                        );
+
+                        if (refundResult && refundResult.refundId) {
+                            eventBus.safeEmit('refund.initiated', {
+                                email: rows[0].email,
+                                patientName: rows[0].patientName,
+                                amount: invoice.amount,
+                                transactionId: refundResult.refundId
+                            });
+                            console.log(`[AdminService] Refund initiated: ${refundResult.refundId}`);
+                        }
+                    }
+                } catch (refundError) {
+                    console.error('[AdminService] Refund error (non-fatal):', refundError.message);
+                }
+            }
+            // ─── End Refund ───────────────────────────────────────
         } catch (eventError) {
             console.error('[AdminService] Event emission error (non-fatal):', eventError.message);
         }
