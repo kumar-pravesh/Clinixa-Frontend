@@ -12,6 +12,9 @@ const RegisterPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [errors, setErrors] = useState({});
+    const [otpSent, setOtpSent] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [otpMessage, setOtpMessage] = useState('');
 
     // Stable today's date in YYYY-MM-DD format (local time)
     const todayStr = new Date().toLocaleDateString('en-CA');
@@ -65,7 +68,8 @@ const RegisterPage = () => {
         return newErrors;
     };
 
-    const handleRegister = async (e) => {
+    // Phase 1: Send OTP
+    const handleSendOtp = async (e) => {
         e.preventDefault();
         setError('');
 
@@ -76,13 +80,56 @@ const RegisterPage = () => {
         }
 
         setLoading(true);
-
         try {
-            await authService.register(formData);
+            const result = await authService.sendRegistrationOtp(formData);
+            setOtpSent(true);
+            setOtpMessage(result.message || 'OTP sent to your email. Please check your inbox.');
+        } catch (err) {
+            console.error('OTP send error:', err);
+            const msg = err.response?.data?.message || 'Failed to send OTP. Please try again.';
+            // If backend says use OTP (shouldn't happen in this flow, but safety fallback)
+            if (err.response?.data?.useOtp) {
+                setOtpSent(true);
+                setOtpMessage('Please verify your email with OTP.');
+            } else {
+                setError(msg);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Phase 2: Verify OTP and complete registration
+    const handleVerifyOtp = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (!otp || otp.length < 6) {
+            setError('Please enter the 6-digit OTP sent to your email.');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await authService.verifyRegistrationOtp(formData.email, otp);
             navigate('/login');
         } catch (err) {
-            console.error('Registration error:', err);
-            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+            console.error('OTP verification error:', err);
+            setError(err.response?.data?.message || 'Verification failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        setError('');
+        setLoading(true);
+        try {
+            const result = await authService.sendRegistrationOtp(formData);
+            setOtpMessage(result.message || 'OTP resent to your email.');
+            setOtp('');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to resend OTP.');
         } finally {
             setLoading(false);
         }
@@ -190,120 +237,191 @@ const RegisterPage = () => {
                         )}
                     </AnimatePresence>
 
-                    <form onSubmit={handleRegister} className="space-y-8" noValidate>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="md:col-span-2 group relative">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Legal Identity</label>
-                                <div className="relative">
-                                    <User className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.name ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        placeholder="Full Legal Name"
-                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.name ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
+                    {!otpSent ? (
+                        /* Phase 1: Registration Form */
+                        <form onSubmit={handleSendOtp} className="space-y-8" noValidate>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="md:col-span-2 group relative">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Legal Identity</label>
+                                    <div className="relative">
+                                        <User className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.name ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            placeholder="Full Legal Name"
+                                            className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.name ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
+                                            onChange={handleChange}
+                                            value={formData.name}
+                                        />
+                                        {errors.name && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.name}</p>}
+                                    </div>
+                                </div>
+
+                                <div className="group relative">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Digital Mail</label>
+                                    <div className="relative">
+                                        <Mail className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.email ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            placeholder="Identification Email"
+                                            className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.email ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
+                                            onChange={handleChange}
+                                            value={formData.email}
+                                        />
+                                        {errors.email && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.email}</p>}
+                                    </div>
+                                </div>
+
+                                <div className="group relative">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Contact Signal</label>
+                                    <div className="relative">
+                                        <Phone className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.phone ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
+                                        <input
+                                            type="text"
+                                            name="phone"
+                                            placeholder="+91 00000 00000"
+                                            className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.phone ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
+                                            onChange={handleChange}
+                                            value={formData.phone}
+                                        />
+                                        {errors.phone && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.phone}</p>}
+                                    </div>
+                                </div>
+
+                                <div className="group relative">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Cycle Start (DOB)</label>
+                                    <div className="relative">
+                                        <Calendar className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.dob ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
+                                        <input
+                                            type="date"
+                                            name="dob"
+                                            className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 text-sm ${errors.dob ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
+                                            onChange={handleChange}
+                                            value={formData.dob}
+                                            max={todayStr}
+                                        />
+                                        {errors.dob && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.dob}</p>}
+                                    </div>
+                                </div>
+
+                                <div className="group relative">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Biological Identity</label>
+                                    <select
+                                        name="gender"
+                                        className="w-full pl-6 pr-10 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 appearance-none cursor-pointer"
                                         onChange={handleChange}
-                                        value={formData.name}
-                                    />
-                                    {errors.name && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.name}</p>}
+                                        value={formData.gender}
+                                    >
+                                        <option value="Male">Biological Male</option>
+                                        <option value="Female">Biological Female</option>
+                                        <option value="Other">Non-Binary / Other</option>
+                                    </select>
+                                </div>
+
+                                <div className="md:col-span-2 group relative">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Access Key Creation</label>
+                                    <div className="relative">
+                                        <Lock className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.password ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
+                                        <input
+                                            type="password"
+                                            name="password"
+                                            placeholder="Minimum 8 characters, secure"
+                                            className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.password ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
+                                            onChange={handleChange}
+                                            value={formData.password}
+                                        />
+                                        {errors.password && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.password}</p>}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="group relative">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Digital Mail</label>
-                                <div className="relative">
-                                    <Mail className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.email ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        placeholder="Identification Email"
-                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.email ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
-                                        onChange={handleChange}
-                                        value={formData.email}
-                                    />
-                                    {errors.email && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.email}</p>}
-                                </div>
-                            </div>
-
-                            <div className="group relative">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Contact Signal</label>
-                                <div className="relative">
-                                    <Phone className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.phone ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
-                                    <input
-                                        type="text"
-                                        name="phone"
-                                        placeholder="+91 00000 00000"
-                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.phone ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
-                                        onChange={handleChange}
-                                        value={formData.phone}
-                                    />
-                                    {errors.phone && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.phone}</p>}
-                                </div>
-                            </div>
-
-                            <div className="group relative">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Cycle Start (DOB)</label>
-                                <div className="relative">
-                                    <Calendar className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.dob ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
-                                    <input
-                                        type="date"
-                                        name="dob"
-                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 text-sm ${errors.dob ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
-                                        onChange={handleChange}
-                                        value={formData.dob}
-                                        max={todayStr}
-                                    />
-                                    {errors.dob && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.dob}</p>}
-                                </div>
-                            </div>
-
-                            <div className="group relative">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Biological Identity</label>
-                                <select
-                                    name="gender"
-                                    className="w-full pl-6 pr-10 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 appearance-none cursor-pointer"
-                                    onChange={handleChange}
-                                    value={formData.gender}
-                                >
-                                    <option value="Male">Biological Male</option>
-                                    <option value="Female">Biological Female</option>
-                                    <option value="Other">Non-Binary / Other</option>
-                                </select>
-                            </div>
-
-                            <div className="md:col-span-2 group relative">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Access Key Creation</label>
-                                <div className="relative">
-                                    <Lock className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.password ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        placeholder="Minimum 8 characters, secure"
-                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.password ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
-                                        onChange={handleChange}
-                                        value={formData.password}
-                                    />
-                                    {errors.password && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.password}</p>}
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-slate-900 py-6 rounded-[2rem] text-white font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-slate-900/40 hover:bg-primary hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 group"
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-slate-900 py-6 rounded-[2rem] text-white font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-slate-900/40 hover:bg-primary hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 group"
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="animate-spin w-5 h-5" />
+                                        Sending Verification Code...
+                                    </>
+                                ) : (
+                                    <>
+                                        Verify & Create Account <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    ) : (
+                        /* Phase 2: OTP Verification */
+                        <MotionDiv
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="space-y-8"
                         >
-                            {loading ? (
-                                <>
-                                    <Loader2 className="animate-spin w-5 h-5" />
-                                    Initializing Identity...
-                                </>
-                            ) : (
-                                <>
-                                    Create Account <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-                                </>
-                            )}
-                        </button>
-                    </form>
+                            <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-3xl">
+                                <p className="text-xs font-bold text-emerald-700 leading-relaxed">
+                                    <ShieldCheck size={14} className="inline mr-2 -mt-0.5" />
+                                    {otpMessage}
+                                </p>
+                                <p className="text-[10px] text-emerald-600 mt-2 font-medium">
+                                    Sent to: <strong>{formData.email}</strong>
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleVerifyOtp} className="space-y-6">
+                                <div className="group relative">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Verification Code</label>
+                                    <div className="relative">
+                                        <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                        <input
+                                            type="text"
+                                            maxLength="6"
+                                            placeholder="Enter 6-digit OTP"
+                                            className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 tracking-[0.5em] text-center text-lg"
+                                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                            value={otp}
+                                            autoFocus
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading || otp.length < 6}
+                                    className="w-full bg-slate-900 py-6 rounded-[2rem] text-white font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-slate-900/40 hover:bg-primary hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 group"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="animate-spin w-5 h-5" />
+                                            Verifying Identity...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Complete Registration <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+
+                            <div className="flex items-center justify-between pt-2">
+                                <button
+                                    onClick={() => { setOtpSent(false); setOtp(''); setError(''); }}
+                                    className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] hover:text-slate-900 transition-colors flex items-center gap-2"
+                                >
+                                    <ArrowLeft size={12} /> Back to Form
+                                </button>
+                                <button
+                                    onClick={handleResendOtp}
+                                    disabled={loading}
+                                    className="text-[10px] font-black text-primary uppercase tracking-[0.2em] hover:text-slate-900 transition-colors disabled:opacity-50"
+                                >
+                                    Resend Code
+                                </button>
+                            </div>
+                        </MotionDiv>
+                    )}
 
                     <div className="mt-10 space-y-6">
                         <div className="relative">

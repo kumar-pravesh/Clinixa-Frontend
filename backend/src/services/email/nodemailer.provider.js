@@ -5,23 +5,27 @@ class EmailProvider extends NotificationProvider {
     constructor() {
         super();
         this.transporter = nodemailer.createTransport({
-            service: process.env.EMAIL_SERVICE || 'gmail',
+            service: 'gmail',
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
+                type: 'OAuth2',
+                user: process.env.GMAIL_SENDER_EMAIL,
+                clientId: process.env.GMAIL_CLIENT_ID,
+                clientSecret: process.env.GMAIL_CLIENT_SECRET,
+                refreshToken: process.env.GMAIL_REFRESH_TOKEN
             }
         });
     }
 
     async send(recipient, message, subject) {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.log('[EmailProvider] Skipped: No credentials configured');
+        if (!process.env.GMAIL_SENDER_EMAIL || !process.env.GMAIL_CLIENT_ID ||
+            !process.env.GMAIL_CLIENT_SECRET || !process.env.GMAIL_REFRESH_TOKEN) {
+            console.log('[EmailProvider] Skipped: Gmail OAuth2 credentials not configured');
             return;
         }
 
         try {
             const info = await this.transporter.sendMail({
-                from: process.env.EMAIL_USER,
+                from: process.env.GMAIL_SENDER_EMAIL,
                 to: recipient,
                 subject: subject || 'Notification from Clinixa',
                 text: message,
