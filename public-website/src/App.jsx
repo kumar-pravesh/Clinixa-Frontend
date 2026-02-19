@@ -9,6 +9,8 @@ import DepartmentsPage from "./pages/public/DepartmentsPage.jsx";
 import DoctorsPage from "./pages/public/DoctorsPage.jsx";
 import LoginPage from "./pages/auth/LoginPage.jsx";
 import RegisterPage from "./pages/auth/RegisterPage.jsx";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage.jsx";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage.jsx";
 
 import PatientDashboard from "./pages/patient/Dashboard.jsx";
 import BookAppointment from "./pages/patient/BookAppointment.jsx";
@@ -24,6 +26,8 @@ function App() {
         {/* PUBLIC ROUTES */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />

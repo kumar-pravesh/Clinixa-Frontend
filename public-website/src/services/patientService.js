@@ -46,7 +46,7 @@ export const patientService = {
     confirmPayment: async (paymentId, verificationData) => {
         const res = await api.post('/payments/confirm', {
             paymentId,
-            verificationData
+            ...verificationData
         });
         return res.data;
     },

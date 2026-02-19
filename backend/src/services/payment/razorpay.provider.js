@@ -39,6 +39,20 @@ class RazorpayProvider {
 
         return generated_signature === razorpay_signature;
     }
+
+    async refund(paymentId, amount) {
+        if (!this.instance) throw new Error('Razorpay not configured');
+
+        const refund = await this.instance.payments.refund(paymentId, {
+            amount: Math.round(amount * 100), // amount in smallest currency unit
+            speed: 'normal'
+        });
+
+        return {
+            refundId: refund.id,
+            status: refund.status
+        };
+    }
 }
 
 module.exports = new RazorpayProvider();

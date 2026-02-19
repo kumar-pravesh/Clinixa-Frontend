@@ -7,6 +7,8 @@ import './App.css';
 
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import AssignedPatients from './pages/doctor/AssignedPatients';
 import Prescriptions from './pages/doctor/Prescriptions';
@@ -61,6 +63,8 @@ function App() {
                   <Route path="/" element={<Login />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
 
                   <Route
                     path="/doctor"

@@ -88,7 +88,7 @@ const BookAppointment = () => {
                 currency: paymentInit.payload.currency,
                 name: "CLINIXA Hospital",
                 description: `Appointment with Dr. ${selectedDoctor.name}`,
-                order_id: paymentInit.payload.order_id,
+                order_id: paymentInit.payload.id,
                 handler: async function (response) {
                     try {
                         await patientService.confirmPayment(paymentInit.paymentId, response);
