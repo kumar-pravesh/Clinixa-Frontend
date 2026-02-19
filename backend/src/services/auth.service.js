@@ -26,7 +26,7 @@ const generateTokens = (user, extraClaims = {}) => {
     return { accessToken, refreshToken };
 };
 
-const register = async (name, email, password, gender, dob, phone) => {
+const register = async (name, email, password, gender, dob, phone, healthData = {}) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
@@ -51,13 +51,15 @@ const register = async (name, email, password, gender, dob, phone) => {
 
         const user = { id: userId, name, role: 'patient' };
 
-        // Create Patient Profile
+        // Create Patient Profile with health data
         await PatientModel.create({
             user_id: userId,
             name,
             dob,
             gender,
-            phone
+            phone,
+            email,
+            ...healthData
         }, connection);
 
         await connection.commit();

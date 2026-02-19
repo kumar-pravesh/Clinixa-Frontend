@@ -7,6 +7,7 @@ const AppointmentModel = require('../models/appointment.model');
 const PatientModel = require('../models/patient.model');
 const PrescriptionModel = require('../models/prescription.model');
 const LabModel = require('../models/lab.model');
+const LabTestModel = require('../models/lab-test.model');
 
 // Helper to generate tokens
 const generateTokens = (user, doctorId) => {
@@ -202,6 +203,33 @@ const updateAppointmentStatus = async (doctorId, appointmentId, status) => {
     return { message: 'Appointment status updated' };
 };
 
+const requestLabTest = async (doctorId, data) => {
+    const { patientId, testName, category, priority, notes } = data;
+
+    const doctor = await DoctorModel.findById(doctorId);
+
+    const testId = await LabTestModel.create({
+        patient_id: patientId,
+        doctor_id: doctorId,
+        test_name: testName,
+        category,
+        department: doctor?.specialization || null,
+        priority: priority || 'Routine',
+        notes
+    });
+
+    if (doctor) {
+        await notificationService.createNotification(doctor.user_id, {
+            type: 'lab',
+            title: 'Lab Test Ordered',
+            message: `You ordered ${testName} (ID: LAB-${String(testId).padStart(4, '0')})`,
+            link: `/doctor/lab-reports`
+        });
+    }
+
+    return { id: testId, message: 'Lab test ordered successfully' };
+};
+
 const getPublicDoctors = async () => {
     return DoctorModel.getPublicDoctors();
 };
@@ -223,6 +251,7 @@ module.exports = {
     createPrescription,
     addMedicines,
     uploadLabReport,
+    requestLabTest,
     setFollowUp,
     updateAppointmentStatus,
     getPublicDoctors,

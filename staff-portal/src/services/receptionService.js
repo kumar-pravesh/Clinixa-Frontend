@@ -1,6 +1,12 @@
-import api from '../api/axios';
+import api, { rootApi } from '../api/axios';
 
 const receptionService = {
+    // Public Data
+    getDepartments: async () => {
+        const response = await rootApi.get('/api/public/departments');
+        return response.data;
+    },
+
     // Patient Management
     searchPatient: async (query) => {
         const response = await api.get(`/receptionist/patients/search?query=${query}`);

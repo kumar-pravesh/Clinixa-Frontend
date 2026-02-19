@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     UserPlus,
     Search,
@@ -30,8 +30,30 @@ const WalkInRegistration = () => {
         gender: '',
         dob: '',
         address: '',
-        reason: ''
+        reason: '',
+        height: '',
+        weight: '',
+        bp_systolic: '',
+        bp_diastolic: '',
+        blood_group: '',
+        dept: ''
     });
+    const [departments, setDepartments] = useState([]);
+
+    useEffect(() => {
+        const fetchDeps = async () => {
+            try {
+                const deps = await receptionService.getDepartments();
+                setDepartments(deps);
+                if (deps.length > 0) {
+                    setFormData(prev => ({ ...prev, dept: deps[0].name }));
+                }
+            } catch (err) {
+                console.error('Error fetching departments:', err);
+            }
+        };
+        fetchDeps();
+    }, []);
 
     const mockPatients = {
         '9876543210': {
@@ -59,7 +81,16 @@ const WalkInRegistration = () => {
 
     const handleSearch = async (e) => {
         e.preventDefault();
-        if (!mobile || mobile.length < 10) return;
+
+        // Mobile number validation: 10 digits, not starting with 0
+        if (!/^[1-9]\d{9}$/.test(mobile)) {
+            addNotification({
+                type: 'error',
+                title: 'Invalid Mobile Number',
+                message: "Mobile number must be exactly 10 digits and cannot start with 0."
+            });
+            return;
+        }
 
         try {
             const results = await receptionService.searchPatient(mobile);
@@ -73,7 +104,12 @@ const WalkInRegistration = () => {
                     gender: found.gender,
                     dob: found.dob,
                     address: found.address || '',
-                    reason: 'Follow-up consultation'
+                    reason: 'Follow-up consultation',
+                    height: found.height || '',
+                    weight: found.weight || '',
+                    bp_systolic: found.bp_systolic || '',
+                    bp_diastolic: found.bp_diastolic || '',
+                    blood_group: found.blood_group || ''
                 });
             } else {
                 setIsExisting(false);
@@ -83,7 +119,13 @@ const WalkInRegistration = () => {
                     gender: '',
                     dob: '',
                     address: '',
-                    reason: ''
+                    reason: '',
+                    height: '',
+                    weight: '',
+                    bp_systolic: '',
+                    bp_diastolic: '',
+                    blood_group: '',
+                    dept: departments.length > 0 ? departments[0].name : ''
                 });
                 addNotification({
                     type: 'info',
@@ -98,6 +140,58 @@ const WalkInRegistration = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
+
+        // 1. Name Validation
+        if (!formData.name || formData.name.trim().length < 3) {
+            addNotification({
+                type: 'error',
+                title: 'Invalid Name',
+                message: "Full name is required and should be at least 3 characters."
+            });
+            return;
+        }
+
+        // 2. Gender Validation
+        if (!formData.gender) {
+            addNotification({
+                type: 'error',
+                title: 'Gender Required',
+                message: "Please select patient gender."
+            });
+            return;
+        }
+
+        // 3. Mobile number validation: 10 digits, not starting with 0
+        if (!/^[1-9]\d{9}$/.test(mobile)) {
+            addNotification({
+                type: 'error',
+                title: 'Invalid Mobile Number',
+                message: "Mobile number must be exactly 10 digits and cannot start with 0."
+            });
+            return;
+        }
+
+        // 4. DOB Validation (Cannot be in the future)
+        if (!formData.dob) {
+            addNotification({
+                type: 'error',
+                title: 'DOB Required',
+                message: "Please select patient date of birth."
+            });
+            return;
+        }
+        const birthDate = new Date(formData.dob);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (birthDate > today) {
+            addNotification({
+                type: 'error',
+                title: 'Invalid DOB',
+                message: "Date of birth cannot be in the future."
+            });
+            return;
+        }
+
         try {
             let patientId = null;
             if (!isExisting) {
@@ -115,7 +209,7 @@ const WalkInRegistration = () => {
 
             const token = await generateToken({
                 patient_id: patientId,
-                dept: formData.dept || 'General Medicine',
+                dept: formData.dept,
                 doctor_id: formData.doctor_id || null, // Optional
                 department: formData.reason || 'Consultation'
             });
@@ -338,16 +432,103 @@ const WalkInRegistration = () => {
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Reason for Visit</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Persistent headache, General checkup"
-                                    className="input-field"
-                                    value={formData.reason}
-                                    onChange={(e) => handleInputChange('reason', e.target.value)}
-                                    required
-                                />
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Height (CM)</label>
+                                    <input
+                                        type="number"
+                                        placeholder="175"
+                                        className="input-field h-11 font-bold"
+                                        value={formData.height}
+                                        onChange={(e) => handleInputChange('height', e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Weight (KG)</label>
+                                    <input
+                                        type="number"
+                                        placeholder="70"
+                                        className="input-field h-11 font-bold"
+                                        value={formData.weight}
+                                        onChange={(e) => handleInputChange('weight', e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">BP Systolic</label>
+                                    <input
+                                        type="number"
+                                        placeholder="120"
+                                        className="input-field h-11 font-bold"
+                                        value={formData.bp_systolic}
+                                        onChange={(e) => handleInputChange('bp_systolic', e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">BP Diastolic</label>
+                                    <input
+                                        type="number"
+                                        placeholder="80"
+                                        className="input-field h-11 font-bold"
+                                        value={formData.bp_diastolic}
+                                        onChange={(e) => handleInputChange('bp_diastolic', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Blood Group</label>
+                                    <select
+                                        className="input-field appearance-none h-11 font-bold"
+                                        value={formData.blood_group}
+                                        onChange={(e) => handleInputChange('blood_group', e.target.value)}
+                                    >
+                                        <option value="">Select Blood Group</option>
+                                        <option>A+</option>
+                                        <option>A-</option>
+                                        <option>B+</option>
+                                        <option>B-</option>
+                                        <option>O+</option>
+                                        <option>O-</option>
+                                        <option>AB+</option>
+                                        <option>AB-</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Department</label>
+                                    <select
+                                        className="input-field appearance-none h-11 font-bold"
+                                        value={formData.dept}
+                                        onChange={(e) => handleInputChange('dept', e.target.value)}
+                                        required
+                                    >
+                                        {departments.map((dept) => (
+                                            <option key={dept.id || dept.name} value={dept.name}>
+                                                {dept.name}
+                                            </option>
+                                        ))}
+                                        {departments.length === 0 && (
+                                            <>
+                                                <option>General Medicine</option>
+                                                <option>Pediatrics</option>
+                                                <option>Dentistry</option>
+                                                <option>Cardiology</option>
+                                                <option>Orthopedics</option>
+                                            </>
+                                        )}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Reason for Visit</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Persistent headache"
+                                        className="input-field h-11 font-bold"
+                                        value={formData.reason}
+                                        onChange={(e) => handleInputChange('reason', e.target.value)}
+                                        required
+                                    />
+                                </div>
                             </div>
 
                             <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">

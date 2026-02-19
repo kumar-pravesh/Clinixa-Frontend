@@ -351,14 +351,20 @@ const BookAppointment = () => {
                                     </div>
                                 </div>
 
-                                <div className="mt-8 pt-6 border-t border-dashed border-gray-200">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <span className="text-sm font-bold text-gray-500">Consultation Total</span>
-                                        <span className="text-lg font-black text-gray-800">₹{selectedDoctor?.consultation_fee || 500}.00</span>
+                                <div className="mt-8 pt-6 border-t border-dashed border-gray-200 space-y-3">
+                                    <div className="flex justify-between items-center text-sm font-bold text-gray-500">
+                                        <span>Consultation Fee</span>
+                                        <span>₹{selectedDoctor?.consultation_fee || 500}.00</span>
                                     </div>
-                                    <div className="p-4 bg-primary rounded-2xl flex justify-between items-center shadow-lg shadow-primary/20">
+                                    <div className="flex justify-between items-center text-xs font-bold text-gray-400">
+                                        <span>GST (18%)</span>
+                                        <span>₹{(selectedDoctor?.consultation_fee || 500) * 0.18}.00</span>
+                                    </div>
+                                    <div className="p-4 bg-primary rounded-2xl flex justify-between items-center shadow-lg shadow-primary/20 mt-4">
                                         <span className="text-sm font-bold text-white/80">Total Payable Now</span>
-                                        <span className="text-xl font-black text-white">₹{selectedDoctor?.consultation_fee || 500}.00</span>
+                                        <span className="text-xl font-black text-white">
+                                            ₹{Math.round((selectedDoctor?.consultation_fee || 500) * 1.18)}.00
+                                        </span>
                                     </div>
                                 </div>
                             </div>

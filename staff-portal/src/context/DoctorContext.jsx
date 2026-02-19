@@ -73,6 +73,30 @@ export const DoctorProvider = ({ children }) => {
         }
     };
 
+    const requestLabTest = async (testData) => {
+        try {
+            const result = await doctorService.requestLabTest(testData);
+
+            addNotification({
+                type: 'success',
+                title: 'Lab Test Ordered',
+                message: `Lab test for ${testData.testName} has been ordered.`
+            });
+
+            // Re-fetch to update stats if necessary, though it might not show in reports yet
+            // fetchData(); 
+            return { success: true, data: result };
+        } catch (err) {
+            console.error("Error ordering lab test:", err);
+            addNotification({
+                type: 'error',
+                title: 'Ordering Failed',
+                message: err.message
+            });
+            return { success: false, message: err.message };
+        }
+    };
+
     const uploadLabReport = async (formData) => {
         try {
             await doctorService.uploadLabReport(formData);
@@ -165,6 +189,7 @@ export const DoctorProvider = ({ children }) => {
         fetchData, // Allow components to refresh data manually
         addPrescription,
         addAppointment,
+        requestLabTest,
         uploadLabReport,
         updateAppointmentStatus,
         updateLabReportStatus,

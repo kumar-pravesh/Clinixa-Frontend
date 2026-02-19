@@ -56,6 +56,11 @@ const doctorService = {
         return response.data;
     },
 
+    requestLabTest: async (testData) => {
+        const response = await api.post('/doctor/lab-tests/request', testData);
+        return response.data;
+    },
+
     // Follow-up & Status
     setFollowUp: async (data) => {
         const response = await api.post('/doctor/appointments/follow-up', data);

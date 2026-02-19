@@ -25,7 +25,12 @@ const RegisterPage = () => {
         password: '',
         dob: '',
         gender: 'Male',
-        phone: ''
+        phone: '',
+        height: '',
+        weight: '',
+        bp_systolic: '',
+        bp_diastolic: '',
+        blood_group: ''
     });
 
     const handleChange = (e) => {
@@ -64,6 +69,20 @@ const RegisterPage = () => {
 
         if (!formData.password) newErrors.password = 'Password is required';
         else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+
+        // Health Validations (Optional but validated if present)
+        if (formData.height && (isNaN(formData.height) || formData.height < 30 || formData.height > 250)) {
+            newErrors.height = 'Invalid height (30-250 cm)';
+        }
+        if (formData.weight && (isNaN(formData.weight) || formData.weight < 2 || formData.weight > 300)) {
+            newErrors.weight = 'Invalid weight (2-300 kg)';
+        }
+        if (formData.bp_systolic && (isNaN(formData.bp_systolic) || formData.bp_systolic < 40 || formData.bp_systolic > 250)) {
+            newErrors.bp_systolic = 'Invalid BP Systolic';
+        }
+        if (formData.bp_diastolic && (isNaN(formData.bp_diastolic) || formData.bp_diastolic < 40 || formData.bp_diastolic > 150)) {
+            newErrors.bp_diastolic = 'Invalid BP Diastolic';
+        }
 
         return newErrors;
     };
@@ -370,6 +389,7 @@ const RegisterPage = () => {
                                 </p>
                             </div>
 
+
                             <form onSubmit={handleVerifyOtp} className="space-y-6">
                                 <div className="group relative">
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Verification Code</label>
@@ -385,6 +405,100 @@ const RegisterPage = () => {
                                             autoFocus
                                         />
                                     </div>
+
+                            <div className="md:col-span-2 mt-8 mb-4">
+                                <div className="relative">
+                                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div>
+                                    <div className="relative flex justify-start text-[10px] font-black uppercase tracking-widest text-slate-400"><span className="bg-white pr-4">Vital Statistics (Optional)</span></div>
+                                </div>
+                            </div>
+
+                            <div className="group relative">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Height (CM)</label>
+                                <input
+                                    type="number"
+                                    name="height"
+                                    placeholder="e.g. 175"
+                                    className={`w-full px-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.height ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:bg-white focus:border-primary/20'}`}
+                                    onChange={handleChange}
+                                    value={formData.height}
+                                />
+                                {errors.height && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.height}</p>}
+                            </div>
+
+                            <div className="group relative">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Weight (KG)</label>
+                                <input
+                                    type="number"
+                                    name="weight"
+                                    placeholder="e.g. 70"
+                                    className={`w-full px-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.weight ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:bg-white focus:border-primary/20'}`}
+                                    onChange={handleChange}
+                                    value={formData.weight}
+                                />
+                                {errors.weight && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.weight}</p>}
+                            </div>
+
+                            <div className="group relative">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">BP Systolic</label>
+                                <input
+                                    type="number"
+                                    name="bp_systolic"
+                                    placeholder="e.g. 120"
+                                    className={`w-full px-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.bp_systolic ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:bg-white focus:border-primary/20'}`}
+                                    onChange={handleChange}
+                                    value={formData.bp_systolic}
+                                />
+                                {errors.bp_systolic && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.bp_systolic}</p>}
+                            </div>
+
+                            <div className="group relative">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">BP Diastolic</label>
+                                <input
+                                    type="number"
+                                    name="bp_diastolic"
+                                    placeholder="e.g. 80"
+                                    className={`w-full px-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.bp_diastolic ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:bg-white focus:border-primary/20'}`}
+                                    onChange={handleChange}
+                                    value={formData.bp_diastolic}
+                                />
+                                {errors.bp_diastolic && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.bp_diastolic}</p>}
+                            </div>
+
+                            <div className="group relative">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Blood Group</label>
+                                <select
+                                    name="blood_group"
+                                    className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5 outline-none transition-all font-bold text-slate-700 appearance-none cursor-pointer"
+                                    onChange={handleChange}
+                                    value={formData.blood_group}
+                                >
+                                    <option value="">Select Blood Group</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                </select>
+                            </div>
+
+                            <div className="group relative mt-4">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Access Key Creation</label>
+                                <div className="relative">
+                                    <Lock className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errors.password ? 'text-red-500' : 'text-slate-300 group-focus-within:text-primary'}`} />
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        placeholder="Minimum 8 characters, secure"
+                                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 rounded-[2rem] outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 ${errors.password ? 'border-red-200 focus:border-red-500 focus:ring-red-50' : 'border-transparent focus:bg-white focus:border-primary/20 focus:ring-[12px] focus:ring-primary/5'}`}
+                                        onChange={handleChange}
+                                        value={formData.password}
+                                    />
+                                    {errors.password && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-wider">{errors.password}</p>}
+
                                 </div>
 
                                 <button

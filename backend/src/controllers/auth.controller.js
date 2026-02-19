@@ -3,6 +3,7 @@ const featureFlags = require('../lib/feature-flags');
 
 const register = async (req, res) => {
     try {
+
         // When OTP registration is enabled, block direct registration
         if (featureFlags.ENABLE_REGISTRATION_OTP) {
             return res.status(400).json({
@@ -14,6 +15,16 @@ const register = async (req, res) => {
 
         const { name, email, password, gender, dob, phone } = req.body;
         const user = await authService.register(name, email, password, gender, dob, phone);
+
+        const {
+            name, email, password, gender, dob, phone,
+            height, weight, bp_systolic, bp_diastolic, blood_group
+        } = req.body;
+
+        const healthData = { height, weight, bp_systolic, bp_diastolic, blood_group };
+
+        const user = await authService.register(name, email, password, gender, dob, phone, healthData);
+
         res.status(201).json({ message: 'User registered successfully', user });
     } catch (error) {
         res.status(400).json({ message: error.message });

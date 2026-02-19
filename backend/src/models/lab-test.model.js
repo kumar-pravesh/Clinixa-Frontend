@@ -60,6 +60,16 @@ class LabTestModel extends BaseModel {
         return rows;
     }
 
+    static async create(data) {
+        const { patient_id, doctor_id, test_name, category, department, priority, notes } = data;
+        const [result] = await this.query(`
+            INSERT INTO lab_tests (
+                patient_id, doctor_id, test_name, category, department, priority, notes, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')
+        `, [patient_id, doctor_id, test_name, category, department, priority, notes]);
+        return result.insertId;
+    }
+
     static async updateStatus(testId, status) {
         const [result] = await this.query(`
             UPDATE lab_tests SET status = ?, updated_at = NOW()

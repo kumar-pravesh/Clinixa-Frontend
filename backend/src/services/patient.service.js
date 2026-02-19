@@ -1,8 +1,42 @@
 const PatientModel = require('../models/patient.model');
 
+const calculateHealthScore = (patient) => {
+    let score = 95; // Starting base for ideal health
+
+    // 1. BMI Calculation & Penalty (Ideal BMI 18.5 - 24.9)
+    if (patient.height && patient.weight) {
+        const heightInMeters = patient.height / 100;
+        const bmi = patient.weight / (heightInMeters * heightInMeters);
+
+        if (bmi < 18.5) {
+            score -= (18.5 - bmi) * 2; // Underweight penalty
+        } else if (bmi > 24.9) {
+            score -= (bmi - 24.9) * 1.5; // Overweight/Obese penalty
+        }
+    } else {
+        score -= 5; // Penalty for missing data
+    }
+
+    // 2. Blood Pressure Penalty (Ideal 120/80)
+    if (patient.bp_systolic && patient.bp_diastolic) {
+        if (patient.bp_systolic > 130) score -= (patient.bp_systolic - 130) * 0.5;
+        if (patient.bp_diastolic > 85) score -= (patient.bp_diastolic - 85) * 0.8;
+        if (patient.bp_systolic < 100) score -= 5;
+    } else {
+        score -= 5; // Penalty for missing data
+    }
+
+    // Ensure score is within realistic bounds (e.g., 60-100)
+    return Math.max(60, Math.min(100, Math.floor(score)));
+};
+
 const patientService = {
     async getProfile(userId) {
         return PatientModel.getProfile(userId);
+    },
+
+    async updateProfile(userId, updateData) {
+        return PatientModel.updateByUserId(userId, updateData);
     },
 
     async getDashboardStats(userId) {
@@ -15,7 +49,7 @@ const patientService = {
         const labCount = await require('../models/lab.model').countByPatientId(patient.id);
 
         return {
-            healthScore: Math.min(85 + (prescriptionCount + labCount) * 2, 99), // Semi-real derivation
+            healthScore: calculateHealthScore(patient),
             nextAppointment,
             todayCount,
             totalRecords: prescriptionCount + labCount,
