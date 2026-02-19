@@ -13,9 +13,6 @@ const register = async (req, res) => {
             });
         }
 
-        const { name, email, password, gender, dob, phone } = req.body;
-        const user = await authService.register(name, email, password, gender, dob, phone);
-
         const {
             name, email, password, gender, dob, phone,
             height, weight, bp_systolic, bp_diastolic, blood_group
@@ -120,6 +117,35 @@ const googleAuth = async (req, res) => {
     }
 };
 
+const sendRegistrationOtp = async (req, res) => {
+    try {
+        const {
+            name, email, password, gender, dob, phone,
+            height, weight, bp_systolic, bp_diastolic, blood_group
+        } = req.body;
+
+        const healthData = { height, weight, bp_systolic, bp_diastolic, blood_group };
+        const result = await authService.sendRegistrationOtp({
+            name, email, password, gender, dob, phone, healthData
+        });
+
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const verifyRegistrationOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const user = await authService.verifyRegistrationOtp(email, otp);
+
+        res.status(201).json({ message: 'User registered successfully', user });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -127,5 +153,7 @@ module.exports = {
     refreshToken,
     forgotPassword,
     resetPassword,
-    googleAuth
+    googleAuth,
+    sendRegistrationOtp,
+    verifyRegistrationOtp
 };

@@ -103,17 +103,25 @@ const DoctorsPage = () => {
                                             <div className="relative">
                                                 <div className="w-24 h-24 bg-white/5 backdrop-blur-3xl rounded-[32px] overflow-hidden border-2 border-white/5 group-hover:border-primary transition-all duration-500 p-1 flex items-center justify-center font-black text-2xl text-slate-600">
                                                     {doctor.image_url ? (
-                                                        <img
-                                                            src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${doctor.image_url}`}
-                                                            alt={doctor.name}
-                                                            className="w-full h-full object-cover rounded-[28px]"
-                                                            onError={(e) => {
-                                                                e.target.style.display = 'none';
-                                                                e.target.parentElement.innerText = doctor.name.split(' ').map(n => n[0]).join('');
-                                                            }}
-                                                        />
+                                                        <div className="w-full h-full">
+                                                            <img
+                                                                src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${doctor.image_url}`}
+                                                                alt={doctor.name}
+                                                                className="w-full h-full object-cover rounded-[28px]"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    const fallback = e.target.parentElement.querySelector('.fallback-initials');
+                                                                    if (fallback) fallback.style.display = 'flex';
+                                                                }}
+                                                            />
+                                                            <div className="fallback-initials hidden absolute inset-0 w-full h-full bg-slate-900 flex items-center justify-center font-black text-slate-400 group-hover:text-primary transition-colors">
+                                                                {doctor.name.split(' ').map(n => n[0]).join('')}
+                                                            </div>
+                                                        </div>
                                                     ) : (
-                                                        doctor.name.split(' ').map(n => n[0]).join('')
+                                                        <span className="flex items-center justify-center w-full h-full bg-slate-900">
+                                                            {doctor.name.split(' ').map(n => n[0]).join('')}
+                                                        </span>
                                                     )}
                                                 </div>
                                                 <div className="absolute -bottom-2 -right-2 bg-emerald-500 w-6 h-6 rounded-full border-4 border-slate-950 shadow-2xl flex items-center justify-center animate-pulse" title="Live Connect Ready">

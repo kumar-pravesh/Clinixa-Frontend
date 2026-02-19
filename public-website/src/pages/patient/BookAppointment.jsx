@@ -120,6 +120,30 @@ const BookAppointment = () => {
         }
     };
 
+    const isPastSlot = (slotTime, dateStr) => {
+        if (!dateStr) return false;
+
+        const today = new Date();
+        const selectedDate = new Date(dateStr);
+
+        // Only check if it's the current day (ignoring time)
+        const isToday = today.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
+        if (!isToday) return false;
+
+        // Parse slot time (e.g., "09:30 AM")
+        const [time, modifier] = slotTime.split(' ');
+        let [hours, minutes] = time.split(':');
+
+        hours = parseInt(hours);
+        if (modifier === 'PM' && hours < 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+
+        const slotDateTime = new Date(selectedDate);
+        slotDateTime.setHours(hours, parseInt(minutes), 0, 0);
+
+        return slotDateTime < today;
+    };
+
     const steps = [
         { id: 1, name: 'Doctor', icon: <User size={16} /> },
         { id: 2, name: 'Schedule', icon: <Calendar size={16} /> },
@@ -185,17 +209,23 @@ const BookAppointment = () => {
                                     >
                                         <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-full -mr-6 -mt-6 group-hover:bg-primary/10 transition-colors"></div>
                                         <div className="flex flex-col items-center text-center relative z-10">
-                                            <div className="w-16 h-16 bg-secondary rounded-full border-4 border-white shadow-md flex items-center justify-center text-primary text-xl font-black italic mb-4 overflow-hidden">
+                                            <div className="w-16 h-16 bg-secondary rounded-full border-4 border-white shadow-md flex items-center justify-center text-primary text-xl font-black italic mb-4 overflow-hidden relative">
                                                 {doc.image_url ? (
-                                                    <img
-                                                        src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${doc.image_url}`}
-                                                        alt={doc.name}
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            e.target.style.display = 'none';
-                                                            e.target.parentElement.innerText = doc.name.charAt(0);
-                                                        }}
-                                                    />
+                                                    <>
+                                                        <img
+                                                            src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${doc.image_url}`}
+                                                            alt={doc.name}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                                const fallback = e.target.parentElement.querySelector('.fallback-initial');
+                                                                if (fallback) fallback.style.display = 'flex';
+                                                            }}
+                                                        />
+                                                        <div className="fallback-initial hidden absolute inset-0 w-full h-full items-center justify-center">
+                                                            {doc.name.charAt(0)}
+                                                        </div>
+                                                    </>
                                                 ) : (
                                                     doc.name.charAt(0)
                                                 )}
@@ -261,21 +291,26 @@ const BookAppointment = () => {
                                         </div>
                                     ) : availableSlots.length > 0 ? (
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                            {availableSlots.map(slot => (
-                                                <button
-                                                    key={slot.time}
-                                                    disabled={!slot.available}
-                                                    onClick={() => setSelectedTime(slot.time)}
-                                                    className={`py-3 rounded-xl text-xs font-bold transition-all ${!slot.available
-                                                        ? 'bg-gray-50 text-gray-300 cursor-not-allowed opacity-50'
-                                                        : selectedTime === slot.time
-                                                            ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105 border-transparent'
-                                                            : 'bg-white/50 text-gray-500 hover:bg-white border border-white/40'
-                                                        }`}
-                                                >
-                                                    {slot.time}
-                                                </button>
-                                            ))}
+                                            {availableSlots.map(slot => {
+                                                const isPast = isPastSlot(slot.time, selectedDate);
+                                                const isAvailable = slot.available && !isPast;
+
+                                                return (
+                                                    <button
+                                                        key={slot.time}
+                                                        disabled={!isAvailable}
+                                                        onClick={() => setSelectedTime(slot.time)}
+                                                        className={`py-3 rounded-xl text-xs font-bold transition-all ${!isAvailable
+                                                            ? 'bg-gray-50 text-gray-300 cursor-not-allowed opacity-50'
+                                                            : selectedTime === slot.time
+                                                                ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105 border-transparent'
+                                                                : 'bg-white/50 text-gray-500 hover:bg-white border border-white/40'
+                                                            }`}
+                                                    >
+                                                        {slot.time}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     ) : (
                                         <div className="p-8 bg-orange-50/30 rounded-2xl border border-orange-100 flex items-center gap-3 text-orange-400">
@@ -319,15 +354,25 @@ const BookAppointment = () => {
                             <div className="space-y-4 mb-10">
                                 <div className="p-4 bg-white/50 rounded-2xl border border-white/40 shadow-sm flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary overflow-hidden">
+                                        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary overflow-hidden relative">
                                             {selectedDoctor?.image_url ? (
-                                                <img
-                                                    src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${selectedDoctor.image_url}`}
-                                                    alt={selectedDoctor.name}
-                                                    className="w-full h-full object-cover"
-                                                />
+                                                <>
+                                                    <img
+                                                        src={`${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${selectedDoctor.image_url}`}
+                                                        alt={selectedDoctor.name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                            const fallback = e.target.parentElement.querySelector('.fallback-icon');
+                                                            if (fallback) fallback.style.display = 'flex';
+                                                        }}
+                                                    />
+                                                    <div className="fallback-icon hidden absolute inset-0 w-full h-full items-center justify-center">
+                                                        <User size={32} />
+                                                    </div>
+                                                </>
                                             ) : (
-                                                <User size={18} />
+                                                <User size={32} />
                                             )}
                                         </div>
                                         <div>
@@ -393,7 +438,7 @@ const BookAppointment = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 

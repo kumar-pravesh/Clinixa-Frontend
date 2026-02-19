@@ -68,6 +68,8 @@ tmp/
 temp/
 
 # =========================
-# Uploads (if stored locally)
+# Uploads
 # =========================
-uploads/
+backend/uploads/reports/
+backend/uploads/lab/
+# Note: Doctor profile images in backend/uploads/ are now allowed to sync with team members

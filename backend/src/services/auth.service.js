@@ -10,6 +10,10 @@ const DoctorModel = require('../models/doctor.model');
 // The plan says "Migrate remaining modules progressively", so NotificationService is still in modules
 const notificationService = require('./notification.service');
 
+// In-memory store for temporary registration data (OTP verification)
+// In a production environment, this should be moved to Redis or a database table
+const tempRegistrations = new Map();
+
 const generateTokens = (user, extraClaims = {}) => {
     const accessToken = jwt.sign(
         { id: user.id, role: user.role, name: user.name, ...extraClaims },
@@ -232,11 +236,64 @@ const googleAuth = async (googleUser) => {
     return { user: { id: user.id, name: user.name, role: user.role }, ...tokens };
 };
 
+const sendRegistrationOtp = async (data) => {
+    const { email, name } = data;
+
+    // Check if user already exists
+    const existingUser = await UserModel.findByEmail(email);
+    if (existingUser) {
+        throw new Error('An account with this email already exists.');
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store data temporarily
+    tempRegistrations.set(email, {
+        ...data,
+        otp,
+        expires: Date.now() + 10 * 60 * 1000 // 10 minutes
+    });
+
+    // Send OTP email
+    await notificationService.sendOTP(email, otp);
+
+    return { message: 'Verification code sent to your email.' };
+};
+
+const verifyRegistrationOtp = async (email, otp) => {
+    const registration = tempRegistrations.get(email);
+
+    if (!registration) {
+        throw new Error('Registration session expired or not found. Please start over.');
+    }
+
+    if (registration.expires < Date.now()) {
+        tempRegistrations.delete(email);
+        throw new Error('Verification code expired. Please request a new one.');
+    }
+
+    if (registration.otp !== otp) {
+        throw new Error('Invalid verification code.');
+    }
+
+    // OTP Correct! Proceed with actual registration
+    const { name, password, gender, dob, phone, healthData } = registration;
+    const user = await register(name, email, password, gender, dob, phone, healthData);
+
+    // Clean up
+    tempRegistrations.delete(email);
+
+    return user;
+};
+
 module.exports = {
     register,
     login,
     refreshToken,
     forgotPassword,
     resetPassword,
-    googleAuth
+    googleAuth,
+    sendRegistrationOtp,
+    verifyRegistrationOtp
 };

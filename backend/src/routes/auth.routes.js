@@ -6,6 +6,8 @@ const featureFlags = require('../lib/feature-flags');
 const { authenticateToken } = require('../middlewares/auth.middleware');
 
 router.post('/register', authController.register);
+router.post('/register/send-otp', authController.sendRegistrationOtp);
+router.post('/register/verify-otp', authController.verifyRegistrationOtp);
 router.post('/login', authController.login);
 router.post('/refresh', authController.refreshToken);
 router.post('/logout', authController.logout);
