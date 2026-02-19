@@ -4,7 +4,7 @@ class TokenModel extends BaseModel {
     static async findAllToday() {
         const [rows] = await this.query(`
             SELECT 
-                t.token_number as id,
+                t.id,
                 t.token_number,
                 p.name as patient,
                 CONCAT('PID-', LPAD(p.id, 4, '0')) as patientId,
@@ -40,7 +40,8 @@ class TokenModel extends BaseModel {
     static async findById(id) {
         const [rows] = await this.query(`
             SELECT 
-                t.token_number as id,
+                t.id,
+                t.token_number,
                 p.name as patient,
                 u.name as doctor,
                 t.department as dept,

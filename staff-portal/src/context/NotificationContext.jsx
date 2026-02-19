@@ -32,7 +32,7 @@ export const NotificationProvider = ({ children }) => {
         success: CheckCircle2,
         error: AlertCircle,
         info: Clock,
-        lab: AlertCircle
+        lab: CheckCircle2
     };
     const colors = {
         emergency: 'text-red-500',
@@ -42,7 +42,7 @@ export const NotificationProvider = ({ children }) => {
         success: 'text-emerald-500',
         error: 'text-rose-500',
         info: 'text-blue-500',
-        lab: 'text-purple-500'
+        lab: 'text-emerald-500'
     };
     const bgs = {
         emergency: 'bg-red-50',
@@ -52,7 +52,7 @@ export const NotificationProvider = ({ children }) => {
         success: 'bg-emerald-50',
         error: 'bg-rose-50',
         info: 'bg-blue-50',
-        lab: 'bg-purple-50'
+        lab: 'bg-emerald-50'
     };
 
     const formatNotification = useCallback((notif) => {

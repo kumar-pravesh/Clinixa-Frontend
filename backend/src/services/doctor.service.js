@@ -69,7 +69,7 @@ const getPatients = async (doctorId) => {
 };
 
 const searchPatients = async (query) => {
-    return PatientModel.search(query);
+    return PatientModel.findAll(query);
 };
 
 const getPrescriptions = async (doctorId) => {

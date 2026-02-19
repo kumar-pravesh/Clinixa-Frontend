@@ -60,7 +60,7 @@ const DepartmentsPage = () => {
   return (
     <div className="bg-white min-h-screen">
       {/* 🚀 CINEMATIC HEADER: Clinical Operations Hub */}
-      <section className="bg-slate-950 text-white pt-48 pb-24 text-center relative overflow-hidden">
+      <section className="bg-slate-950 text-white pt-32 pb-16 text-center relative overflow-hidden">
         {/* Animated Medical Grid Background */}
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
           style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
@@ -70,21 +70,21 @@ const DepartmentsPage = () => {
           <MotionDiv
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-3 mb-8 bg-white/5 backdrop-blur-md px-6 py-2 rounded-full border border-white/10"
+            className="inline-flex items-center gap-3 mb-6 bg-white/5 backdrop-blur-md px-6 py-2 rounded-full border border-white/10"
           >
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-400">Clinical Operations Hub</span>
           </MotionDiv>
 
-          <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tighter leading-none">
+          <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter leading-none">
             Our <span className="text-gradient">Specializations.</span>
           </h1>
-          <p className="text-slate-400 max-w-2xl mx-auto font-medium text-lg leading-relaxed">
+          <p className="text-slate-400 max-w-2xl mx-auto font-medium text-base leading-relaxed">
             Global healthcare matrix powered by advanced clinical intelligence and world-class specialists.
           </p>
 
           {/* Header Stats Bar */}
-          <div className="flex justify-center flex-wrap gap-8 mt-16 pt-12 border-t border-white/5">
+          <div className="flex justify-center flex-wrap gap-8 mt-10 pt-8 border-t border-white/5">
             <div className="flex items-center gap-3">
               <Shield className="text-primary" size={20} />
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">ISO Certified</span>
@@ -101,7 +101,7 @@ const DepartmentsPage = () => {
         </div>
       </section>
 
-      <div className="container mx-auto px-6 py-24 relative">
+      <div className="container mx-auto px-6 py-12 relative">
         {/* Decorative Grid for Content Area */}
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle, #0D9488 1px, transparent 1px)', backgroundSize: '30px 30px' }} />

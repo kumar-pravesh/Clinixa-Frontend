@@ -317,7 +317,7 @@ const TokenManagement = () => {
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 bg-white/50 rounded-2xl flex items-center justify-center border border-white/50 shadow-sm">
-                                    <span className="text-lg font-black text-slate-800 tracking-tighter">{token.id}</span>
+                                    <span className="text-lg font-black text-slate-800 tracking-tighter">{token.token_number}</span>
                                 </div>
                                 <div>
                                     <h3 className="font-black text-slate-800 text-sm">{token.patient}</h3>
@@ -404,7 +404,7 @@ const TokenManagement = () => {
                             {filteredTokens.length > 0 ? filteredTokens.map((token) => (
                                 <tr key={token.id} className="group hover:bg-slate-50/50 transition-colors">
                                     <td className="px-6 py-5">
-                                        <span className="text-xl font-black text-slate-800 tracking-tighter">{token.id}</span>
+                                        <span className="text-xl font-black text-slate-800 tracking-tighter">{token.token_number}</span>
                                     </td>
                                     <td className="px-6 py-5">
                                         <p className="font-black text-slate-800">{token.patient}</p>

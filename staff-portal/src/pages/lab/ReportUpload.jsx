@@ -59,7 +59,7 @@ const ReportUpload = () => {
 
             if (result.success) {
                 addNotification({
-                    type: 'emergency',
+                    type: 'lab',
                     title: 'Report Uploaded',
                     message: `Diagnostic report for ${selectedPatient.patient} has been processed successfully.`
                 });

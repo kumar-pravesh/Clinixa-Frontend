@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useDoctor } from '../../context/DoctorContext';
+import { useAuth } from '../../context/AuthContext';
 
 import { SimpleChart } from '../../components/common/SimpleChart';
 
@@ -54,6 +55,7 @@ const StatCard = ({ title, value, icon: Icon, color, trend, chartData }) => {
 
 const DoctorDashboard = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const { appointments, labReports, getPatientStats } = useDoctor();
     const stats = getPatientStats();
     const [selectedAppointment, setSelectedAppointment] = React.useState(null);
@@ -69,7 +71,7 @@ const DoctorDashboard = () => {
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Welcome Section */}
             <div>
-                <h1 className="text-2xl font-bold text-slate-800">Welcome back, Dr. Smith!</h1>
+                <h1 className="text-2xl font-bold text-slate-800">Welcome back, {user?.name || 'Doctor'}!</h1>
                 <p className="text-slate-500">Here's your schedule and activity overview for today.</p>
             </div>
 

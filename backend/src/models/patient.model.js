@@ -33,7 +33,7 @@ class PatientModel extends BaseModel {
         const [rows] = await this.query('SELECT * FROM patients WHERE user_id = ?', [userId]);
         return rows[0] || null;
     }
-    static async search(search = '', limit = 100) {
+    static async findAll(search = '', limit = 100) {
         let query = `
             SELECT 
                 CONCAT('PID-', LPAD(p.id, 4, '0')) as id,

@@ -9,7 +9,7 @@ const receptionistService = {
      * Search patient by phone number
      */
     async searchPatients(query) {
-        return PatientModel.search(query);
+        return PatientModel.findAll(query);
     },
 
     /**

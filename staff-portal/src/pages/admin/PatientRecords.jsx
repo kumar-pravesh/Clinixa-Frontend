@@ -130,10 +130,20 @@ const PatientRecords = () => {
         setSelectedPatient(patient);
     };
 
-    const handleCloseProfile = async () => {
+    const closeModal = () => {
+        setSelectedPatient(null);
+    };
+
+    const handleDeletePatient = async () => {
         if (!selectedPatient) return;
+
         const name = selectedPatient.name;
         const patientId = selectedPatient.id;
+
+        if (!window.confirm(`Are you sure you want to permanently delete the clinical profile for ${name}? This action cannot be undone.`)) {
+            return;
+        }
+
         setSelectedPatient(null);
         try {
             await adminService.deletePatient(patientId);
@@ -296,13 +306,13 @@ const PatientRecords = () => {
             {selectedPatient && (
                 <div
                     className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200"
-                    onClick={handleCloseProfile}
+                    onClick={closeModal}
                 >
                     <div
                         className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <button onClick={handleCloseProfile} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-600 transition-colors z-10">
+                        <button onClick={closeModal} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-600 transition-colors z-10">
                             <X className="w-6 h-6" />
                         </button>
 
@@ -361,8 +371,12 @@ const PatientRecords = () => {
                                 </div>
                             </div>
 
-                            <button onClick={handleCloseProfile} className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl shadow-slate-200 hover:scale-[1.01] active:scale-[0.99] transition-all">
+                            <button onClick={closeModal} className="w-full h-16 bg-slate-950 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl shadow-slate-200 hover:scale-[1.01] active:scale-[0.99] transition-all mb-4">
                                 Close Clinical Profile
+                            </button>
+
+                            <button onClick={handleDeletePatient} className="w-full h-12 bg-white text-rose-500 border-2 border-rose-100 hover:border-rose-200 rounded-xl font-black uppercase tracking-titles text-[9px] transition-all">
+                                Permanently Delete Record
                             </button>
                         </div>
                     </div>

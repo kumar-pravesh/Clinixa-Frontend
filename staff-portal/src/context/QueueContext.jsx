@@ -75,6 +75,7 @@ export const QueueProvider = ({ children }) => {
     };
 
     const updateTokenStatus = async (tokenId, newStatus) => {
+        console.log(`[QueueContext] Updating token ${tokenId} status to ${newStatus}`);
         try {
             await receptionService.updateTokenStatus(tokenId, newStatus);
             // Optimistic update
@@ -90,6 +91,7 @@ export const QueueProvider = ({ children }) => {
     };
 
     const deleteToken = async (tokenId) => {
+        console.log(`[QueueContext] Deleting token ${tokenId}`);
         try {
             await receptionService.deleteToken(tokenId);
             setTokens(prev => prev.filter(t => t.id !== tokenId));

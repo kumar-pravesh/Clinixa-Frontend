@@ -32,12 +32,15 @@ const labService = {
     async uploadReport(data, uploadedBy) {
         const { lab_test_id, patient_id, doctor_id, test_name, results, notes, file_path } = data;
 
-        const numericTestId = lab_test_id ? lab_test_id.toString().replace('LAB-', '') : null;
-        const numericPatientId = patient_id ? patient_id.toString().replace('PID-', '') : null;
-        const numericDoctorId = doctor_id ? doctor_id.toString().replace('DOC-', '') : null;
+        // Strip formatted prefixes to get numeric IDs
+        const numericTestId = lab_test_id ? lab_test_id.toString().replace(/^LAB-0*/i, '') : null;
+        // patient_id comes formatted as PID-XXXX from the queue
+        const numericPatientId = patient_id ? patient_id.toString().replace(/^PID-0*/i, '') : null;
+        // doctor_id is already a raw numeric ID from the queue
+        const numericDoctorId = doctor_id ? doctor_id.toString().replace(/^DOC-0*/i, '') : null;
 
-        if (!numericPatientId) throw new Error('Patient ID is required');
-        if (!numericDoctorId) throw new Error('Doctor ID is required');
+        if (!numericPatientId) throw new Error('Patient ID is required for lab report upload');
+        if (!numericDoctorId) throw new Error('Doctor ID is required for lab report upload');
 
         // Create Report
         const reportId = await LabModel.create({

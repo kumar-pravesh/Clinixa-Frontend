@@ -15,14 +15,15 @@ class LabModel extends BaseModel {
 
     static async create(data) {
         // supports both upload styles (doctor direct or lab tech with test link)
-        const { doctorId, patientId, uploadedBy, testName, filePath, results, notes, date } = data;
+        const { labTestId, doctorId, patientId, uploadedBy, testName, filePath, results, notes, date } = data;
 
         const [result] = await this.query(`
             INSERT INTO lab_reports (
-                patient_id, doctor_id, uploaded_by,
+                lab_test_id, patient_id, doctor_id, uploaded_by,
                 test_name, file_url, result_summary, test_date, status, test_status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Completed', 'Completed')
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Completed', 'Completed')
         `, [
+            labTestId || null,
             patientId,
             doctorId,
             uploadedBy || null,

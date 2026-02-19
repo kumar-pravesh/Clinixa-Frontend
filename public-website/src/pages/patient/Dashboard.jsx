@@ -21,6 +21,13 @@ const PatientDashboard = () => {
         ? `${new Date(stats.nextAppointment.date).toLocaleDateString('en-US', { weekday: 'short' })}, ${stats.nextAppointment.time}`
         : 'No upcoming visits';
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good Morning';
+        if (hour < 17) return 'Good Afternoon';
+        return 'Good Evening';
+    };
+
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
             {/* Welcome Hero */}
@@ -29,7 +36,7 @@ const PatientDashboard = () => {
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight">
-                            Good Morning, <span className="text-secondary">{firstName}!</span>
+                            {getGreeting()}, <span className="text-secondary">{firstName}!</span>
                         </h1>
                         <p className="text-base opacity-90 max-w-lg leading-relaxed">
                             Your health is our priority. You have <span className="font-bold underline decoration-secondary decoration-2 underline-offset-4">
