@@ -6,6 +6,7 @@ const DepartmentModel = require('../models/department.model');
 const PatientModel = require('../models/patient.model');
 const AppointmentModel = require('../models/appointment.model');
 const InvoiceModel = require('../models/invoice.model');
+const eventBus = require('../lib/event-bus');
 
 // Note: TokenModel for dashboard summary (migrated later or raw SQL now)
 // I'll use raw SQL for TokenModel queries in getDashboardSummary for now as per original service resilience
@@ -302,6 +303,38 @@ const adminService = {
      */
     async rejectAppointment(id) {
         await AppointmentModel.updateStatus(id, 'Cancelled');
+
+        // ─── Post-Update Event Emission (additive) ────────────
+        try {
+            const [rows] = await pool.query(`
+                SELECT 
+                    u.email, u.name as patientName,
+                    doc_u.name as doctorName,
+                    DATE_FORMAT(a.date, '%Y-%m-%d') as date,
+                    a.time
+                FROM appointments a
+                JOIN patients p ON a.patient_id = p.id
+                JOIN users u ON p.user_id = u.id
+                JOIN doctors d ON a.doctor_id = d.id
+                JOIN users doc_u ON d.user_id = doc_u.id
+                WHERE a.id = ?
+            `, [id]);
+
+            if (rows.length > 0) {
+                eventBus.safeEmit('appointment.rejected', {
+                    email: rows[0].email,
+                    patientName: rows[0].patientName,
+                    doctorName: rows[0].doctorName,
+                    date: rows[0].date,
+                    time: rows[0].time,
+                    reason: 'Appointment cancelled by the clinic'
+                });
+            }
+        } catch (eventError) {
+            console.error('[AdminService] Event emission error (non-fatal):', eventError.message);
+        }
+        // ─── End Post-Update Event ────────────────────────────
+
         return { success: true, status: 'Cancelled' };
     },
 

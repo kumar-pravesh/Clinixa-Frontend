@@ -19,6 +19,7 @@ const publicRoutes = require('./routes/public.routes');
 const receptionistRoutes = require('./routes/receptionist.routes');
 const labRoutes = require('./routes/lab.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const otpAuthRoutes = require('./routes/otp-auth.routes');
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use('/auth', authRoutes);                   // Authentication
 app.use('/patient', patientRoutes);             // Patient operations
 app.use('/appointment', appointmentRoutes);     // Appointments
 app.use('/payments', paymentRoutes);            // Payments
+app.use('/auth', otpAuthRoutes);                // OTP Registration + JWT Forgot Password
 app.use('/api', notificationRoutes);            // Shared notifications
 
 // ============================================
@@ -90,4 +92,19 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+
+// ─── Startup Initialization (runs after module load) ─────────
+try {
+    const { registerEventListeners } = require('./services/event-listeners');
+    registerEventListeners();
+} catch (error) {
+    console.error('[App] Failed to register event listeners (non-fatal):', error.message);
+}
+
+try {
+    const { startScheduler } = require('./services/scheduler/reminder.scheduler');
+    startScheduler();
+} catch (error) {
+    console.error('[App] Failed to start reminder scheduler (non-fatal):', error.message);
+}
 

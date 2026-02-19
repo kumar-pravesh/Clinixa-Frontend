@@ -3,6 +3,7 @@ const PaymentModel = require('../models/payment.model');
 const InvoiceModel = require('../models/invoice.model');
 const AppointmentModel = require('../models/appointment.model');
 const notificationService = require('./notification.service');
+const eventBus = require('../lib/event-bus');
 
 // Providers
 const mockProvider = require('./payment/mock.provider');
@@ -122,6 +123,53 @@ const paymentService = {
             }
 
             await connection.commit();
+
+            // ─── Post-Commit Event Emissions (additive) ───────────
+            try {
+                if (isValid) {
+                    // Fetch patient info for event payload
+                    const [patientRows] = await pool.query(`
+                        SELECT u.name, u.email
+                        FROM invoices i
+                        JOIN patients p ON i.patient_id = p.id
+                        JOIN users u ON p.user_id = u.id
+                        WHERE i.id = ?
+                    `, [payment.invoice_id]);
+
+                    if (patientRows.length > 0) {
+                        eventBus.safeEmit('payment.success', {
+                            email: patientRows[0].email,
+                            patientName: patientRows[0].name,
+                            amount: payment.amount,
+                            transactionId: payment.transaction_id,
+                            appointmentId: await InvoiceModel.getAppointmentId(payment.invoice_id)
+                        });
+                    }
+                } else {
+                    // Attempt to get patient info for failure email too
+                    const [patientRows] = await pool.query(`
+                        SELECT u.name, u.email
+                        FROM invoices i
+                        JOIN patients p ON i.patient_id = p.id
+                        JOIN users u ON p.user_id = u.id
+                        WHERE i.id = ?
+                    `, [payment.invoice_id]);
+
+                    if (patientRows.length > 0) {
+                        eventBus.safeEmit('payment.failed', {
+                            email: patientRows[0].email,
+                            patientName: patientRows[0].name,
+                            amount: payment.amount,
+                            transactionId: payment.transaction_id,
+                            reason: 'Payment verification failed'
+                        });
+                    }
+                }
+            } catch (eventError) {
+                console.error('[PaymentService] Event emission error (non-fatal):', eventError.message);
+            }
+            // ─── End Post-Commit Events ───────────────────────────
+
             return { status };
         } catch (error) {
             await connection.rollback();
