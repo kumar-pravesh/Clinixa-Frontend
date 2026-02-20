@@ -32,10 +32,20 @@ const uploadReport = async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
+        let results = [];
+        if (req.body.results) {
+            try {
+                results = typeof req.body.results === 'string' ? JSON.parse(req.body.results) : req.body.results;
+            } catch (e) {
+                console.warn('[LabController] Failed to parse results JSON:', e.message);
+                results = [];
+            }
+        }
+
         const data = {
             ...req.body,
             file_path: `/uploads/reports/${req.file.filename}`,
-            results: req.body.results ? JSON.parse(req.body.results) : []
+            results
         };
 
         const result = await labService.uploadReport(data, req.user.id);

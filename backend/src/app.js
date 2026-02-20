@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const morgan = require('morgan');
 const logger = require('./lib/logger');
+const fs = require('fs');
 require('dotenv').config();
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger-output.json');
@@ -24,6 +25,16 @@ const notificationRoutes = require('./routes/notification.routes');
 const otpAuthRoutes = require('./routes/otp-auth.routes');
 
 const app = express();
+
+// Ensure upload directories exist
+const uploadDirs = ['uploads', 'uploads/reports', 'uploads/lab'];
+uploadDirs.forEach(dir => {
+    const dirPath = path.join(__dirname, '..', dir);
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+        console.log(`[App] Created missing directory: ${dir}`);
+    }
+});
 
 // Middleware
 app.use(cors({
