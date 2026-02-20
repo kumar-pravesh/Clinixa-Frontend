@@ -16,9 +16,10 @@ export const AuthProvider = ({ children }) => {
                     localStorage.setItem('accessToken', data.accessToken);
                 }
                 if (data.user) {
+                    console.log('Persistence: Restoring user session');
                     setUser(data.user);
                 }
-            } catch {
+            } catch (err) {
                 console.warn('Auth Persistence: Refresh failed or session expired');
                 // Don't clear user immediately if we already have one (from login)
                 // but usually checkAuth runs on mount

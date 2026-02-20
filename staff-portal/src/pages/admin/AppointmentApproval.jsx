@@ -72,23 +72,25 @@ const AppointmentApproval = () => {
     };
 
     const getStatusStyle = (status) => {
-        switch (status) {
-            case 'Pending':
+        const s = status?.toUpperCase();
+        switch (s) {
+            case 'PENDING':
             case 'CREATED': return "bg-amber-50 text-amber-600 border-amber-100 shadow-amber-100/10";
-            case 'Approved':
-            case 'Scheduled':
-            case 'Confirmed': return "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-100/10";
-            case 'Rescheduled': return "bg-blue-50 text-blue-600 border-blue-100 shadow-blue-100/10";
-            case 'Cancelled': return "bg-rose-50 text-rose-600 border-rose-100 shadow-rose-100/10";
+            case 'APPROVED':
+            case 'SCHEDULED':
+            case 'CONFIRMED': return "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-100/10";
+            case 'RESCHEDULED': return "bg-blue-50 text-blue-600 border-blue-100 shadow-blue-100/10";
+            case 'CANCELLED': return "bg-rose-50 text-rose-600 border-rose-100 shadow-rose-100/10";
             default: return "bg-slate-50 text-slate-500 border-slate-100";
         }
     };
 
     const filteredAppointments = appointments.filter(app => {
+        const status = app.status?.toUpperCase();
         if (activeTab === 'Schedules') return true;
-        if (activeTab === 'Pending') return app.status === 'Pending' || app.status === 'CREATED';
-        if (activeTab === 'Approved') return app.status === 'Approved' || app.status === 'Confirmed' || app.status === 'Scheduled';
-        return app.status === activeTab;
+        if (activeTab === 'Pending') return status === 'PENDING' || status === 'CREATED';
+        if (activeTab === 'Approved') return status === 'APPROVED' || status === 'CONFIRMED' || status === 'SCHEDULED';
+        return status === activeTab.toUpperCase();
     });
 
     return (

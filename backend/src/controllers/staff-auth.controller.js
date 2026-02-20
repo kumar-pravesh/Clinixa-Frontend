@@ -75,7 +75,7 @@ const refreshToken = async (req, res) => {
             path: '/'
         });
 
-        res.json({ accessToken: data.accessToken });
+        res.json({ user: data.user, accessToken: data.accessToken });
     } catch (error) {
         res.status(403).json({ message: 'Invalid Refresh Token' });
     }
