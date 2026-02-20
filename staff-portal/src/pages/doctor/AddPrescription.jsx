@@ -18,7 +18,7 @@ const AddPrescription = () => {
     const addMedication = () => {
         setMedications([
             ...medications,
-            { id: Date.now(), name: '', dosage: '', frequency: '', duration: '' }
+            { id: `${Date.now()}-${Math.random()}`, name: '', dosage: '', frequency: '', duration: '' }
         ]);
     };
 

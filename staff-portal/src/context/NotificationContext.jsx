@@ -103,7 +103,7 @@ export const NotificationProvider = ({ children }) => {
     const addNotification = useCallback((notif) => {
         // For local feedback (transient, until next poll)
         const newNotif = {
-            id: Date.now(),
+            id: `${Date.now()}-${Math.random()}`,
             type: notif.type || 'system',
             title: notif.title,
             message: notif.message,

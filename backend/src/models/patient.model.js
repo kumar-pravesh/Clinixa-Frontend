@@ -64,6 +64,24 @@ class PatientModel extends BaseModel {
         const fields = [];
         const values = [];
 
+        // Check if patient record exists first
+        const [existing] = await this.query('SELECT id, email FROM patients WHERE user_id = ?', [userId], connection);
+
+        if (existing.length === 0) {
+            // Get user info to populate basic fields
+            const [user] = await this.query('SELECT name, email FROM users WHERE id = ?', [userId], connection);
+            if (user.length === 0) return null;
+
+            // Create record
+            await this.create({
+                user_id: userId,
+                name: updateData.name || user[0].name,
+                email: user[0].email,
+                ...updateData
+            }, connection);
+            return { affectedRows: 1 };
+        }
+
         for (const field of allowedFields) {
             if (updateData[field] !== undefined) {
                 fields.push(`${field} = ?`);
@@ -90,7 +108,7 @@ class PatientModel extends BaseModel {
             SELECT p.id, u.name, u.email, p.dob, p.gender, p.phone, p.address, p.history, 
                    p.blood_group, p.height, p.weight, p.bp_systolic, p.bp_diastolic
             FROM users u 
-            JOIN patients p ON u.id = p.user_id 
+            LEFT JOIN patients p ON u.id = p.user_id 
             WHERE u.id = ?
         `, [userId]);
         return rows[0] || null;

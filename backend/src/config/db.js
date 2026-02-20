@@ -10,10 +10,12 @@ const poolConfig = {
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
   waitForConnections: true,
-  connectionLimit: 5,
+  connectionLimit: 20, // Increased for team collaboration
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0
+  keepAliveInitialDelay: 0,
+  timezone: 'Z',
+  multipleStatements: true
 };
 
 // Add SSL if CA path is provided

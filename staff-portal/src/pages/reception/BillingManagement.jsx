@@ -73,7 +73,7 @@ const BillingManagement = () => {
     };
 
     const addItem = () => {
-        setBillItems([...billItems, { id: Date.now(), service: '', charge: 0 }]);
+        setBillItems([...billItems, { id: `${Date.now()}-${Math.random()}`, service: '', charge: 0 }]);
     };
 
     const removeItem = (id) => {

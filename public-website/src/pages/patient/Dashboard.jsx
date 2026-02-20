@@ -5,7 +5,9 @@ import { patientService } from '../../services/patientService';
 
 const PatientDashboard = () => {
     const profile = JSON.parse(localStorage.getItem("user"));
-    const firstName = profile?.name?.split(' ')[0] || 'Patient';
+    const rawName = profile?.name || 'Patient';
+    const cleanName = rawName.replace(/^(Dr\.|Dr|Mr\.|Mr|Mrs\.|Mrs|Ms\.|Ms|Miss)\s+/i, '');
+    const firstName = cleanName.split(' ')[0] || 'Patient';
 
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
