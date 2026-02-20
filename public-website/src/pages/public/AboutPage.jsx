@@ -51,7 +51,17 @@ const AboutPage = () => {
             <h3 className="text-secondary font-bold uppercase tracking-wider mb-2">Our Mission</h3>
             <h2 className="text-4xl font-bold text-gray-900 mb-6">Healing with Heart & Science</h2>
             <p className="text-gray-600 mb-6 leading-relaxed">
-              At Clinixa, our mission is to provide exceptional, patient-centered care that improves the health and well-being of our community. We combine state-of-the-art medical technology with a compassionate human touch.
+              At Clinixa, our mission is to deliver high-quality, patient-focused healthcare that genuinely improves lives.
+We believe the best outcomes are achieved when medical expertise, advanced technology, and empathy work together.
+
+Our approach goes beyond treating symptoms — we focus on understanding each patient’s condition, concerns, and long-term well-being.
+            </p>
+
+            <h3 className="text-secondary font-bold uppercase tracking-wider mb-2">Our Commitment</h3>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+             From routine consultations to specialized treatments, Clinixa remains committed to providing care that patients can trust, understand, and rely on.
+
+We don’t just treat conditions, we support recovery, confidence, and peace of mind.
             </p>
             <ul className="space-y-4">
               {[

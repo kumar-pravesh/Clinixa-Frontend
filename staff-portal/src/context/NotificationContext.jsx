@@ -75,7 +75,8 @@ export const NotificationProvider = ({ children }) => {
                 // Compare with old notifications to show toasts for new ones
                 setNotifications(prev => {
                     const newNotifs = formatted.filter(n => !prev.find(p => p.id === n.id));
-                    if (newNotifs.length > 0 && !loading) {
+                    // Check if we have previous notifications to avoid toasts on initial load
+                    if (newNotifs.length > 0 && prev.length > 0) {
                         // Show toast for the most recent unread notification
                         const latestUnread = newNotifs.find(n => !n.read);
                         if (latestUnread) setActiveToast(latestUnread);
@@ -88,7 +89,7 @@ export const NotificationProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, [formatNotification, loading]);
+    }, [formatNotification]);
 
     // Initial fetch and polling
     useEffect(() => {

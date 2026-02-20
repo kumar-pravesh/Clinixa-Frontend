@@ -198,6 +198,19 @@ const adminService = {
      * Create department
      */
     async createDepartment(data) {
+        // Parse publications if it's a JSON string (from FormData)
+        if (typeof data.publications === 'string') {
+            try {
+                data.publications = JSON.parse(data.publications);
+            } catch (e) {
+                data.publications = [];
+            }
+        }
+        // Ensure numeric fields
+        if (data.beds) data.beds = parseInt(data.beds);
+        if (data.staff) data.staff = parseInt(data.staff);
+        if (data.success_rate) data.success_rate = parseInt(data.success_rate);
+
         const id = await DepartmentModel.create(data);
         return { id, ...data };
     },
@@ -207,6 +220,20 @@ const adminService = {
      */
     async updateDepartment(id, data) {
         const numericId = id.toString().replace('DEPT-', '');
+
+        // Parse publications if it's a JSON string (from FormData)
+        if (typeof data.publications === 'string') {
+            try {
+                data.publications = JSON.parse(data.publications);
+            } catch (e) {
+                data.publications = [];
+            }
+        }
+        // Ensure numeric fields
+        if (data.beds) data.beds = parseInt(data.beds);
+        if (data.staff) data.staff = parseInt(data.staff);
+        if (data.success_rate) data.success_rate = parseInt(data.success_rate);
+
         await DepartmentModel.update(numericId, data);
         return { id, ...data };
     },

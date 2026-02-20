@@ -15,6 +15,33 @@ const iconMap = {
   "Lab": Microscope
 };
 
+const getImageUrl = (url) => {
+  if (!url) return null;
+  return url.startsWith('http') ? url : `http://localhost:5000/${url}`;
+};
+
+const departmentImageMap = {
+  "Cardio": "https://images.unsplash.com/photo-1530026405186-ed1f139313f3?q=80&w=800&auto=format&fit=crop",
+  "Neuro": "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?q=80&w=800&auto=format&fit=crop",
+  "Pediatr": "https://images.unsplash.com/photo-1504439904031-93ded9f93e4e?q=80&w=800&auto=format&fit=crop",
+  "Orthop": "https://images.unsplash.com/photo-1582719471384-894fbb16e074?q=80&w=800&auto=format&fit=crop",
+  "Ophthalm": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=800&auto=format&fit=crop",
+  "Dermat": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop",
+  "Gynec": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=800&auto=format&fit=crop",
+  "Emerg": "https://images.unsplash.com/photo-1551190822-a9333d879b1f?q=80&w=800&auto=format&fit=crop",
+  "Surgeon": "https://images.unsplash.com/photo-1551601651-2a8555f1a136?q=80&w=800&auto=format&fit=crop",
+  "General": "https://images.unsplash.com/photo-1666214280577-5d9e8e7e0e4c?q=80&w=800&auto=format&fit=crop",
+  "Lab": "https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=800&auto=format&fit=crop"
+};
+
+const getDeptImage = (name) => {
+  if (!name) return "https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=800&auto=format&fit=crop";
+  for (const key in departmentImageMap) {
+    if (name.toLowerCase().includes(key.toLowerCase())) return departmentImageMap[key];
+  }
+  return "https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=800&auto=format&fit=crop";
+};
+
 const getIcon = (name) => {
   if (!name) return Activity;
   for (const key in iconMap) {
@@ -129,7 +156,7 @@ const DepartmentsPage = () => {
                   {/* Image Section */}
                   <div className="md:w-5/12 h-80 md:h-auto relative overflow-hidden">
                     <img
-                      src={dept.image_url || "https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=800&auto=format&fit=crop"}
+                      src={getImageUrl(dept.image_url) || getDeptImage(dept.name)}
                       alt={dept.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-40 group-hover:opacity-60"
                     />

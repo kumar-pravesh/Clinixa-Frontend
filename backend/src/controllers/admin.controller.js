@@ -57,7 +57,11 @@ const getDepartments = async (req, res) => {
 
 const createDepartment = async (req, res) => {
     try {
-        const result = await adminService.createDepartment(req.body);
+        const deptData = { ...req.body };
+        if (req.file) {
+            deptData.image_url = req.file.path.replace(/\\/g, '/');
+        }
+        const result = await adminService.createDepartment(deptData);
         res.status(201).json(result);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -66,7 +70,11 @@ const createDepartment = async (req, res) => {
 
 const updateDepartment = async (req, res) => {
     try {
-        const result = await adminService.updateDepartment(req.params.id, req.body);
+        const updateData = { ...req.body };
+        if (req.file) {
+            updateData.image_url = req.file.path.replace(/\\/g, '/');
+        }
+        const result = await adminService.updateDepartment(req.params.id, updateData);
         res.json(result);
     } catch (error) {
         res.status(400).json({ message: error.message });

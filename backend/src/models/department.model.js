@@ -31,20 +31,20 @@ class DepartmentModel extends BaseModel {
     }
 
     static async create(data, connection) {
-        const { name, head, beds, status, color, description, publications } = data;
+        const { name, head, beds, status, color, description, publications, image_url } = data;
         const [result] = await this.query(
-            'INSERT INTO departments (name, head, beds, status, color, description, publications) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [name, head, beds || 0, status || 'Active', color || 'bg-primary', description || '', JSON.stringify(publications || [])],
+            'INSERT INTO departments (name, head, beds, status, color, description, publications, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [name, head, beds || 0, status || 'Active', color || 'bg-primary', description || '', JSON.stringify(publications || []), image_url || null],
             connection
         );
         return result.insertId;
     }
 
     static async update(id, data) {
-        const { name, head, beds, status, color, description, publications } = data;
+        const { name, head, beds, status, color, description, publications, image_url } = data;
         const [result] = await this.query(
-            'UPDATE departments SET name = ?, head = ?, beds = ?, status = ?, color = ?, description = ?, publications = ? WHERE id = ?',
-            [name, head, beds || 0, status || 'Active', color || 'bg-primary', description || '', JSON.stringify(publications || []), id]
+            'UPDATE departments SET name = ?, head = ?, beds = ?, status = ?, color = ?, description = ?, publications = ?, image_url = ? WHERE id = ?',
+            [name, head, beds || 0, status || 'Active', color || 'bg-primary', description || '', JSON.stringify(publications || []), image_url || null, id]
         );
         return result;
     }
