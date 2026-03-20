@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
-import { User, Calendar, FileText, Home, LogOut, PlusCircle, Bell, Search, Clock, CheckCircle, Info } from 'lucide-react';
+import { User, Calendar, FileText, Home, LogOut, PlusCircle, Bell, Search, Clock, CheckCircle, Info, Menu, X } from 'lucide-react';
 import { patientService } from '../services/patientService';
 
 const PatientLayout = () => {
@@ -11,6 +11,7 @@ const PatientLayout = () => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const fetchNotifications = async () => {
         try {
@@ -68,9 +69,19 @@ const PatientLayout = () => {
     ];
 
     return (
-        <div className="flex h-screen bg-health-flow overflow-hidden">
+        <div className="flex h-screen bg-health-flow overflow-hidden relative">
+            {/* Mobile Sidebar Backdrop */}
+            {isSidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-300"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-64 glass-panel m-3 mr-0 rounded-2xl flex flex-col shadow-xl transition-all duration-300">
+            <aside className={`fixed inset-y-0 left-0 z-50 w-64 glass-panel m-3 mr-0 rounded-2xl flex flex-col shadow-xl transition-all duration-300 transform ${
+                isSidebarOpen ? 'translate-x-0' : '-translate-x-[calc(100%+12px)]'
+            } md:relative md:translate-x-0 md:flex`}>
                 <div className="p-6 border-b border-white/20">
                     <div className="flex items-center space-x-2 mb-1">
                         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/20">
@@ -92,6 +103,7 @@ const PatientLayout = () => {
                                     ? 'bg-primary text-white shadow-lg shadow-primary/20 translate-x-1'
                                     : 'text-gray-500 hover:bg-white/50 hover:text-primary'
                                     }`}
+                                onClick={() => setIsSidebarOpen(false)}
                             >
                                 <span className={`${isActive ? 'text-white' : 'group-hover:text-primary transition-colors'}`}>
                                     {item.icon}
@@ -120,8 +132,15 @@ const PatientLayout = () => {
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 {/* Header */}
                 <header className="h-16 glass-nav m-3 mb-0 rounded-2xl flex items-center justify-between px-6 shadow-sm">
-                    <div className="flex items-center space-x-4 flex-1 max-w-md">
-                        <div className="relative w-full">
+                    <div className="flex items-center space-x-4 flex-1">
+                        <button
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            className="p-2 -ml-2 text-gray-500 hover:bg-white/50 rounded-lg md:hidden transition-colors"
+                        >
+                            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                        </button>
+
+                        <div className="relative w-full max-w-md hidden sm:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                             <input
                                 type="text"
