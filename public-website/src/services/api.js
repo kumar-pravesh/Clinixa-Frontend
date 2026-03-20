@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const baseURL = import.meta.env.VITE_API_ROOT || 'http://localhost:5000';
+console.log(`[API] Base URL initialized with: ${baseURL}`);
+if (baseURL === 'http://localhost:5000' && import.meta.env.PROD) {
+    console.warn('[API] Warning: Running in production but VITE_API_ROOT is not set. Falling back to localhost.');
+}
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_ROOT || 'http://localhost:5000',
+    baseURL,
     withCredentials: true,
 });
 
@@ -38,7 +44,7 @@ api.interceptors.response.use(
 
             try {
                 const { data } = await axios.post(
-                    `${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/auth/refresh`,
+                    `${baseURL}/auth/refresh`,
                     {},
                     { withCredentials: true }
                 );
