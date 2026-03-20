@@ -3,10 +3,13 @@ const BaseModel = require('./BaseModel');
 class AppointmentModel extends BaseModel {
     static async findByDoctorId(doctorId) {
         const [rows] = await this.query(`
-            SELECT a.id, u.name as patient_name, a.patient_id, DATE_FORMAT(a.date, '%Y-%m-%d') as date, a.time, a.type, a.status, a.reason
+            SELECT a.id, COALESCE(u.name, p.name) as patient, 
+                   CONCAT('PID-', LPAD(a.patient_id::text, 4, '0')) as patient_id,
+                   TO_CHAR(a.date + INTERVAL '330 MINUTE', 'YYYY-MM-DD') as date, 
+                   a.time, a.type, a.status, a.reason
             FROM appointments a
             JOIN patients p ON a.patient_id = p.id
-            JOIN users u ON p.user_id = u.id
+            LEFT JOIN users u ON p.user_id = u.id
             WHERE a.doctor_id = ?
             ORDER BY a.date DESC, a.time ASC
         `, [doctorId]);
@@ -21,9 +24,9 @@ class AppointmentModel extends BaseModel {
     static async create(data, connection) {
         let { patientId, doctorId, date, timeSlot, time, type, status, reason } = data;
 
-        // Sanitize IDs
-        const cleanPatientId = patientId.toString().replace('PID-', '');
-        const cleanDoctorId = doctorId.toString().replace('DOC-', '');
+        // Sanitize IDs with guards
+        const cleanPatientId = patientId ? patientId.toString().replace('PID-', '') : null;
+        const cleanDoctorId = doctorId ? doctorId.toString().replace('DOC-', '') : null;
 
         // Map timeSlot to time if time is missing (for flexibility)
         const finalTime = time || timeSlot;
@@ -58,15 +61,15 @@ class AppointmentModel extends BaseModel {
         let query = `
             SELECT 
                 a.id,
-                DATE_FORMAT(a.date, '%Y-%m-%d') as date,
+                TO_CHAR(a.date, 'YYYY-MM-DD') as date,
                 a.time,
                 a.type,
                 a.status,
                 a.reason,
                 p.name as patient,
-                CONCAT('PID-', LPAD(p.id, 4, '0')) as patient_id,
+                CONCAT('PID-', LPAD(p.id::text, 4, '0')) as patient_id,
                 u.name as doctor,
-                CONCAT('DOC-', LPAD(d.id, 4, '0')) as doctor_id,
+                CONCAT('DOC-', LPAD(d.id::text, 4, '0')) as doctor_id,
                 dep.name as dept
             FROM appointments a
             LEFT JOIN patients p ON a.patient_id = p.id
@@ -79,7 +82,7 @@ class AppointmentModel extends BaseModel {
         const params = [];
         if (date) {
             // Use DATE_ADD to handle UTC vs IST (5:30h offset) for precise day matching
-            query += ` AND DATE(DATE_ADD(a.date, INTERVAL 330 MINUTE)) = ?`;
+            query += ` AND (a.date + INTERVAL '330 MINUTE')::date = ?`;
             params.push(date);
         }
         if (status) {
@@ -111,8 +114,8 @@ class AppointmentModel extends BaseModel {
 
     static async countToday() {
         // Use +5:30 offset to match IST "Today" from UTC storage
-        const [rows] = await this.query('SELECT COUNT(*) as count FROM appointments WHERE DATE(DATE_ADD(date, INTERVAL 330 MINUTE)) = DATE(DATE_ADD(NOW(), INTERVAL 330 MINUTE))');
-        return rows[0].count;
+        const [rows] = await this.query("SELECT COUNT(*) as count FROM appointments WHERE (date + INTERVAL '330 MINUTE')::date = (NOW() + INTERVAL '330 MINUTE')::date");
+        return rows[0] ? parseInt(rows[0].count) : 0;
     }
 
     static async checkAvailability(doctorId, date, timeSlot) {
@@ -128,7 +131,7 @@ class AppointmentModel extends BaseModel {
         const [rows] = await this.query(`
             SELECT 
                 a.*,
-                u.name as doctor_name,
+                COALESCE(u.name, 'Doctor') as doctor_name,
                 dep.name as specialization,
                 doc.consultation_fee,
                 doc.image_url,
@@ -137,7 +140,7 @@ class AppointmentModel extends BaseModel {
             FROM appointments a
             JOIN patients p ON a.patient_id = p.id
             JOIN doctors doc ON a.doctor_id = doc.id
-            JOIN users u ON doc.user_id = u.id
+            LEFT JOIN users u ON doc.user_id = u.id
             LEFT JOIN departments dep ON doc.department_id = dep.id
             LEFT JOIN invoices inv ON inv.appointment_id = a.id
             WHERE p.user_id = ?
@@ -150,7 +153,7 @@ class AppointmentModel extends BaseModel {
         const [rows] = await this.query(`
             SELECT 
                 a.id,
-                DATE_FORMAT(a.date, '%Y-%m-%d') as date,
+                TO_CHAR(a.date, 'YYYY-MM-DD') as date,
                 a.time,
                 a.status,
                 u.name as doctor_name
@@ -160,11 +163,11 @@ class AppointmentModel extends BaseModel {
             JOIN users u ON d.user_id = u.id
             WHERE p.user_id = ? 
             AND (
-                a.date > CURDATE() 
-                OR (a.date = CURDATE() AND a.time > DATE_FORMAT(NOW(), '%h:%i %p'))
+                a.date > CURRENT_DATE 
+                OR (a.date = CURRENT_DATE AND (a.time::time > (NOW() + INTERVAL '330 MINUTE')::time))
             )
             AND a.status != 'Cancelled'
-            ORDER BY a.date ASC, a.time ASC
+            ORDER BY a.date ASC, a.time::time ASC
             LIMIT 1
         `, [userId]);
         return rows[0] || null;
@@ -175,12 +178,25 @@ class AppointmentModel extends BaseModel {
             SELECT COUNT(*) as count
             FROM appointments a
             JOIN patients p ON a.patient_id = p.id
-            WHERE p.user_id = ? AND a.date = CURDATE() AND a.status != 'Cancelled'
+            WHERE p.user_id = ? AND a.date = CURRENT_DATE AND a.status != 'Cancelled'
         `, [userId]);
-        return rows[0].count;
+        return rows[0] ? parseInt(rows[0].count) : 0;
+    }
+
+    static async countUpcomingByUserId(userId) {
+        const [rows] = await this.query(`
+            SELECT COUNT(*) as count
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.id
+            WHERE p.user_id = ? 
+            AND (a.date > CURRENT_DATE OR (a.date = CURRENT_DATE AND a.time::time > (NOW() + INTERVAL '330 MINUTE')::time))
+            AND a.status != 'Cancelled'
+        `, [userId]);
+        return rows[0] ? parseInt(rows[0].count) : 0;
     }
 
     static async findById(id) {
+        if (!id) return null;
         const cleanId = id.toString().replace('APP-', '');
         const [rows] = await this.query(`
              SELECT a.*, d.consultation_fee, p.user_id, p.id as patient_id
@@ -199,6 +215,7 @@ class AppointmentModel extends BaseModel {
      * @param {object} connection - Optional connection for transaction
      */
     static async updateStatus(id, status, connection) {
+        if (!id) return null;
         const cleanId = id.toString().replace(/^(APP|APT|APT-)-/i, '').replace(/[^0-9]/g, '');
         const [result] = await this.query(
             'UPDATE appointments SET status = ? WHERE id = ?',

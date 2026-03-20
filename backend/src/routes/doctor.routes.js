@@ -33,17 +33,17 @@ router.post('/login', doctorController.login);
 
 // Protected Staff Routes
 router.get('/profile', authenticateToken, authorizeRoles('doctor'), doctorController.getProfile);
-router.get('/appointments', authenticateToken, authorizeRoles('doctor'), doctorController.getAppointments);
-router.get('/patients', authenticateToken, authorizeRoles('doctor'), doctorController.getPatients);
+router.get('/appointments', authenticateToken, authorizeRoles('doctor', 'receptionist', 'lab_technician', 'admin'), doctorController.getAppointments);
+router.get('/patients', authenticateToken, authorizeRoles('doctor', 'receptionist', 'lab_technician', 'admin'), doctorController.getPatients);
 router.get('/patients/search', authenticateToken, authorizeRoles('doctor'), doctorController.searchPatients);
-router.get('/prescriptions', authenticateToken, authorizeRoles('doctor'), doctorController.getPrescriptions);
-router.post('/prescriptions', authenticateToken, authorizeRoles('doctor'), doctorController.createPrescription);
-router.post('/prescriptions/add-medicines', authenticateToken, authorizeRoles('doctor'), doctorController.addMedicines);
-router.get('/lab-reports', authenticateToken, authorizeRoles('doctor', 'receptionist', 'admin'), doctorController.getLabReports);
-router.post('/lab-reports', authenticateToken, authorizeRoles('doctor', 'receptionist', 'admin'), upload.single('file'), doctorController.uploadLabReport);
-router.post('/lab-tests/request', authenticateToken, authorizeRoles('doctor', 'receptionist', 'admin'), doctorController.requestLabTest);
-router.post('/appointments/follow-up', authenticateToken, authorizeRoles('doctor'), doctorController.setFollowUp);
-router.put('/appointments/:id/status', authenticateToken, authorizeRoles('doctor'), doctorController.updateAppointmentStatus);
+router.get('/prescriptions', authenticateToken, authorizeRoles('doctor', 'receptionist', 'lab_technician', 'admin'), doctorController.getPrescriptions);
+router.post('/prescriptions', authenticateToken, authorizeRoles('doctor', 'receptionist', 'lab_technician', 'admin'), doctorController.createPrescription);
+router.post('/prescriptions/add-medicines', authenticateToken, authorizeRoles('doctor', 'receptionist', 'lab_technician', 'admin'), doctorController.addMedicines);
+router.get('/lab-reports', authenticateToken, authorizeRoles('doctor', 'receptionist', 'lab_technician', 'admin'), doctorController.getLabReports);
+router.post('/lab-reports', authenticateToken, authorizeRoles('doctor', 'receptionist', 'lab_technician', 'admin'), upload.single('file'), doctorController.uploadLabReport);
+router.post('/lab-tests/request', authenticateToken, authorizeRoles('doctor', 'receptionist', 'lab_technician', 'admin'), doctorController.requestLabTest);
+router.post('/appointments/follow-up', authenticateToken, authorizeRoles('doctor', 'receptionist', 'lab_technician', 'admin'), doctorController.setFollowUp);
+router.put('/appointments/:id/status', authenticateToken, authorizeRoles('doctor', 'receptionist', 'lab_technician', 'admin'), doctorController.updateAppointmentStatus);
 
 // Public Routes (Legacy but used by Public Website)
 // Note: These might be better in a public.routes.js but keeping here for now to mirror old structure

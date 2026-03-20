@@ -1,4 +1,5 @@
 const authService = require('../services/auth.service');
+const logger = require('../lib/logger');
 
 const login = async (req, res) => {
     try {
@@ -13,14 +14,14 @@ const login = async (req, res) => {
         }
 
         // Set cookies for both tokens (Staff portal uses mostly cookies)
-        res.cookie('refreshToken', data.refreshToken, {
+        res.cookie('staff_refreshToken', data.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             path: '/'
         });
 
-        res.cookie('accessToken', data.accessToken, {
+        res.cookie('staff_accessToken', data.accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
@@ -29,46 +30,58 @@ const login = async (req, res) => {
 
         res.json({ user: data.user, accessToken: data.accessToken });
     } catch (error) {
-        res.status(401).json({ message: error.message });
+        logger.error('Staff Login Error:', error);
+
+        if (error.message === 'Invalid credentials') {
+            return res.status(401).json({ message: error.message });
+        }
+
+        // Handle database or other internal errors
+        res.status(500).json({
+            message: 'Internal server error during login',
+            error: error.message
+        });
     }
 };
 
 const logout = (req, res) => {
-    res.clearCookie('refreshToken', {
+    res.clearCookie('staff_refreshToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         path: '/'
     });
-    res.clearCookie('accessToken', {
+    res.clearCookie('staff_accessToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         path: '/'
     });
-    // Also clear without path just in case
+    // Also clear original ones just in case
     res.clearCookie('refreshToken');
     res.clearCookie('accessToken');
+    res.clearCookie('staff_refreshToken');
+    res.clearCookie('staff_accessToken');
 
     res.json({ message: 'Logged out successfully' });
 };
 
 const refreshToken = async (req, res) => {
     try {
-        const token = req.cookies.refreshToken;
+        const token = req.cookies.staff_refreshToken;
         if (!token) return res.status(401).json({ message: 'Refresh Token Required' });
 
         const data = await authService.refreshToken(token);
 
         // Update both cookies
-        res.cookie('refreshToken', data.refreshToken, {
+        res.cookie('staff_refreshToken', data.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             path: '/'
         });
 
-        res.cookie('accessToken', data.accessToken, {
+        res.cookie('staff_accessToken', data.accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',

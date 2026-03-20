@@ -29,7 +29,7 @@ class DoctorModel extends BaseModel {
     static async getPublicDoctors() {
         const [rows] = await this.query(`
             SELECT 
-                CONCAT('DOC-', LPAD(d.id, 4, '0')) as id,
+                CONCAT('DOC-', LPAD(d.id::text, 4, '0')) as id,
                 u.name,
                 u.email,
                 u.phone,
@@ -52,7 +52,7 @@ class DoctorModel extends BaseModel {
     static async getPublicDoctorById(cleanId) {
         const [rows] = await this.query(`
             SELECT 
-                CONCAT('DOC-', LPAD(d.id, 4, '0')) as id,
+                CONCAT('DOC-', LPAD(d.id::text, 4, '0')) as id,
                 u.name,
                 u.email,
                 u.phone,
@@ -75,16 +75,18 @@ class DoctorModel extends BaseModel {
         console.log(`[DEBUG] executing getPatientsByDoctorId with ID: ${doctorId}`);
         const [rows] = await this.query(`
             SELECT DISTINCT 
-                p.id, 
-                COALESCE(p.name, u.name) as name, 
+                CONCAT('PID-', LPAD(p.id::text, 4, '0')) as id,
+                p.id as raw_id,
+                COALESCE(p.name, u.name) as name,
+                COALESCE(p.name, u.name) as patient, 
                 CASE 
-                    WHEN p.dob IS NOT NULL THEN TIMESTAMPDIFF(YEAR, p.dob, CURDATE())
+                    WHEN p.dob IS NOT NULL THEN EXTRACT(YEAR FROM AGE(p.dob))::text
                     ELSE 'N/A'
                 END as age,
                 p.gender, 
                 p.phone,
                 (SELECT reason FROM appointments WHERE patient_id = p.id AND doctor_id = ? ORDER BY date DESC, time DESC LIMIT 1) as diagnosis,
-                (SELECT date FROM appointments WHERE patient_id = p.id AND doctor_id = ? ORDER BY date DESC, time DESC LIMIT 1) as lastVisit
+                (SELECT TO_CHAR(date + INTERVAL '330 MINUTE', 'YYYY-MM-DD') FROM appointments WHERE patient_id = p.id AND doctor_id = ? ORDER BY date DESC, time DESC LIMIT 1) as lastVisit
             FROM patients p
             LEFT JOIN users u ON p.user_id = u.id
             JOIN appointments a ON p.id = a.patient_id
@@ -108,7 +110,7 @@ class DoctorModel extends BaseModel {
     static async findAll() {
         const [rows] = await this.query(`
             SELECT 
-                CONCAT('DOC-', LPAD(d.id, 4, '0')) as id,
+                CONCAT('DOC-', LPAD(d.id::text, 4, '0')) as id,
                 u.name, u.email, u.phone, u.status,
                 dep.name as dept,
                 d.specialization, d.experience_years, d.consultation_fee, d.qualification, d.image_url
@@ -141,7 +143,7 @@ class DoctorModel extends BaseModel {
 
     static async countTotal() {
         const [rows] = await this.query('SELECT COUNT(*) as count FROM doctors');
-        return rows[0].count;
+        return rows[0] ? parseInt(rows[0].count) : 0;
     }
 }
 

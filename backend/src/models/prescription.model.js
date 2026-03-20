@@ -4,7 +4,7 @@ class PrescriptionModel extends BaseModel {
     static async findByDoctorId(doctorId) {
         const [rows] = await this.query(`
             SELECT pr.id, COALESCE(p.name, u.name) as patient_name, pr.visit_date as date, pr.diagnosis,
-                   (SELECT JSON_ARRAYAGG(JSON_OBJECT('name', m.name, 'dosage', m.dosage, 'frequency', m.frequency, 'duration', m.duration))
+                   (SELECT json_agg(json_build_object('name', m.name, 'dosage', m.dosage, 'frequency', m.frequency, 'duration', m.duration))
                     FROM medicines m WHERE m.prescription_id = pr.id) as medications
             FROM prescriptions pr
             JOIN patients p ON pr.patient_id = p.id
@@ -33,7 +33,7 @@ class PrescriptionModel extends BaseModel {
 
     static async countByPatientId(patientId) {
         const [rows] = await this.query('SELECT COUNT(*) as count FROM prescriptions WHERE patient_id = ?', [patientId]);
-        return rows[0].count;
+        return rows[0] ? parseInt(rows[0].count) : 0;
     }
 
     static async findByIdAndDoctor(id, doctorId) {
@@ -53,12 +53,16 @@ class PrescriptionModel extends BaseModel {
 
     static async addItems(items, connection) {
         // items is array of [prescriptionId, name, dosage, frequency, duration]
-        const [result] = await this.query(
-            'INSERT INTO medicines (prescription_id, name, dosage, frequency, duration) VALUES ?',
-            [items],
-            connection
-        );
-        return result;
+        // mysql2 supports [items] for bulk. pg wrapper needs explicit values expansion or multiple queries.
+        // For standard pg, we do it in a loop if wrapper doesn't handle (?) with array.
+        for (const item of items) {
+            await this.query(
+                'INSERT INTO medicines (prescription_id, name, dosage, frequency, duration) VALUES (?, ?, ?, ?, ?)',
+                item,
+                connection
+            );
+        }
+        return { affectedRows: items.length };
     }
 }
 

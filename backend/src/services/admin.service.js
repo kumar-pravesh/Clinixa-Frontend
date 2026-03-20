@@ -174,17 +174,46 @@ const adminService = {
      */
     async deleteDoctor(doctorId) {
         const numericId = doctorId.toString().replace('DOC-', '');
+        const connection = await pool.getConnection();
 
-        // We need to delete user, constraint will likely cascade delete doctor
-        // But verifying logic: original code gets user_id then deletes user.
-        const doctor = await DoctorModel.findById(numericId);
-        if (!doctor) {
-            throw new Error('Doctor not found');
+        try {
+            await connection.beginTransaction();
+
+            const doctor = await DoctorModel.findById(numericId);
+            if (!doctor) {
+                throw new Error('Doctor not found');
+            }
+
+            // 1. Delete associated data to satisfy foreign keys
+            // Delete prescriptions (and their medicines via cascade or manual)
+            await connection.query('DELETE FROM prescriptions WHERE doctor_id = ?', [numericId]);
+            
+            // Delete billing data linked to this doctor's appointments
+            await connection.query('DELETE FROM invoices WHERE appointment_id IN (SELECT id FROM appointments WHERE doctor_id = ?)', [numericId]);
+            
+            // Delete appointments
+            await connection.query('DELETE FROM appointments WHERE doctor_id = ?', [numericId]);
+            
+            // Delete tokens
+            await connection.query('DELETE FROM tokens WHERE doctor_id = ?', [numericId]);
+
+            // 2. Delete Doctor profile
+            await connection.query('DELETE FROM doctors WHERE id = ?', [numericId]);
+
+            // 3. Delete User account
+            if (doctor.user_id) {
+                await connection.query('DELETE FROM users WHERE id = ?', [doctor.user_id]);
+            }
+
+            await connection.commit();
+            return { success: true };
+        } catch (error) {
+            await connection.rollback();
+            console.error('[AdminService] deleteDoctor failure:', error);
+            throw error;
+        } finally {
+            connection.release();
         }
-
-        // Delete User (Cascade should handle doctor table)
-        await UserModel.query('DELETE FROM users WHERE id = ?', [doctor.user_id]);
-        return { success: true };
     },
 
     /**
@@ -262,22 +291,35 @@ const adminService = {
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
-            await connection.query('SET FOREIGN_KEY_CHECKS = 0');
 
-            // Delete linked data first
-            await connection.query('DELETE FROM appointments WHERE patient_id = ?', [numericId]);
-            await connection.query('DELETE FROM prescriptions WHERE patient_id = ?', [numericId]);
+            // 1. Delete Tokens (no cascade in schema)
+            await connection.query('DELETE FROM tokens WHERE patient_id = ?', [numericId]);
+
+            // 2. Delete Lab Reports & Tests
             await connection.query('DELETE FROM lab_reports WHERE patient_id = ?', [numericId]);
+            await connection.query('DELETE FROM lab_tests WHERE patient_id = ?', [numericId]);
 
-            // Get user_id before deleting patient
-            const [[patient]] = await connection.query('SELECT user_id FROM patients WHERE id = ?', [numericId]);
+            // 3. Delete Billing Data
+            // Payments will cascade from invoices
+            await connection.query('DELETE FROM invoices WHERE patient_id = ?', [numericId]);
+
+            // 4. Delete Clinical Data
+            // Medicines will cascade from prescriptions
+            await connection.query('DELETE FROM prescriptions WHERE patient_id = ?', [numericId]);
+            await connection.query('DELETE FROM appointments WHERE patient_id = ?', [numericId]);
+
+            // 5. Get user_id before deleting patient
+            const [rows] = await connection.query('SELECT user_id FROM patients WHERE id = ?', [numericId]);
+            const patient = rows[0];
+
             if (!patient) throw new Error('Patient not found');
 
-            // Delete patient profile and user account
+            // 6. Delete patient profile and user account (cascades)
             await connection.query('DELETE FROM patients WHERE id = ?', [numericId]);
-            await connection.query('DELETE FROM users WHERE id = ?', [patient.user_id]);
+            if (patient.user_id) {
+                await connection.query('DELETE FROM users WHERE id = ?', [patient.user_id]);
+            }
 
-            await connection.query('SET FOREIGN_KEY_CHECKS = 1');
             await connection.commit();
             return { success: true };
         } catch (error) {
@@ -338,7 +380,7 @@ const adminService = {
                 SELECT 
                     u.email, u.name as patientName,
                     doc_u.name as doctorName,
-                    DATE_FORMAT(a.date, '%Y-%m-%d') as date,
+                    TO_CHAR(a.date, 'YYYY-MM-DD') as date,
                     a.time
                 FROM appointments a
                 JOIN patients p ON a.patient_id = p.id
@@ -414,7 +456,7 @@ const adminService = {
             let pendingTokensValue = 0;
             try {
                 const [pendingTokens] = await pool.query(
-                    `SELECT COUNT(*) as count FROM tokens WHERE status IN ('Waiting', 'In Progress') AND DATE(created_at) = CURDATE()`
+                    `SELECT COUNT(*) as count FROM tokens WHERE status IN ('Waiting', 'In Progress') AND created_at::date = CURRENT_DATE`
                 );
                 pendingTokensValue = pendingTokens[0].count;
             } catch (e) {
@@ -436,13 +478,21 @@ const adminService = {
         }
     },
     /**
-     * Create admin notification (Placeholder)
+     * Create admin notification
      */
     async createAdminNotification(type, title, message, detailsId, link) {
-        // TODO: Implement persistent admin notifications if needed.
-        // Currently admin dashboard polls real-time data.
-        console.log(`[AdminNotification] ${type}: ${title} - ${message}`);
-        return true;
+        try {
+            await pool.query(
+                `INSERT INTO admin_notifications (type, title, message, details_id, link)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [type || 'info', title, message, detailsId, link]
+            );
+            console.log(`[AdminNotification] Persisted: ${title}`);
+            return true;
+        } catch (error) {
+            console.error('[AdminNotification] Failed to persist:', error.message);
+            return false;
+        }
     }
 };
 

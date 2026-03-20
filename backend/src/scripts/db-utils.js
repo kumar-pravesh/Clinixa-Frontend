@@ -15,14 +15,14 @@
  *   node db-utils.js test                 - Test database connection and queries
  */
 
-const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 const { pool } = require('../config/db');
 require('dotenv').config();
 
-const SCHEMA_FILE = path.join(__dirname, 'schema.sql');
-const SEED_FILE = path.join(__dirname, 'seed.sql');
+const SCHEMA_FILE = path.join(__dirname, 'schema.pg.sql');
+const SEED_FILE = path.join(__dirname, 'seed.pg.sql');
+
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -137,17 +137,15 @@ async function cloudSetup() {
         connection = await pool.getConnection();
         console.log('✅ Connected to Cloud Database (SSL Enabled)');
 
-        await connection.query('SET FOREIGN_KEY_CHECKS = 0');
-        console.log('✅ Foreign key checks disabled');
+        // In PostgreSQL, we don't usually need to disable foreign key checks for fresh table creation.
+        // If needed, the equivalent is "SET session_replication_role = 'replica';" (requires superuser)
+        // or dropping constraints. For now, we'll just skip the MySQL command.
 
         await runSQLFile(connection, SCHEMA_FILE, 'Schema', true);
 
         if (shouldSeed) {
             await runSQLFile(connection, SEED_FILE, 'Seed Data', true);
         }
-
-        await connection.query('SET FOREIGN_KEY_CHECKS = 1');
-        console.log('✅ Foreign key checks re-enabled');
 
         console.log('\n🎉 Cloud setup complete!');
     } catch (err) {
@@ -204,7 +202,6 @@ async function cleanDatabase() {
 
     try {
         connection = await pool.getConnection();
-        await connection.query('SET FOREIGN_KEY_CHECKS = 0');
 
         const tables = [
             'admin_notifications',
@@ -230,7 +227,6 @@ async function cleanDatabase() {
             }
         }
 
-        await connection.query('SET FOREIGN_KEY_CHECKS = 1');
         console.log('[Clean] Cleanup completed.');
     } catch (error) {
         console.error('[Clean] Error:', error.message);
@@ -246,19 +242,24 @@ async function cleanDatabase() {
 // ============================================================================
 
 async function listTables() {
-    console.log('[Info] Listing tables...');
+    console.log('\n📋 Listing all tables in database...');
     try {
-        const [dbInfo] = await pool.query('SELECT DATABASE() as db, USER() as user');
-        console.log(`[Info] Connected to: ${JSON.stringify(dbInfo[0])}`);
+        const [rows] = await pool.query(
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename"
+        );
 
-        const [rows] = await pool.query('SHOW TABLES');
-        const tableNames = rows.map(r => Object.values(r)[0]);
-        console.log('[Info] Found Tables:', tableNames.length > 0 ? tableNames.join(', ') : 'NONE');
+        if (rows.length === 0) {
+            console.log('∅ No tables found.');
+        } else {
+            rows.forEach((row, i) => {
+                console.log(`${i + 1}. ${row.tablename}`);
+            });
+        }
     } catch (err) {
-        console.error('[Error]:', err.message);
+        console.error('❌ Failed to list tables:', err.message);
     } finally {
         await pool.end();
-        process.exit();
+        process.exit(0);
     }
 }
 
@@ -269,8 +270,13 @@ async function inspectTable(tableName) {
     }
     console.log(`[Info] Inspecting table: ${tableName}`);
     try {
-        const [rows] = await pool.query(`DESCRIBE ${tableName}`);
-        console.table(rows.map(r => ({ column: r.Field, type: r.Type, null: r.Null, key: r.Key, default: r.Default })));
+        const [rows] = await pool.query(`
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns 
+            WHERE table_name = $1
+            ORDER BY ordinal_position
+        `, [tableName]);
+        console.table(rows);
     } catch (err) {
         console.error('[Error]:', err.message);
     } finally {
@@ -305,123 +311,16 @@ async function patchSchema() {
     try {
         // 1. Add missing columns to appointments
         try {
-            await pool.query('ALTER TABLE appointments ADD COLUMN reason TEXT AFTER status');
-            console.log('✅ Added "reason" column to appointments');
+            await pool.query('ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reason TEXT');
+            console.log('✅ Ensured "reason" column exists in appointments');
         } catch (err) {
-            if (err.code !== 'ER_DUP_COLUMN_NAME') console.warn(`   ⚠️ Appointments column: ${err.message}`);
-        }
-
-        // 2. Add missing columns to tokens
-        const tokenCols = [
-            'ADD COLUMN doctor_id INT AFTER patient_id',
-            'ADD COLUMN department VARCHAR(255) AFTER doctor_id',
-            'ADD COLUMN generated_by INT AFTER department',
-            'ADD COLUMN called_at DATETIME AFTER status',
-            'ADD COLUMN completed_at DATETIME AFTER called_at'
-        ];
-
-        for (const col of tokenCols) {
-            try {
-                await pool.query(`ALTER TABLE tokens ${col}`);
-                console.log(`✅ Tokens: ${col}`);
-            } catch (err) {
-                if (err.code !== 'ER_DUP_COLUMN_NAME') console.warn(`   ⚠️ Tokens column: ${err.message}`);
-            }
-        }
-
-        // 3. Add missing columns to invoices
-        const invoiceCols = [
-            'ADD COLUMN consultation_fee DECIMAL(10,2) AFTER created_by',
-            'ADD COLUMN lab_charges DECIMAL(10,2) AFTER consultation_fee',
-            'ADD COLUMN medicine_charges DECIMAL(10,2) AFTER lab_charges',
-            'ADD COLUMN other_charges DECIMAL(10,2) AFTER medicine_charges',
-            'ADD COLUMN subtotal DECIMAL(10,2) AFTER other_charges',
-            'ADD COLUMN discount_amount DECIMAL(10,2) AFTER subtotal',
-            'ADD COLUMN discount_percent DECIMAL(5,2) AFTER discount_amount',
-            'ADD COLUMN tax_amount DECIMAL(10,2) AFTER discount_percent',
-            'ADD COLUMN items JSON AFTER tax_amount',
-            'ADD COLUMN payment_mode VARCHAR(50) AFTER items',
-            'ADD COLUMN payment_status VARCHAR(50) DEFAULT "UNPAID" AFTER payment_mode'
-        ];
-
-        for (const col of invoiceCols) {
-            try {
-                await pool.query(`ALTER TABLE invoices ${col}`);
-                console.log(`✅ Invoices: ${col}`);
-            } catch (err) {
-                if (err.code !== 'ER_DUP_COLUMN_NAME') console.warn(`   ⚠️ Invoices column: ${err.message}`);
-            }
-        }
-
-        // 4. Add lab_tests table if missing
-        try {
-            await pool.query(`
-                CREATE TABLE IF NOT EXISTS lab_tests (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    patient_id INT NOT NULL,
-                    doctor_id INT NOT NULL,
-                    test_name VARCHAR(255) NOT NULL,
-                    category VARCHAR(100),
-                    department VARCHAR(100),
-                    priority ENUM('Routine', 'Urgent', 'STAT') DEFAULT 'Routine',
-                    status ENUM('Pending', 'In Progress', 'Completed', 'Cancelled', 'Delivered') DEFAULT 'Pending',
-                    notes TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    FOREIGN KEY (patient_id) REFERENCES patients(id),
-                    FOREIGN KEY (doctor_id) REFERENCES doctors(id)
-                )
-            `);
-            console.log('✅ Ensured "lab_tests" table exists');
-        } catch (err) {
-            console.warn(`   ⚠️ Lab Tests table: ${err.message}`);
-        }
-
-        // 5. Add lab_test_id to lab_reports if missing
-        try {
-            await pool.query('ALTER TABLE lab_reports ADD COLUMN lab_test_id INT AFTER doctor_id');
-            await pool.query('ALTER TABLE lab_reports ADD CONSTRAINT fk_lab_test FOREIGN KEY (lab_test_id) REFERENCES lab_tests(id) ON DELETE SET NULL');
-            console.log('✅ Added "lab_test_id" to lab_reports');
-        } catch (err) {
-            if (err.code !== 'ER_DUP_COLUMN_NAME' && err.code !== 'ER_DUP_FIELDNAME')
-                console.warn(`   ⚠️ Lab Reports column: ${err.message}`);
-        }
-
-        // 6. Add notifications table if missing
-        try {
-            await pool.query(`
-                CREATE TABLE IF NOT EXISTS notifications (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    user_id INT NOT NULL,
-                    type VARCHAR(50) DEFAULT 'info',
-                    title VARCHAR(255) NOT NULL,
-                    message TEXT NOT NULL,
-                    link VARCHAR(255),
-                    is_read TINYINT(1) DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    INDEX (user_id),
-                    INDEX (created_at),
-                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-                )
-            `);
-            console.log('✅ Ensured "notifications" table exists');
-        } catch (err) {
-            console.warn(`   ⚠️ Notifications table: ${err.message}`);
-        }
-
-        // 7. Add publications to departments if missing
-        try {
-            await pool.query('ALTER TABLE departments ADD COLUMN publications JSON AFTER procedures');
-            console.log('✅ Added "publications" column to departments');
-        } catch (err) {
-            if (err.code !== 'ER_DUP_COLUMN_NAME') console.warn(`   ⚠️ Departments column: ${err.message}`);
+            console.warn(`   ⚠️ Appointments column: ${err.message}`);
         }
 
         // 8. List users for verification
-        const [users] = await pool.query('SELECT name, email, role, status FROM users');
-        console.log(`\n[Info] Found ${users.length} users in database:`);
-        users.slice(0, 5).forEach(u => console.log(`   - ${u.name} (${u.email}) [${u.role}]`));
-        if (users.length > 5) console.log(`   ... and ${users.length - 5} more`);
+        const [users] = await pool.query('SELECT name, email, role, status FROM users LIMIT 10');
+        console.log(`\n[Info] Found users in database:`);
+        users.forEach(u => console.log(`   - ${u.name} (${u.email}) [${u.role}]`));
 
     } catch (err) {
         console.error('[Patch] FAIL:', err.message);
@@ -433,29 +332,23 @@ async function patchSchema() {
 
 // ============================================================================
 // TEST DATABASE
-// ============================================================================
+// ==================================================
 
 async function testDatabase() {
     console.log('[Test] Environment Check:');
-    console.log(` - DB_HOST: ${process.env.DB_HOST}`);
-    console.log(` - DB_USER: ${process.env.DB_USER}`);
-    console.log(` - DB_NAME: ${process.env.DB_NAME}`);
-    console.log(` - DB_PORT: ${process.env.DB_PORT}`);
+    console.log(` - DATABASE_URL: ${process.env.DATABASE_URL ? 'DEFINED' : 'MISSING'}`);
 
     console.log('\n[Test] Testing DB connection...');
     try {
-        const [dbInfo] = await pool.query('SELECT DATABASE() as db, USER() as user, VERSION() as ver');
+        const [dbInfo] = await pool.query('SELECT current_database() as db, current_user as user, version() as ver');
         console.log(`[Test] Connection Info: ${JSON.stringify(dbInfo[0])}`);
 
-        const [tables] = await pool.query('SHOW TABLES');
-        console.log(`[Test] Found ${tables.length} tables`);
+        const [tables] = await pool.query("SELECT COUNT(*) as count FROM pg_tables WHERE schemaname = 'public'");
+        console.log(`[Test] Found ${tables[0].count} tables`);
 
         // Test departments query
         console.log('\n[Test] Testing departments query...');
         try {
-            const [desc] = await pool.query('DESCRIBE departments');
-            console.log(`[Test] Departments columns: ${desc.map(c => c.Field).join(', ')}`);
-
             const [rows] = await pool.query(`
                 SELECT 
                     d.id,
@@ -466,7 +359,7 @@ async function testDatabase() {
                     COUNT(doc.id) as doctor_count
                 FROM departments d
                 LEFT JOIN doctors doc ON doc.department_id = d.id
-                GROUP BY d.id
+                GROUP BY d.id, d.name, d.head, d.beds, d.status
                 ORDER BY d.name
             `);
             console.log(`[Test] ✅ Successfully fetched ${rows.length} departments.`);
@@ -510,13 +403,15 @@ const command = process.argv[2];
 
 switch (command) {
     case 'setup':
-        setupDatabase();
+        // Setup is combined into cloud-setup for PostgreSQL
+        cloudSetup();
         break;
     case 'cloud-setup':
         cloudSetup();
         break;
     case 'reset':
-        resetDatabase();
+        console.log('Reset not supported on cloud PG without manual drop. Use clean + cloud-setup.');
+        process.exit(0);
         break;
     case 'clean':
         cleanDatabase();
@@ -541,12 +436,10 @@ switch (command) {
         break;
     default:
         console.log(`
-🏥 Clinixa Database Utilities
+🏥 Clinixa Database Utilities (PostgreSQL)
 
 Usage:
-  node db-utils.js setup [--seed]       - Setup local database
-  node db-utils.js cloud-setup [--seed] - Setup cloud database
-  node db-utils.js reset                - Reset database
+  node db-utils.js cloud-setup [--seed] - Setup database
   node db-utils.js clean                - Drop all tables
   node db-utils.js list                 - List all tables
   node db-utils.js inspect <table>      - Show columns of a table
@@ -588,7 +481,7 @@ async function diagnoseData() {
             console.warn(`\n⚠️  Found ${brokenJoins.length} inconsistent appointments:`);
             console.table(brokenJoins.map(a => ({
                 id: a.id,
-                date: a.date.toISOString().split('T')[0],
+                date: a.date ? new Date(a.date).toISOString().split('T')[0] : 'N/A',
                 patient: a.patient_name || '-- MISSING --',
                 doctor: a.doctor_name || '-- MISSING --'
             })));
@@ -601,7 +494,6 @@ async function diagnoseData() {
                 (SELECT COUNT(*) FROM users) as users,
                 (SELECT COUNT(*) FROM doctors) as doctors,
                 (SELECT COUNT(*) FROM patients) as patients
-            FROM DUAL
         `);
         console.log(`\n📋 Entity Counts:`);
         console.table(counts);

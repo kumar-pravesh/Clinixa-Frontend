@@ -2,7 +2,9 @@ const PatientModel = require('../models/patient.model');
 
 const calculateHealthScore = (patient) => {
     try {
-        let score = 95; // Starting base for ideal health
+        let score = 90; // Starting base
+        let deductions = 0;
+        let dataPresencePenalty = 0;
 
         // 1. BMI Calculation & Penalty (Ideal BMI 18.5 - 24.9)
         const height = parseFloat(patient.height);
@@ -14,13 +16,13 @@ const calculateHealthScore = (patient) => {
 
             if (!isNaN(bmi)) {
                 if (bmi < 18.5) {
-                    score -= (18.5 - bmi) * 2; // Underweight penalty
+                    deductions += (18.5 - bmi) * 3; // Underweight penalty
                 } else if (bmi > 24.9) {
-                    score -= (bmi - 24.9) * 1.5; // Overweight/Obese penalty
+                    deductions += (bmi - 24.9) * 2; // Overweight/Obese penalty
                 }
             }
         } else {
-            score -= 5;
+            dataPresencePenalty += 5;
         }
 
         // 2. Blood Pressure Penalty (Ideal 120/80)
@@ -28,18 +30,29 @@ const calculateHealthScore = (patient) => {
         const dia = parseInt(patient.bp_diastolic);
 
         if (!isNaN(sys) && !isNaN(dia)) {
-            if (sys > 130) score -= (sys - 130) * 0.5;
-            if (dia > 85) score -= (dia - 85) * 0.8;
-            if (sys < 100) score -= 5;
+            // Systolic penalties
+            if (sys > 130) deductions += (sys - 130) * 0.4;
+            else if (sys < 95) deductions += (95 - sys) * 0.2;
+
+            // Diastolic penalties
+            if (dia > 85) deductions += (dia - 85) * 0.6;
+            else if (dia < 60) deductions += (60 - dia) * 0.2;
         } else {
-            score -= 5;
+            dataPresencePenalty += 5;
         }
 
-        const finalScore = Math.floor(score);
-        return isNaN(finalScore) ? 80 : Math.max(60, Math.min(100, finalScore));
+        // 3. Completeness Bonus/Penalty
+        // Reward having full information
+        if (!patient.blood_group) dataPresencePenalty += 2;
+        if (!patient.dob) dataPresencePenalty += 3;
+
+        const finalScore = Math.floor(score - deductions - dataPresencePenalty);
+        
+        // Return between 40 and 100. Lower than 40 is extremely unlikely for active patients.
+        return Math.max(40, Math.min(100, finalScore));
     } catch (e) {
         console.error('[HealthScore] Error:', e);
-        return 80;
+        return 85; 
     }
 };
 
@@ -83,17 +96,19 @@ const patientService = {
             const results = await Promise.all([
                 AppointmentModel.findNextByUserId(userId),
                 AppointmentModel.countTodayByUserId(userId),
+                AppointmentModel.countUpcomingByUserId(userId),
                 PrescriptionModel.countByPatientId(patient.id),
                 LabModel.countByPatientId(patient.id)
             ]);
 
-            const [nextAppointment, todayCount, prescriptionCount, labCount] = results;
+            const [nextAppointment, todayCount, upcomingCount, prescriptionCount, labCount] = results;
             console.log('[PatientService] Data fetched successfully');
 
             return {
                 healthScore: calculateHealthScore(patient),
                 nextAppointment,
                 todayCount,
+                upcomingCount,
                 totalRecords: (prescriptionCount || 0) + (labCount || 0),
                 status: 'Active'
             };
@@ -104,6 +119,7 @@ const patientService = {
                 healthScore: 80,
                 nextAppointment: null,
                 todayCount: 0,
+                upcomingCount: 0,
                 totalRecords: 0,
                 status: 'Error'
             };

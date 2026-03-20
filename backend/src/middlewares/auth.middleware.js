@@ -8,8 +8,8 @@ const authenticateToken = (req, res, next) => {
     let token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
     // Fallback to cookie if no Authorization header
-    if (!token && req.cookies && req.cookies.accessToken) {
-        token = req.cookies.accessToken;
+    if (!token && req.cookies) {
+        token = req.cookies.staff_accessToken || req.cookies.accessToken;
     }
 
     if (!token) {

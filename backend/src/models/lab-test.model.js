@@ -5,9 +5,9 @@ class LabTestModel extends BaseModel {
         const [rows] = await this.query(`
             SELECT 
                 lt.id,
-                CONCAT('LAB-', LPAD(lt.id, 4, '0')) as test_id,
+                CONCAT('LAB-', LPAD(lt.id::text, 4, '0')) as test_id,
                 p.name as patient,
-                CONCAT('PID-', LPAD(p.id, 4, '0')) as patient_id,
+                CONCAT('PID-', LPAD(p.id::text, 4, '0')) as patient_id,
                 u.name as doctor,
                 lt.doctor_id,
                 lt.test_name as testType,
@@ -15,8 +15,8 @@ class LabTestModel extends BaseModel {
                 lt.status,
                 lt.category,
                 lt.department,
-                DATE_FORMAT(lt.created_at, '%h:%i %p') as time,
-                DATE_FORMAT(lt.created_at, '%Y-%m-%d') as date
+                TO_CHAR(lt.created_at, 'HH12:MI AM') as time,
+                TO_CHAR(lt.created_at, 'YYYY-MM-DD') as date
             FROM lab_tests lt
             JOIN patients p ON lt.patient_id = p.id
             JOIN doctors d ON lt.doctor_id = d.id
@@ -33,17 +33,17 @@ class LabTestModel extends BaseModel {
         const [rows] = await this.query(`
             SELECT 
                 lt.id,
-                CONCAT('LAB-', LPAD(lt.id, 4, '0')) as test_id,
+                CONCAT('LAB-', LPAD(lt.id::text, 4, '0')) as test_id,
                 p.name as patient,
-                CONCAT('PID-', LPAD(p.id, 4, '0')) as patient_id,
+                CONCAT('PID-', LPAD(p.id::text, 4, '0')) as patient_id,
                 du.name as doctor,
                 lt.doctor_id,
                 lt.test_name as testType,
                 lt.priority,
                 lt.status,
                 lt.category,
-                DATE_FORMAT(lt.updated_at, '%Y-%m-%d') as completedDate,
-                DATE_FORMAT(lt.updated_at, '%h:%i %p') as completedTime,
+                TO_CHAR(lt.updated_at, 'YYYY-MM-DD') as completedDate,
+                TO_CHAR(lt.updated_at, 'HH12:MI AM') as completedTime,
                 lr.id as report_id,
                 lr.file_url,
                 tu.name as technician

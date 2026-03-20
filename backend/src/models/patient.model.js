@@ -19,10 +19,12 @@ class PatientModel extends BaseModel {
                 height, weight, bp_systolic, bp_diastolic, blood_group
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                user_id, name, dob, gender, phone, email,
-                height || null, weight || null,
-                bp_systolic || null, bp_diastolic || null,
-                blood_group || null
+                user_id, name, dob || null, gender, phone, email,
+                height && height !== "" ? height : null,
+                weight && weight !== "" ? weight : null,
+                bp_systolic && bp_systolic !== "" ? bp_systolic : null,
+                bp_diastolic && bp_diastolic !== "" ? bp_diastolic : null,
+                blood_group && blood_group !== "" ? blood_group : null
             ],
             connection
         );
@@ -36,11 +38,11 @@ class PatientModel extends BaseModel {
     static async findAll(search = '', limit = 100) {
         let query = `
             SELECT 
-                CONCAT('PID-', LPAD(p.id, 4, '0')) as id,
+                CONCAT('PID-', LPAD(p.id::text, 4, '0')) as id,
                 p.name, p.email, p.phone, p.gender, p.blood_group,
                 p.height, p.weight, p.bp_systolic, p.bp_diastolic,
-                DATE_FORMAT(p.dob, '%Y-%m-%d') as dob,
-                DATE_FORMAT(p.created_at, '%Y-%m-%d') as registered_date,
+                TO_CHAR(p.dob, 'YYYY-MM-DD') as dob,
+                TO_CHAR(p.created_at, 'YYYY-MM-DD') as registered_date,
                 (SELECT COUNT(*) FROM appointments a WHERE a.patient_id = p.id) as visit_count,
                 (SELECT MAX(a.date) FROM appointments a WHERE a.patient_id = p.id) as last_visit
             FROM patients p
@@ -60,7 +62,11 @@ class PatientModel extends BaseModel {
     }
 
     static async updateByUserId(userId, updateData, connection) {
-        const allowedFields = ['name', 'phone', 'dob', 'gender', 'address', 'history', 'blood_group', 'emergency_contact', 'height', 'weight', 'bp_systolic', 'bp_diastolic'];
+        const allowedFields = [
+            'name', 'phone', 'dob', 'gender', 'address', 'history', 
+            'blood_group', 'emergency_contact', 'height', 'weight', 
+            'bp_systolic', 'bp_diastolic'
+        ];
         const fields = [];
         const values = [];
 
@@ -85,15 +91,23 @@ class PatientModel extends BaseModel {
         for (const field of allowedFields) {
             if (updateData[field] !== undefined) {
                 fields.push(`${field} = ?`);
-                values.push(updateData[field]);
+                // Convert empty strings to null for clinical numerical/dropdown data
+                const val = updateData[field];
+                const isVitals = ['height', 'weight', 'bp_systolic', 'bp_diastolic', 'blood_group', 'dob'].includes(field);
+                values.push(isVitals && val === "" ? null : val);
             }
         }
 
         if (fields.length === 0) return null;
 
         // Automatically update last_vitals_update if vitals are changed
-        if (updateData.height !== undefined || updateData.weight !== undefined || updateData.bp_systolic !== undefined || updateData.bp_diastolic !== undefined) {
-            fields.push('last_vitals_update = NOW()');
+        const vitalsChanged = updateData.height !== undefined || 
+                             updateData.weight !== undefined || 
+                             updateData.bp_systolic !== undefined || 
+                             updateData.bp_diastolic !== undefined;
+                             
+        if (vitalsChanged) {
+            fields.push('last_vitals_update = CURRENT_TIMESTAMP');
         }
 
         const query = `UPDATE patients SET ${fields.join(', ')} WHERE user_id = ?`;
@@ -105,7 +119,12 @@ class PatientModel extends BaseModel {
 
     static async getProfile(userId) {
         const [rows] = await this.query(`
-            SELECT p.id, u.name, u.email, p.dob, p.gender, p.phone, p.address, p.history, 
+            SELECT p.id, 
+                   COALESCE(p.name, u.name) as name, 
+                   COALESCE(p.email, u.email) as email, 
+                   p.dob, p.gender, 
+                   COALESCE(p.phone, u.phone) as phone, 
+                   p.address, p.history, 
                    p.blood_group, p.height, p.weight, p.bp_systolic, p.bp_diastolic
             FROM users u 
             LEFT JOIN patients p ON u.id = p.user_id 
@@ -116,11 +135,11 @@ class PatientModel extends BaseModel {
 
     static async countTotal() {
         const [rows] = await this.query('SELECT COUNT(*) as count FROM patients');
-        return rows[0].count;
+        return rows[0] ? parseInt(rows[0].count) : 0;
     }
 
     static async countToday() {
-        const [rows] = await this.query('SELECT COUNT(*) as count FROM patients WHERE DATE(created_at) = CURDATE()');
+        const [rows] = await this.query('SELECT COUNT(*) as count FROM patients WHERE created_at::date = CURRENT_DATE');
         return rows[0].count;
     }
 
@@ -136,10 +155,12 @@ class PatientModel extends BaseModel {
                 height, weight, bp_systolic, bp_diastolic, blood_group
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                name, dob, gender, phone, email || null, address || null, registeredBy,
-                height || null, weight || null,
-                bp_systolic || null, bp_diastolic || null,
-                blood_group || null
+                name, dob || null, gender, phone, email || null, address || null, registeredBy,
+                height && height !== "" ? height : null,
+                weight && weight !== "" ? weight : null,
+                bp_systolic && bp_systolic !== "" ? bp_systolic : null,
+                bp_diastolic && bp_diastolic !== "" ? bp_diastolic : null,
+                blood_group && blood_group !== "" ? blood_group : null
             ]
         );
         return result.insertId;

@@ -1,5 +1,6 @@
 const adminService = require('../services/admin.service');
 const doctorService = require('../services/doctor.service');
+const logger = require('../lib/logger');
 
 const getDepartments = async (req, res) => {
     try {
@@ -8,7 +9,7 @@ const getDepartments = async (req, res) => {
         const activeDepartments = departments.filter(d => d.status === 'Active' || !d.status);
         res.json(activeDepartments);
     } catch (error) {
-        console.error('❌ Error fetching public departments:', error);
+        logger.error('❌ Error fetching public departments:', error);
         res.status(500).json({
             message: 'Failed to fetch departments',
             error: error.message,
@@ -30,7 +31,7 @@ const getDoctors = async (req, res) => {
             }));
         res.json(activeDoctors);
     } catch (error) {
-        console.error('❌ Error fetching public doctors:', error);
+        logger.error('❌ Error fetching public doctors:', error);
         res.status(500).json({
             message: 'Failed to fetch doctors',
             error: error.message,
@@ -50,7 +51,7 @@ const getStats = async (req, res) => {
             raw: stats
         });
     } catch (error) {
-        console.error('❌ Error fetching public stats:', error);
+        logger.error('❌ Error fetching public stats:', error);
         res.status(500).json({ message: 'Failed to fetch clinical metrics' });
     }
 };

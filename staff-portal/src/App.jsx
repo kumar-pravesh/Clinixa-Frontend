@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Activity } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
 import { QueueProvider } from './context/QueueContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -69,7 +70,7 @@ function App() {
                   <Route
                     path="/doctor"
                     element={
-                      <ProtectedRoute allowedRoles={['doctor']}>
+                      <ProtectedRoute allowedRoles={['doctor', 'receptionist', 'lab_technician', 'admin']}>
                         <DoctorLayout />
                       </ProtectedRoute>
                     }
@@ -132,7 +133,20 @@ function App() {
                     <Route path="appointments" element={<AppointmentApproval />} />
                     <Route path="billing" element={<BillingControl />} />
                     <Route path="reports" element={<ReportGeneration />} />
-                    <Route path="settings" element={<div>System Settings</div>} />
+                    <Route path="settings" element={
+                      <div className="p-8">
+                        <div className="bg-white rounded-[2.5rem] p-12 border border-slate-100 shadow-sm text-center">
+                          <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mx-auto mb-6">
+                            <Activity size={40} />
+                          </div>
+                          <h2 className="text-3xl font-black text-slate-800 mb-4">System Settings</h2>
+                          <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
+                            Configure your clinic's core parameters, branding, and professional metadata here. 
+                            This module is currently being optimized for enterprise deployments.
+                          </p>
+                        </div>
+                      </div>
+                    } />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />

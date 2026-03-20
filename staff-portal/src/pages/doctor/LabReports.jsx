@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Upload, FileText, Download, Eye, Calendar, User, Printer, X, CheckCircle, Clock } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useDoctor } from '../../context/DoctorContext';
 
-const UploadModal = ({ isOpen, onClose, patients, onUpload }) => {
+const UploadModal = ({ isOpen, onClose, patients, onUpload, preSelectedPatientId }) => {
     const [selectedPatient, setSelectedPatient] = useState('');
     const [testName, setTestName] = useState('');
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
+
+    React.useEffect(() => {
+        if (isOpen && preSelectedPatientId) {
+            setSelectedPatient(preSelectedPatientId.startsWith('PID-') ? preSelectedPatientId : `PID-${preSelectedPatientId.padStart(4, '0')}`);
+        }
+    }, [isOpen, preSelectedPatientId]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -124,13 +131,19 @@ const UploadModal = ({ isOpen, onClose, patients, onUpload }) => {
     );
 };
 
-const OrderTestModal = ({ isOpen, onClose, patients, onOrder }) => {
+const OrderTestModal = ({ isOpen, onClose, patients, onOrder, preSelectedPatientId }) => {
     const [selectedPatient, setSelectedPatient] = useState('');
     const [testName, setTestName] = useState('');
     const [category, setCategory] = useState('Diagnostic');
     const [priority, setPriority] = useState('Routine');
     const [notes, setNotes] = useState('');
     const [ordering, setOrdering] = useState(false);
+
+    React.useEffect(() => {
+        if (isOpen && preSelectedPatientId) {
+            setSelectedPatient(preSelectedPatientId.startsWith('PID-') ? preSelectedPatientId : `PID-${preSelectedPatientId.padStart(4, '0')}`);
+        }
+    }, [isOpen, preSelectedPatientId]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -274,6 +287,18 @@ const LabReports = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+    const [searchParams] = useSearchParams();
+
+    // Check for pre-selection on load
+    const prePatientId = searchParams.get('patientId');
+
+    React.useEffect(() => {
+        const action = searchParams.get('action');
+        if (prePatientId) {
+            if (action === 'order') setIsOrderModalOpen(true);
+            else if (action === 'upload') setIsUploadModalOpen(true);
+        }
+    }, [searchParams, prePatientId]);
 
     const handleUpload = async (formData) => {
         const result = await uploadLabReport(formData);
@@ -524,12 +549,14 @@ const LabReports = () => {
                 onClose={() => setIsUploadModalOpen(false)}
                 patients={patients}
                 onUpload={handleUpload}
+                preSelectedPatientId={prePatientId}
             />
             <OrderTestModal
                 isOpen={isOrderModalOpen}
                 onClose={() => setIsOrderModalOpen(false)}
                 patients={patients}
                 onOrder={handleOrder}
+                preSelectedPatientId={prePatientId}
             />
         </div>
     );

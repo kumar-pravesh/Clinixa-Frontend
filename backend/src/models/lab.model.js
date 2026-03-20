@@ -39,13 +39,13 @@ class LabModel extends BaseModel {
         const [rows] = await this.query(`
             SELECT 
                 lr.id,
-                CONCAT('RPT-', LPAD(lr.id, 4, '0')) as report_id,
+                CONCAT('RPT-', LPAD(lr.id::text, 4, '0')) as report_id,
                 lr.test_name,
                 lr.file_url,
                 lr.result_summary,
                 lr.test_date,
                 p.name as patient_name,
-                CONCAT('PID-', LPAD(p.id, 4, '0')) as patient_id,
+                CONCAT('PID-', LPAD(p.id::text, 4, '0')) as patient_id,
                 u.name as doctor_name,
                 tu.name as technician_name
             FROM lab_reports lr
@@ -61,7 +61,7 @@ class LabModel extends BaseModel {
     static async findByPatientId(patientId) {
         const [rows] = await this.query(`
             SELECT 
-                CONCAT('RPT-', LPAD(lr.id, 4, '0')) as report_id,
+                CONCAT('RPT-', LPAD(lr.id::text, 4, '0')) as report_id,
                 lr.test_name,
                 lr.file_url,
                 lr.test_date,
@@ -77,7 +77,7 @@ class LabModel extends BaseModel {
 
     static async countByPatientId(patientId) {
         const [rows] = await this.query('SELECT COUNT(*) as count FROM lab_reports WHERE patient_id = ?', [patientId]);
-        return rows[0].count;
+        return rows[0] ? parseInt(rows[0].count) : 0;
     }
 }
 

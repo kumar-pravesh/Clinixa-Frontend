@@ -24,6 +24,7 @@ class PaymentModel extends BaseModel {
     }
 
     static async findById(id) {
+        if (!id) return null;
         const cleanId = id.toString().replace('PAY-', '');
         const [rows] = await this.query('SELECT * FROM payments WHERE id = ?', [cleanId]);
         return rows[0] || null;

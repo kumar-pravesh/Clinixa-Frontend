@@ -13,7 +13,7 @@ const rootApi = axios.create({
 });
 
 const api = axios.create({
-    baseURL: STAFF_API_BASE,
+    baseURL: ROOT_API_BASE,
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',

@@ -1,15 +1,29 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Save, ArrowLeft, Search } from 'lucide-react';
 import { useDoctor } from '../../context/DoctorContext';
 import doctorService from '../../services/doctorService';
 
 const AddPrescription = () => {
     const navigate = useNavigate();
-    const { addPrescription } = useDoctor();
+    const [searchParams] = useSearchParams();
+    const { addPrescription, patients } = useDoctor();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [searchResults, setSearchResults] = useState([]);
+
+    // Initialize patient from URL if provided
+    React.useEffect(() => {
+        const patientId = searchParams.get('patientId');
+        if (patientId && patients.length > 0) {
+            const pid = patientId.startsWith('PID-') ? patientId : `PID-${patientId.padStart(4, '0')}`;
+            const patient = patients.find(p => p.id === pid);
+            if (patient) {
+                setSelectedPatient(patient);
+                setSearchQuery(`${patient.name} (${patient.id})`);
+            }
+        }
+    }, [searchParams, patients]);
 
     const [medications, setMedications] = useState([
         { id: 1, name: '', dosage: '', frequency: '', duration: '' }

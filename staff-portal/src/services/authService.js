@@ -4,12 +4,12 @@ import { rootApi } from '../api/axios';
 const authService = {
     login: async (credentials) => {
         // Use staff-specific login endpoint
-        const response = await api.post('/auth/login', credentials);
+        const response = await api.post('/api/staff/auth/login', credentials);
         return response.data;
     },
     logout: async () => {
         // Use staff-specific logout endpoint
-        const response = await api.post('/auth/logout');
+        const response = await api.post('/api/staff/auth/logout');
         return response.data;
     },
     register: async (userData) => {
@@ -18,7 +18,7 @@ const authService = {
     },
     refresh: async () => {
         // Use staff-specific refresh endpoint
-        const response = await api.post('/auth/refresh');
+        const response = await api.post('/api/staff/auth/refresh');
         return response.data;
     },
     // Forgot password — uses root API (auth endpoints are at root level)

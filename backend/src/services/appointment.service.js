@@ -10,7 +10,8 @@ const { createAdminNotification } = require('./admin.service'); // Moving logic 
 
 const appointmentService = {
     async createAppointment(userId, doctorId, date, timeSlot) {
-        // Sanitize doctorId (strip DOC- prefix if present)
+        // Sanitize doctorId
+        if (!doctorId) throw new Error('Doctor ID is required');
         const cleanDoctorId = doctorId.toString().replace('DOC-', '');
 
         const connection = await pool.getConnection();
@@ -49,7 +50,7 @@ const appointmentService = {
             // But doctorId might be int or string.
             // Let's use specific query or existing model method.
             // DoctorModel has findById (returns row) and getPublicDoctorById (returns joined).
-            const [docRow] = await pool.query(`
+            const [[docRow]] = await pool.query(`
                 SELECT u.name as doctor_name, d.specialization as dept 
                 FROM doctors d 
                 JOIN users u ON d.user_id = u.id 

@@ -1,24 +1,25 @@
-import React, { useState } from 'react';
-import {
-    Upload,
-    File,
-    X,
-    CheckCircle2,
-    AlertCircle,
-    Search,
-    User,
-    Clipboard,
-    ArrowLeft,
-    Loader2,
-    Shield
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useNotification } from '../../context/NotificationContext';
 import { useLab } from '../../context/LabContext';
 import { cn } from '../../utils/cn';
+import React, { useState, useEffect } from 'react';
+import { 
+    ArrowLeft, 
+    Search, 
+    Clipboard, 
+    User, 
+    Upload, 
+    File, 
+    X, 
+    CheckCircle2, 
+    AlertCircle, 
+    Loader2, 
+    Shield 
+} from 'lucide-react';
 
 const ReportUpload = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { addNotification } = useNotification();
     const { labQueue, completeLabTest } = useLab();
     const [isUploading, setIsUploading] = useState(false);
@@ -26,6 +27,26 @@ const ReportUpload = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [remarks, setRemarks] = useState('');
+
+    // Handle initial patient selection from URL
+    React.useEffect(() => {
+        const testId = searchParams.get('testId');
+        const patientId = searchParams.get('patientId');
+        
+        if (labQueue.length > 0) {
+            let patient = null;
+            if (testId) {
+                patient = labQueue.find(p => String(p.id) === String(testId));
+            } else if (patientId) {
+                const pid = patientId.startsWith('PID-') ? patientId : `PID-${patientId.padStart(4, '0')}`;
+                patient = labQueue.find(p => p.patient_id === pid);
+            }
+
+            if (patient) {
+                setSelectedPatient(patient);
+            }
+        }
+    }, [searchParams, labQueue]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];

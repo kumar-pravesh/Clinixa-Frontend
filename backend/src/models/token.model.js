@@ -7,25 +7,25 @@ class TokenModel extends BaseModel {
                 t.id,
                 t.token_number,
                 p.name as patient,
-                CONCAT('PID-', LPAD(p.id, 4, '0')) as patientId,
+                CONCAT('PID-', LPAD(p.id::text, 4, '0')) as patientId,
                 t.department as dept,
                 u.name as doctor,
                 t.status,
-                DATE_FORMAT(t.created_at, '%h:%i %p') as time,
+                TO_CHAR(t.created_at, 'HH12:MI AM') as time,
                 p.phone as mobile
             FROM tokens t
             JOIN patients p ON t.patient_id = p.id
             LEFT JOIN doctors d ON t.doctor_id = d.id
             LEFT JOIN users u ON d.user_id = u.id
-            WHERE DATE(t.created_at) = CURDATE()
+            WHERE t.created_at::date = CURRENT_DATE
             ORDER BY t.created_at DESC
         `);
         return rows;
     }
 
     static async countToday() {
-        const [rows] = await this.query('SELECT COUNT(*) as count FROM tokens WHERE DATE(created_at) = CURDATE()');
-        return rows[0].count;
+        const [rows] = await this.query('SELECT COUNT(*) as count FROM tokens WHERE created_at::date = CURRENT_DATE');
+        return rows[0] ? parseInt(rows[0].count) : 0;
     }
 
     static async create(data) {
@@ -46,7 +46,7 @@ class TokenModel extends BaseModel {
                 u.name as doctor,
                 t.department as dept,
                 t.status,
-                DATE_FORMAT(t.created_at, '%h:%i %p') as time,
+                TO_CHAR(t.created_at, 'HH12:MI AM') as time,
                 p.phone as mobile
             FROM tokens t
             JOIN patients p ON t.patient_id = p.id
@@ -72,9 +72,9 @@ class TokenModel extends BaseModel {
 
     static async getAvgWaitingTimeToday() {
         const [rows] = await this.query(`
-            SELECT AVG(TIMESTAMPDIFF(MINUTE, created_at, called_at)) as avg_wait
+            SELECT AVG(EXTRACT(EPOCH FROM (called_at - created_at)) / 60) as avg_wait
             FROM tokens
-            WHERE DATE(created_at) = CURDATE() AND called_at IS NOT NULL
+            WHERE created_at::date = CURRENT_DATE AND called_at IS NOT NULL
         `);
         return rows[0].avg_wait || 0;
     }
@@ -82,9 +82,9 @@ class TokenModel extends BaseModel {
     static async countActiveToday() {
         const [rows] = await this.query(`
             SELECT COUNT(*) as count FROM tokens
-            WHERE DATE(created_at) = CURDATE() AND status IN ('Waiting', 'In Progress')
+            WHERE created_at::date = CURRENT_DATE AND status IN ('Waiting', 'In Progress')
         `);
-        return rows[0].count;
+        return rows[0] ? parseInt(rows[0].count) : 0;
     }
 }
 

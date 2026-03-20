@@ -36,6 +36,12 @@ const Prescriptions = () => {
     };
 
     const handleDownload = async (record) => {
+        // If it's a lab report with a file_url, download/open the actual file
+        if (record.type === 'Lab Report' && record.file_url) {
+            window.open(record.file_url, '_blank');
+            return;
+        }
+
         if (!pdfTemplateRef.current) return;
         setIsDownloading(record.id);
 

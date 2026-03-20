@@ -63,10 +63,17 @@ class NotificationService {
         }
     }
 
-    async sendOTP(email, otp) {
-        const subject = 'Clinixa - Password Reset OTP';
-        const message = `Your OTP for password reset is: ${otp}. It expires in 10 minutes.`;
+    async sendOTP(email, otp, phone = null) {
+        const subject = 'Clinixa - Verification Code';
+        const message = `Your Clinixa verification code is: ${otp}. It expires in 10 minutes.`;
+
+        // Send to Email
         await emailProvider.send(email, message, subject);
+
+        // Send to SMS if phone provided
+        if (phone) {
+            await smsProvider.send(phone, message);
+        }
     }
 
     async getPollNotifications(role, userId) {
@@ -90,7 +97,7 @@ class NotificationService {
                 SELECT COUNT(*) as count 
                 FROM appointments 
                 WHERE doctor_id IN (SELECT id FROM doctors WHERE user_id = ?)
-                AND date = CURDATE()
+                AND date = CURRENT_DATE
                 AND status = 'Confirmed'
             `, [userId]);
 
@@ -129,7 +136,5 @@ class NotificationService {
         } catch (err) { }
     }
 }
-
-module.exports = new NotificationService();
 
 module.exports = new NotificationService();

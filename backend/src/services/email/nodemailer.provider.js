@@ -23,17 +23,28 @@ class EmailProvider extends NotificationProvider {
             return;
         }
 
+        // Re-create transporter to ensure fresh environment variables are used
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                type: 'OAuth2',
+                user: process.env.GMAIL_SENDER_EMAIL,
+                clientId: process.env.GMAIL_CLIENT_ID,
+                clientSecret: process.env.GMAIL_CLIENT_SECRET,
+                refreshToken: process.env.GMAIL_REFRESH_TOKEN
+            }
+        });
+
         try {
-            const info = await this.transporter.sendMail({
+            const info = await transporter.sendMail({
                 from: process.env.GMAIL_SENDER_EMAIL,
                 to: recipient,
                 subject: subject || 'Notification from Clinixa',
                 text: message,
-                html: `<p>${message.replace(/\n/g, '<br>')}</p>` // Simple HTML conversion
+                html: `<p>${message.replace(/\n/g, '<br>')}</p>`
             });
-            console.log(`[EmailProvider] Sent email to ${recipient}: ${info.messageId}`);
         } catch (error) {
-            console.error('[EmailProvider] Error sending email:', error.message);
+            console.error('[EmailProvider] FAILED to send email:', error.message);
         }
     }
 }

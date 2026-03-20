@@ -11,7 +11,9 @@ import {
     UserPlus,
     CreditCard,
     Plus,
-    Calendar
+    Calendar,
+    FileText,
+    FlaskConical
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -179,12 +181,28 @@ const ReceptionDashboard = () => {
                                                 </span>
                                             </td>
                                             <td className="px-8 py-6 text-right">
-                                                <button
-                                                    onClick={() => navigate('/reception/tokens')}
-                                                    className="p-2.5 rounded-xl bg-slate-50 text-slate-400 hover:text-primary hover:bg-primary/10 transition-all active:scale-95"
-                                                >
-                                                    <ChevronRight className="w-5 h-5" />
-                                                </button>
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => navigate(`/doctor/prescriptions/new?patientId=${token.patient_id}`)}
+                                                        title="Write Prescription"
+                                                        className="p-2.5 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 transition-all active:scale-95"
+                                                    >
+                                                        <FileText className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => navigate(`/lab/upload?patientId=${token.patient_id}`)}
+                                                        title="Request/Upload Lab"
+                                                        className="p-2.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all active:scale-95"
+                                                    >
+                                                        <FlaskConical className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => navigate('/reception/tokens')}
+                                                        className="p-2.5 rounded-xl bg-slate-50 text-slate-400 hover:text-primary hover:bg-primary/10 transition-all active:scale-95"
+                                                    >
+                                                        <ChevronRight className="w-5 h-5" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     )) : (

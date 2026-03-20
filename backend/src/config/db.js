@@ -1,39 +1,96 @@
-const mysql = require('mysql2/promise');
-const fs = require('fs');
-const path = require('path');
+const { Pool } = require('pg');
 require('dotenv').config();
 
-const poolConfig = {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-  waitForConnections: true,
-  connectionLimit: 20, // Increased for team collaboration
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
-  timezone: 'Z',
-  multipleStatements: true
-};
+// Create PostgreSQL connection pool for Neon.
+// SSL handled entirely via the DATABASE_URL connection string.
+const pgPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+});
 
-// Add SSL if CA path is provided
-if (process.env.DB_SSL_CA_PATH) {
-  const caPath = path.resolve(process.env.DB_SSL_CA_PATH);
-  if (fs.existsSync(caPath)) {
-    poolConfig.ssl = {
-      ca: fs.readFileSync(caPath),
-      rejectUnauthorized: true
+pgPool.on('connect', () => {
+  console.log('[DB] Connected to Neon PostgreSQL');
+});
+
+pgPool.on('error', (err) => {
+  console.error('[DB] Unexpected pool error:', err.message);
+});
+
+/**
+ * MySQL2-compatibility wrapper.
+ * mysql2 returns: [rows, fields]
+ * pg returns:     { rows, fields }
+ *
+ * This wrapper converts ? placeholders to $1, $2, etc.
+ * and returns [rows, fields] so all existing code works unchanged.
+ */
+const pool = {
+  query: async (sql, params) => {
+    let i = 0;
+    let pgSql = sql.replace(/\?/g, () => `$${++i}`);
+    pgSql = pgSql.replace(/`([^`]+)`/g, '"$1"');
+
+    const isInsert = sql.trim().toUpperCase().startsWith('INSERT');
+    const isUpdateDelete = sql.trim().toUpperCase().startsWith('UPDATE') || sql.trim().toUpperCase().startsWith('DELETE');
+
+    if (isInsert && !pgSql.toUpperCase().includes('RETURNING')) {
+      pgSql += ' RETURNING id';
+    }
+
+    const result = await pgPool.query(pgSql, params);
+
+    if (isInsert || isUpdateDelete) {
+      const mockResult = {
+        insertId: isInsert && result.rows[0] ? result.rows[0].id : null,
+        affectedRows: result.rowCount,
+        warningCount: 0,
+        message: '',
+      };
+      return [mockResult, result.fields];
+    }
+
+    return [result.rows, result.fields];
+  },
+  getConnection: async () => {
+    const client = await pgPool.connect();
+    return {
+      query: async (sql, params) => {
+        let i = 0;
+        let pgSql = sql.replace(/\?/g, () => `$${++i}`);
+        pgSql = pgSql.replace(/`([^`]+)`/g, '"$1"');
+
+        const isInsert = sql.trim().toUpperCase().startsWith('INSERT');
+        const isUpdateDelete = sql.trim().toUpperCase().startsWith('UPDATE') || sql.trim().toUpperCase().startsWith('DELETE');
+
+        if (isInsert && !pgSql.toUpperCase().includes('RETURNING')) {
+          pgSql += ' RETURNING id';
+        }
+
+        const result = await client.query(pgSql, params);
+
+        if (isInsert || isUpdateDelete) {
+          const mockResult = {
+            insertId: isInsert && result.rows[0] ? result.rows[0].id : null,
+            affectedRows: result.rowCount,
+            warningCount: 0,
+            message: '',
+          };
+          return [mockResult, result.fields];
+        }
+
+        return [result.rows, result.fields];
+      },
+      release: () => client.release(),
+      beginTransaction: () => client.query('BEGIN'),
+      commit: () => client.query('COMMIT'),
+      rollback: () => client.query('ROLLBACK'),
     };
-    console.log('[DB] SSL Configuration enabled using:', caPath);
-  } else {
-    console.warn('[DB] SSL CA path provided but file not found:', caPath);
-  }
-}
-
-const pool = mysql.createPool(poolConfig);
-
-module.exports = {
-  pool,
+  },
+  end: async () => pgPool.end(),
 };
+
+console.log('[DB] Neon PostgreSQL pool initialized');
+
+module.exports = { pool };

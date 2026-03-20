@@ -9,7 +9,8 @@ import {
     ChevronRight,
     TrendingUp,
     AlertCircle,
-    X
+    X,
+    FlaskConical
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useDoctor } from '../../context/DoctorContext';
@@ -61,9 +62,10 @@ const DoctorDashboard = () => {
     const [selectedAppointment, setSelectedAppointment] = React.useState(null);
 
     // Filter appointments for today
-    const todaysAppointments = appointments.filter(
-        apt => apt.date === new Date().toISOString().split('T')[0]
-    );
+    const todaysAppointments = appointments.filter(apt => {
+        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+        return apt.date === today;
+    });
 
     const pendingReports = labReports.filter(r => r.status === 'Pending');
 
@@ -127,7 +129,7 @@ const DoctorDashboard = () => {
                                         <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Patient</th>
                                         <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
                                         <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
+                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -158,12 +160,28 @@ const DoctorDashboard = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <button
-                                                    onClick={() => setSelectedAppointment(apt)}
-                                                    className="text-primary text-xs font-bold hover:underline"
-                                                >
-                                                    View
-                                                </button>
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => navigate(`/doctor/prescriptions/new?patientId=${apt.patient_id}`)}
+                                                        title="Write Prescription"
+                                                        className="p-2 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 transition-all active:scale-95"
+                                                    >
+                                                        <FileText className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => navigate(`/doctor/lab-reports?action=order&patientId=${apt.patient_id}`)}
+                                                        title="Order Lab Test"
+                                                        className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all active:scale-95"
+                                                    >
+                                                        <FlaskConical className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setSelectedAppointment(apt)}
+                                                        className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-primary transition-all active:scale-95"
+                                                    >
+                                                        <ChevronRight className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     )) : (

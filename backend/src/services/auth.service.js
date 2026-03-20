@@ -49,6 +49,7 @@ const register = async (name, email, password, gender, dob, phone, healthData = 
         const userId = await UserModel.create({
             name,
             email,
+            phone,
             password_hash: passwordHash,
             role: 'patient'
         }, connection);
@@ -166,7 +167,7 @@ const forgotPassword = async (email) => {
 
     await UserModel.updateResetToken(user.id, otpHash, expires);
 
-    // Send email
+    // Send email (and potentially SMS if we had phone, but forgotPassword only takes email)
     try {
         await notificationService.sendOTP(email, otp);
     } catch (error) {
@@ -255,8 +256,8 @@ const sendRegistrationOtp = async (data) => {
         expires: Date.now() + 10 * 60 * 1000 // 10 minutes
     });
 
-    // Send OTP email
-    await notificationService.sendOTP(email, otp);
+    // Send OTP email and SMS
+    await notificationService.sendOTP(email, otp, data.phone);
 
     return { message: 'Verification code sent to your email.' };
 };

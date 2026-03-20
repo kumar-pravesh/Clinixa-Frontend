@@ -3,7 +3,7 @@ import api from '../api/axios';
 const adminService = {
     // Doctors
     getAllDoctors: async () => {
-        const response = await api.get('/admin/doctors');
+        const response = await api.get('/api/staff/admin/doctors');
         return response.data;
     },
 
@@ -12,7 +12,7 @@ const adminService = {
         if (hasImage) {
             config.headers = { 'Content-Type': 'multipart/form-data' };
         }
-        const response = await api.post('/admin/doctors', data, config);
+        const response = await api.post('/api/staff/admin/doctors', data, config);
         return response.data;
     },
 
@@ -21,36 +21,36 @@ const adminService = {
         if (hasImage) {
             config.headers = { 'Content-Type': 'multipart/form-data' };
         }
-        const response = await api.put(`/admin/doctors/${id}`, data, config);
+        const response = await api.put(`/api/staff/admin/doctors/${id}`, data, config);
         return response.data;
     },
 
     deleteDoctor: async (id) => {
-        const response = await api.delete(`/admin/doctors/${id}`);
+        const response = await api.delete(`/api/staff/admin/doctors/${id}`);
         return response.data;
     },
 
     // Departments
     getDepartments: async () => {
-        const response = await api.get('/admin/departments');
+        const response = await api.get('/api/staff/admin/departments');
         return response.data;
     },
 
     // Patients
     getPatients: async (search = '', limit = 100) => {
-        const response = await api.get(`/admin/patients?search=${search}&limit=${limit}`);
+        const response = await api.get(`/api/staff/admin/patients?search=${search}&limit=${limit}`);
         return response.data;
     },
 
     deletePatient: async (id) => {
-        const response = await api.delete(`/admin/patients/${id}`);
+        const response = await api.delete(`/api/staff/admin/patients/${id}`);
         return response.data;
     },
 
 
     // Dashboard
     getDashboardSummary: async () => {
-        const response = await api.get('/admin/dashboard');
+        const response = await api.get('/api/staff/admin/dashboard');
         return response.data;
     }
 };

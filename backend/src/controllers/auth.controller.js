@@ -1,5 +1,6 @@
 const authService = require('../services/auth.service');
 const featureFlags = require('../lib/feature-flags');
+const logger = require('../lib/logger');
 
 const register = async (req, res) => {
     try {
@@ -24,6 +25,7 @@ const register = async (req, res) => {
 
         res.status(201).json({ message: 'User registered successfully', user });
     } catch (error) {
+        logger.error('Registration Error:', error);
         res.status(400).json({ message: error.message });
     }
 };
@@ -51,7 +53,16 @@ const login = async (req, res) => {
 
         res.json({ user: data.user, accessToken: data.accessToken });
     } catch (error) {
-        res.status(401).json({ message: error.message });
+        logger.error('Login Error:', error);
+
+        if (error.message === 'Invalid credentials') {
+            return res.status(401).json({ message: error.message });
+        }
+
+        res.status(500).json({
+            message: 'Internal server error during login',
+            error: error.message
+        });
     }
 };
 

@@ -9,7 +9,8 @@ import {
     ArrowRight,
     Upload,
     MoreVertical,
-    Loader2
+    Loader2,
+    FileText
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../utils/cn';
@@ -192,17 +193,26 @@ const LabDashboard = () => {
                                                         </span>
                                                     </td>
                                                     <td className="px-8 py-6 text-right">
-                                                        <button
-                                                            onClick={() => handleProcessTest(test.id)}
-                                                            className={cn(
-                                                                "p-3 rounded-xl transition-all active:scale-95 group shadow-sm border border-transparent",
-                                                                test.status === 'In Progress'
-                                                                    ? "bg-primary text-white shadow-primary/20"
-                                                                    : "bg-slate-50 text-slate-400 hover:text-primary hover:border-primary/20 hover:bg-primary/5"
-                                                            )}
-                                                        >
-                                                            <Upload className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
-                                                        </button>
+                                                        <div className="flex justify-end gap-2">
+                                                            <button
+                                                                onClick={() => navigate(`/doctor/prescriptions/new?patientId=${test.patient_id}`)}
+                                                                title="Write Prescription"
+                                                                className="p-3 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 transition-all active:scale-95 group shadow-sm border border-transparent"
+                                                            >
+                                                                <FileText className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleProcessTest(test.id)}
+                                                                className={cn(
+                                                                    "p-3 rounded-xl transition-all active:scale-95 group shadow-sm border border-transparent",
+                                                                    test.status === 'In Progress'
+                                                                        ? "bg-primary text-white shadow-primary/20"
+                                                                        : "bg-slate-50 text-slate-400 hover:text-primary hover:border-primary/20 hover:bg-primary/5"
+                                                                )}
+                                                            >
+                                                                <Upload className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}

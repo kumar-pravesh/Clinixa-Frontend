@@ -5,7 +5,7 @@ class InvoiceModel extends BaseModel {
         const [rows] = await this.query(`
             SELECT 
                 i.id, i.invoice_number, i.amount, i.total, i.payment_status, i.payment_mode,
-                DATE_FORMAT(i.issued_date, '%Y-%m-%d') as issued_date,
+                TO_CHAR(i.issued_date, 'YYYY-MM-DD') as issued_date,
                 p.name as patient_name,
                 'Consultation' as type -- Placeholder for now as per current schema structure
             FROM invoices i
@@ -20,10 +20,10 @@ class InvoiceModel extends BaseModel {
         try {
             const [rows] = await this.query(
                 `SELECT COALESCE(SUM(total), 0) as total FROM invoices 
-                 WHERE DATE(DATE_ADD(issued_date, INTERVAL 330 MINUTE)) = DATE(DATE_ADD(NOW(), INTERVAL 330 MINUTE)) 
+                 WHERE (issued_date + INTERVAL '330 MINUTE')::date = (NOW() + INTERVAL '330 MINUTE')::date 
                  AND payment_status = 'Paid'`
             );
-            return rows[0].total;
+            return rows[0] ? parseFloat(rows[0].total) : 0;
         } catch (e) {
             return 0;
         }
@@ -35,12 +35,12 @@ class InvoiceModel extends BaseModel {
                 i.id,
                 i.invoice_number,
                 p.name as patient_name,
-                CONCAT('PID-', LPAD(p.id, 4, '0')) as patient_id,
+                CONCAT('PID-', LPAD(p.id::text, 4, '0')) as patient_id,
                 i.total,
                 i.payment_mode,
                 i.payment_status,
-                DATE_FORMAT(i.issued_date, '%Y-%m-%d') as date,
-                DATE_FORMAT(i.issued_date, '%h:%i %p') as time
+                TO_CHAR(i.issued_date, 'YYYY-MM-DD') as date,
+                TO_CHAR(i.issued_date, 'HH12:MI AM') as time
             FROM invoices i
             JOIN patients p ON i.patient_id = p.id
             ORDER BY i.issued_date DESC
@@ -50,8 +50,8 @@ class InvoiceModel extends BaseModel {
     }
 
     static async countThisYear() {
-        const [rows] = await this.query('SELECT COUNT(*) as count FROM invoices WHERE YEAR(issued_date) = YEAR(CURDATE())');
-        return rows[0].count;
+        const [rows] = await this.query("SELECT COUNT(*) as count FROM invoices WHERE EXTRACT(YEAR FROM issued_date) = EXTRACT(YEAR FROM CURRENT_DATE)");
+        return rows[0] ? parseInt(rows[0].count) : 0;
     }
 
     static async create(data) {
@@ -90,7 +90,7 @@ class InvoiceModel extends BaseModel {
             SELECT 
                 i.*,
                 p.name as patient_name,
-                CONCAT('PID-', LPAD(p.id, 4, '0')) as patient_code,
+                CONCAT('PID-', LPAD(p.id::text, 4, '0')) as patient_code,
                 p.phone as patient_phone,
                 p.address as patient_address,
                 a.status as appointment_status,
@@ -107,9 +107,9 @@ class InvoiceModel extends BaseModel {
         // Used by payment service to create/update invoice before payment
         const { appointmentId, patientId, amount, createdBy } = data;
 
-        // Sanitize IDs
-        const cleanAppointmentId = appointmentId.toString().replace('APP-', '');
-        const cleanPatientId = patientId.toString().replace('PID-', '');
+        // Sanitize IDs with guards
+        const cleanAppointmentId = appointmentId ? appointmentId.toString().replace('APP-', '') : null;
+        const cleanPatientId = patientId ? patientId.toString().replace('PID-', '') : null;
 
         // Generate a random invoice number for new inserts
         const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -117,7 +117,7 @@ class InvoiceModel extends BaseModel {
         const [result] = await this.query(
             `INSERT INTO invoices (invoice_number, appointment_id, patient_id, amount, total, created_by, issued_date)
               VALUES (?, ?, ?, ?, ?, ?, NOW())
-              ON DUPLICATE KEY UPDATE amount = VALUES(amount), total = VALUES(total), issued_date = NOW()`,
+              ON CONFLICT (appointment_id) DO UPDATE SET amount = EXCLUDED.amount, total = EXCLUDED.total, issued_date = NOW()`,
             [invoiceNumber, cleanAppointmentId, cleanPatientId, amount, amount, createdBy],
             connection
         );
@@ -136,6 +136,7 @@ class InvoiceModel extends BaseModel {
     }
 
     static async updateStatus(id, status, connection) {
+        if (!id) return null;
         const cleanId = id.toString().replace('INV-', '');
         const [result] = await this.query(
             'UPDATE invoices SET payment_status = ? WHERE id = ?',

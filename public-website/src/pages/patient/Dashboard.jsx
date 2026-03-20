@@ -41,9 +41,18 @@ const PatientDashboard = () => {
                             {getGreeting()}, <span className="text-secondary">{firstName}!</span>
                         </h1>
                         <p className="text-base opacity-90 max-w-lg leading-relaxed">
-                            Your health is our priority. You have <span className="font-bold underline decoration-secondary decoration-2 underline-offset-4">
-                                {stats?.todayCount || 0} appointment{stats?.todayCount !== 1 ? 's' : ''}
-                            </span> today.
+                            Your health is our priority.
+                            {stats?.todayCount > 0 ? (
+                                <> You have <span className="font-bold underline decoration-secondary decoration-2 underline-offset-4">
+                                    {stats.todayCount} appointment{stats.todayCount !== 1 ? 's' : ''}
+                                </span> today.</>
+                            ) : stats?.upcomingCount > 0 ? (
+                                <> You have <span className="font-bold underline decoration-secondary decoration-2 underline-offset-4">
+                                    {stats.upcomingCount} upcoming visit{stats.upcomingCount !== 1 ? 's' : ''}
+                                </span> scheduled.</>
+                            ) : (
+                                <> You have no appointments scheduled for today.</>
+                            )}
                         </p>
                     </div>
                 </div>
@@ -51,13 +60,26 @@ const PatientDashboard = () => {
 
             {/* Health Overview Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="glass-card p-4 rounded-2xl flex items-center space-x-3 border-l-4 border-primary shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                <div className="glass-card p-4 rounded-2xl flex items-center space-x-3 border-l-4 border-primary shadow-sm hover:shadow-md transition-all group">
+                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                         <Activity size={20} />
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Health Score</p>
-                        <h3 className="text-xl font-bold text-gray-800">{stats?.healthScore || '--'}/100</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Health Score</p>
+                            {stats?.healthScore && (
+                                <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                                    stats.healthScore > 80 ? 'bg-green-500' : 
+                                    stats.healthScore > 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`}></span>
+                            )}
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-800">
+                            {stats?.healthScore ? `${stats.healthScore}/100` : '--/100'}
+                        </h3>
+                        {!stats?.healthScore && (
+                            <Link to="/patient/profile" className="text-[9px] text-primary hover:underline font-bold">Update Vitals</Link>
+                        )}
                     </div>
                 </div>
                 <div className="glass-card p-4 rounded-2xl flex items-center space-x-3 border-l-4 border-accent shadow-sm hover:shadow-md transition-shadow">

@@ -107,7 +107,7 @@ const checkAndSendReminders = async () => {
             JOIN doctors d ON a.doctor_id = d.id
             JOIN users doc_u ON d.user_id = doc_u.id
             WHERE UPPER(a.status) = 'CONFIRMED'
-            AND a.date >= CURDATE()
+            AND a.date >= CURRENT_DATE
         `);
 
         const now = Date.now();

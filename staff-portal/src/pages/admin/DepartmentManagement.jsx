@@ -95,9 +95,9 @@ const DepartmentManagement = () => {
         setImageFile(null);
         if (dept) {
             setEditingDept(dept);
-            const previewUrl = dept.image_url
-                ? (dept.image_url.startsWith('http') ? dept.image_url : `http://localhost:5000/${dept.image_url}`)
-                : null;
+                const previewUrl = dept.image_url
+                    ? (dept.image_url.startsWith('http') ? dept.image_url : `http://localhost:5000/${dept.image_url}`)
+                    : null;
             setImagePreview(previewUrl);
             setFormData({
                 ...dept,
@@ -419,29 +419,30 @@ const DepartmentManagement = () => {
 
             {/* Config Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl z-[100] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-400 overflow-y-auto no-scrollbar">
-                    <div className="bg-white w-full max-w-2xl rounded-[4rem] shadow-[0_40px_100px_rgba(0,0,0,0.3)] overflow-hidden relative my-8">
-                        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none"></div>
+                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl z-[100] overflow-y-auto pb-12">
+                    <div className="flex min-h-full items-start justify-center p-4 sm:items-center animate-in fade-in zoom-in-95 duration-400">
+                        <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.3)] relative my-4 sm:my-8">
+                            <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none rounded-t-[2.5rem]"></div>
 
-                        <button onClick={() => setIsModalOpen(false)} className="absolute top-10 right-10 p-3 text-slate-300 hover:text-slate-600 bg-slate-50 hover:bg-white rounded-2xl border border-transparent hover:border-slate-100 transition-all z-10">
-                            <X className="w-6 h-6" />
-                        </button>
-                        <div className="p-16">
-                            <div className="mb-12">
-                                <div className="p-4 bg-primary/10 rounded-2xl w-fit mb-6">
-                                    <Building2 className="w-8 h-8 text-primary" />
+                            <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 p-2.5 text-slate-300 hover:text-slate-600 bg-slate-50 hover:bg-white rounded-xl border border-transparent hover:border-slate-100 transition-all z-10">
+                                <X className="w-5 h-5" />
+                            </button>
+                            <div className="p-8 md:p-12">
+                                <div className="mb-6">
+                                    <div className="p-2.5 bg-primary/10 rounded-lg w-fit mb-3">
+                                        <Building2 className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <h2 className="text-xl font-black text-slate-900 tracking-tight">{editingDept ? 'Modify Infrastructure' : 'Initialize Specialist Unit'}</h2>
+                                    <p className="text-[8px] text-slate-400 font-bold uppercase tracking-[0.4em] mt-1.5">Commiting new parameters to core hospital system</p>
                                 </div>
-                                <h2 className="text-3xl font-black text-slate-900 tracking-tight">{editingDept ? 'Modify Infrastructure' : 'Initialize Specialist Unit'}</h2>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em] mt-3">Commiting new parameters to core hospital system</p>
-                            </div>
 
-                            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-3 md:col-span-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Unit Identification</label>
                                     <input
                                         type="text"
                                         placeholder="E.g., Neuro-Science Pavilion"
-                                        className="input-field h-16 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold shadow-inner"
+                                        className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold shadow-inner"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         required
@@ -452,7 +453,7 @@ const DepartmentManagement = () => {
                                     <input
                                         type="text"
                                         placeholder="Senior Medical Director Name"
-                                        className="input-field h-16 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold shadow-inner"
+                                        className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold shadow-inner"
                                         value={formData.head}
                                         onChange={(e) => setFormData({ ...formData, head: e.target.value })}
                                         required
@@ -462,7 +463,7 @@ const DepartmentManagement = () => {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Allocated Staff</label>
                                     <input
                                         type="number"
-                                        className="input-field h-16 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold text-center shadow-inner"
+                                        className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold text-center shadow-inner"
                                         value={formData.staff}
                                         onChange={(e) => setFormData({ ...formData, staff: parseInt(e.target.value) })}
                                     />
@@ -471,7 +472,7 @@ const DepartmentManagement = () => {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Total Bed Units</label>
                                     <input
                                         type="number"
-                                        className="input-field h-16 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold text-center shadow-inner"
+                                        className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold text-center shadow-inner"
                                         value={formData.beds}
                                         onChange={(e) => setFormData({ ...formData, beds: parseInt(e.target.value) })}
                                     />
@@ -479,7 +480,7 @@ const DepartmentManagement = () => {
                                 <div className="space-y-3">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Clinical Tech Level</label>
                                     <select
-                                        className="input-field h-16 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold appearance-none shadow-inner"
+                                        className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold appearance-none shadow-inner"
                                         value={formData.tech}
                                         onChange={(e) => setFormData({ ...formData, tech: e.target.value })}
                                     >
@@ -496,7 +497,7 @@ const DepartmentManagement = () => {
                                         onClick={() => document.getElementById('dept-img-input').click()}
                                     >
                                         {imagePreview ? (
-                                            <div className="relative h-44">
+                                            <div className="relative h-32">
                                                 <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
                                                     <p className="text-white text-xs font-black uppercase tracking-widest">Click to change image</p>
@@ -508,12 +509,12 @@ const DepartmentManagement = () => {
                                                 >×</button>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
-                                                <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 group-hover/upload:bg-primary/5 transition-colors">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-slate-400 group-hover/upload:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                            <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-2 group-hover/upload:bg-primary/5 transition-colors">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-400 group-hover/upload:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                                 </div>
-                                                <p className="text-sm font-black text-slate-700 mb-1">Click to upload image</p>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">JPG, PNG, or WEBP · Max 5MB</p>
+                                                <p className="text-xs font-black text-slate-700 mb-1">Click to upload image</p>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">JPG, PNG, or WEBP</p>
                                             </div>
                                         )}
                                     </div>
@@ -534,7 +535,7 @@ const DepartmentManagement = () => {
                                 <div className="space-y-3">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Operational Status</label>
                                     <select
-                                        className="input-field h-16 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold appearance-none shadow-inner"
+                                        className="input-field h-14 bg-slate-50 border-slate-100 !pl-6 text-sm font-bold appearance-none shadow-inner"
                                         value={formData.status}
                                         onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                                     >
@@ -565,9 +566,9 @@ const DepartmentManagement = () => {
                                         </button>
                                     </div>
 
-                                    <div className="space-y-4">
+                                    <div className="space-y-3">
                                         {formData.publications.map((pub, idx) => (
-                                            <div key={idx} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 relative group/pub">
+                                            <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 relative group/pub">
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemovePublication(idx)}
@@ -581,7 +582,7 @@ const DepartmentManagement = () => {
                                                         <input
                                                             type="text"
                                                             placeholder="Clinical Research Title"
-                                                            className="w-full h-12 bg-white rounded-xl border border-slate-100 px-4 text-xs font-bold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                            className="w-full h-11 bg-white rounded-lg border border-slate-100 px-4 text-[11px] font-bold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                                             value={pub.title}
                                                             onChange={(e) => handleUpdatePublication(idx, 'title', e.target.value)}
                                                         />
@@ -591,7 +592,7 @@ const DepartmentManagement = () => {
                                                         <input
                                                             type="text"
                                                             placeholder="Dr. Specialist Name"
-                                                            className="w-full h-12 bg-white rounded-xl border border-slate-100 px-4 text-xs font-bold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                            className="w-full h-11 bg-white rounded-lg border border-slate-100 px-4 text-[11px] font-bold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                                             value={pub.author}
                                                             onChange={(e) => handleUpdatePublication(idx, 'author', e.target.value)}
                                                         />
@@ -601,7 +602,7 @@ const DepartmentManagement = () => {
                                                         <input
                                                             type="text"
                                                             placeholder="Month DD, YYYY"
-                                                            className="w-full h-12 bg-white rounded-xl border border-slate-100 px-4 text-xs font-bold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                            className="w-full h-11 bg-white rounded-lg border border-slate-100 px-4 text-[11px] font-bold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                                             value={pub.date}
                                                             onChange={(e) => handleUpdatePublication(idx, 'date', e.target.value)}
                                                         />
@@ -611,7 +612,7 @@ const DepartmentManagement = () => {
                                                         <input
                                                             type="text"
                                                             placeholder="Short summary of key findings..."
-                                                            className="w-full h-12 bg-white rounded-xl border border-slate-100 px-4 text-xs font-bold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                            className="w-full h-11 bg-white rounded-lg border border-slate-100 px-4 text-[11px] font-bold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                                             value={pub.description}
                                                             onChange={(e) => handleUpdatePublication(idx, 'description', e.target.value)}
                                                         />
@@ -630,13 +631,14 @@ const DepartmentManagement = () => {
                                     </div>
                                 </div>
 
-                                <button type="submit" className="md:col-span-2 h-20 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-[0.4em] text-xs shadow-2xl shadow-slate-200 mt-8 hover:bg-primary hover:-translate-y-1 active:scale-95 transition-all">
+                                <button type="submit" className="md:col-span-2 h-16 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-[0.4em] text-[10px] shadow-2xl shadow-slate-200 mt-4 hover:bg-primary hover:-translate-y-0.5 active:scale-95 transition-all">
                                     {editingDept ? 'Commit Configuration' : 'Sync Infrastructure'}
                                 </button>
                             </form>
                         </div>
                     </div>
                 </div>
+            </div>
             )
             }
 

@@ -63,25 +63,25 @@ const Profile = () => {
             title: "Personal",
             icon: <User className="text-primary" size={18} />,
             items: [
-                { label: "Full Name", value: profile.name, icon: <User size={14} /> },
-                { label: "Date of Birth", value: profile.dob ? new Date(profile.dob).toLocaleDateString() : 'N/A', icon: <Calendar size={14} /> },
-                { label: "Gender", value: profile.gender, icon: <Heart size={14} /> },
+                { label: "Full Name", value: profile.name || 'Anonymous', icon: <User size={14} /> },
+                { label: "Date of Birth", value: profile.dob ? new Date(profile.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Not provided', icon: <Calendar size={14} /> },
+                { label: "Gender", value: profile.gender || 'Not specified', icon: <Heart size={14} /> },
             ]
         },
         {
             title: "Vital Statistics",
             icon: <Activity className="text-pink-500" size={18} />,
             items: [
-                { label: "Height (cm)", value: profile.height ? `${profile.height} cm` : 'N/A', icon: <Activity size={14} /> },
-                { label: "Weight (kg)", value: profile.weight ? `${profile.weight} kg` : 'N/A', icon: <Activity size={14} /> },
-                { label: "Blood Pressure", value: (profile.bp_systolic && profile.bp_diastolic) ? `${profile.bp_systolic}/${profile.bp_diastolic} mmHg` : 'N/A', icon: <Activity size={14} /> },
+                { label: "Height (cm)", value: profile.height ? `${profile.height} cm` : 'Pending Vitals', icon: <Activity size={14} /> },
+                { label: "Weight (kg)", value: profile.weight ? `${profile.weight} kg` : 'Pending Vitals', icon: <Activity size={14} /> },
+                { label: "Blood Pressure", value: (profile.bp_systolic && profile.bp_diastolic) ? `${profile.bp_systolic}/${profile.bp_diastolic} mmHg` : 'Pending Vitals', icon: <Activity size={14} /> },
             ]
         },
         {
             title: "Medical Background",
             icon: <Shield className="text-green-500" size={18} />,
             items: [
-                { label: "Blood Group", value: profile.blood_group || 'N/A', icon: <Heart size={14} /> },
+                { label: "Blood Group", value: profile.blood_group || 'Not tested', icon: <Heart size={14} /> },
                 { label: "Medical History", value: profile.history || 'No history recorded', icon: <Edit3 size={14} /> },
             ]
         }

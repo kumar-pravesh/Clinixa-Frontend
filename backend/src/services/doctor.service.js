@@ -86,13 +86,15 @@ const notificationService = require('./notification.service');
 
 const createPrescription = async (doctorId, data) => {
     const { patientId, medications } = data;
+    // Strip PID- prefix if present (frontend sends formatted ID)
+    const cleanPatientId = patientId ? patientId.toString().replace('PID-', '') : patientId;
 
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
         const prescriptionId = await PrescriptionModel.create({
             doctorId,
-            patientId,
+            patientId: cleanPatientId,
             date: new Date()
         }, connection);
 
@@ -139,9 +141,11 @@ const addMedicines = async (doctorId, data) => {
 
 const uploadLabReport = async (doctorId, data) => {
     const { patientId, testName, filePath } = data;
+    // Strip PID- prefix if present (frontend sends formatted ID)
+    const cleanPatientId = patientId ? patientId.toString().replace('PID-', '') : patientId;
     const reportId = await LabModel.create({
         doctorId,
-        patientId,
+        patientId: cleanPatientId,
         testName,
         filePath,
         date: new Date()
@@ -205,11 +209,13 @@ const updateAppointmentStatus = async (doctorId, appointmentId, status) => {
 
 const requestLabTest = async (doctorId, data) => {
     const { patientId, testName, category, priority, notes } = data;
+    // Strip PID- prefix if present (frontend sends formatted ID)
+    const cleanPatientId = patientId ? patientId.toString().replace('PID-', '') : patientId;
 
     const doctor = await DoctorModel.findById(doctorId);
 
     const testId = await LabTestModel.create({
-        patient_id: patientId,
+        patient_id: cleanPatientId,
         doctor_id: doctorId,
         test_name: testName,
         category,
