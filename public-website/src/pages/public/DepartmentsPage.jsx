@@ -17,7 +17,7 @@ const iconMap = {
 
 const getImageUrl = (url) => {
   if (!url) return null;
-  return url.startsWith('http') ? url : `http://localhost:5000/${url}`;
+  return url.startsWith('http') ? url : `${import.meta.env.VITE_API_ROOT || 'http://localhost:5000'}/${url}`;
 };
 
 const departmentImageMap = {
